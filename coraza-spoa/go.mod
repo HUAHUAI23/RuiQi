@@ -15,6 +15,7 @@ require (
 )
 
 require (
+	github.com/alibaba/sentinel-golang v1.0.4 // indirect
 	github.com/corazawaf/libinjection-go v0.2.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
