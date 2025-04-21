@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/HUAHUAI23/simple-waf/coraza-spoa/internal/qps"
 	"math/rand"
 	"net/netip"
 	"os"
@@ -44,6 +45,7 @@ type Application struct {
 	waf      coraza.WAF
 	cache    cache.ExpiringCache
 	logStore LogStore
+	qpsLimit *qps.QPS
 
 	AppConfig
 }
@@ -143,6 +145,11 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 		}
 	}
 
+	// 访问流控
+	if it := accessLimit(&req, a.qpsLimit); it != nil {
+		return it
+	}
+
 	if len(req.ID) == 0 {
 		const idLength = 16
 		var sb strings.Builder
@@ -226,6 +233,52 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 		return ErrInterrupted{it}
 	}
 
+	return nil
+}
+
+// 访问流控
+func accessLimit(req *applicationRequest, qps *qps.QPS) *ErrInterrupted {
+	name := fmt.Sprintf("%s:%s", req.DstIp.String(), req.DstPort)
+	// TODO 源ip流控
+	if qps.SrcIpLimiter {
+		ipLimit := qps.IPLimiter(name, req.SrcIp.String())
+		if !ipLimit {
+			return &ErrInterrupted{
+				Interruption: &types.Interruption{
+					Status: 429,
+					Action: "interrupted",
+					Data:   "src ip limit",
+				},
+			}
+		}
+	}
+
+	// TODO 目标ip流控
+	if qps.DstIpLimiter && (req.SrcIp != req.DstIp) {
+		ipLimit := qps.IPLimiter(name, req.SrcIp.String())
+		if !ipLimit {
+			return &ErrInterrupted{
+				Interruption: &types.Interruption{
+					Status: 429,
+					Action: "interrupted",
+					Data:   "dst ip limit",
+				},
+			}
+		}
+	}
+	// TODO: 路径流控
+	if qps.DstPathLimiter {
+		pathLimit := qps.PathLimiter(name, string(req.Path))
+		if !pathLimit {
+			return &ErrInterrupted{
+				Interruption: &types.Interruption{
+					Status: 429,
+					Action: "interrupted",
+					Data:   "path limit",
+				},
+			}
+		}
+	}
 	return nil
 }
 
@@ -542,6 +595,13 @@ func (a AppConfig) NewApplicationWithContext(ctx context.Context, mongoConfig *M
 		return nil, err
 	}
 	app.waf = waf
+
+	// 初始化qps
+	qpsLimit, err := qps.InitQpsLimit(mongoConfig.Client, mongoConfig.Database, &a.Logger)
+	if err != nil {
+		return nil, err
+	}
+	app.qpsLimit = qpsLimit
 
 	const defaultExpire = time.Second * 10
 	const defaultEvictionInterval = time.Second * 1
