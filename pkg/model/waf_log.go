@@ -20,6 +20,7 @@ type WAFLog struct {
 	Payload    string        `json:"payload" bson:"payload" example:"Scanner/1.0"`                                                                                          // 攻击载荷
 	URI        string        `json:"uri" bson:"uri" example:"/api/v1/users"`                                                                                                // 请求URI路径
 	SrcIP      string        `json:"srcIp" bson:"srcIp" example:"192.168.1.1"`                                                                                              // 来源IP地址
+	SrcIPInfo  *IPInfo       `json:"srcIpInfo,omitempty" bson:"srcIpInfo,omitempty"`                                                                                        // 来源IP地理位置信息
 	DstIP      string        `json:"dstIp" bson:"dstIp" example:"10.0.0.1"`                                                                                                 // 目标IP地址
 	ClientIP   string        `json:"clientIp" bson:"clientIp" example:"192.168.1.1"`                                                                                        // 来源IP地址
 	ServerIP   string        `json:"serverIp" bson:"serverIp" example:"10.0.0.1"`                                                                                           // 目标IP地址

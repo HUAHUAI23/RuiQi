@@ -40,10 +40,17 @@ type AppConfig struct {
 	TransactionTTL time.Duration
 }
 
+// ApplicationOptions 应用程序配置选项 配置应用是否开启 ip 解析，日志记录
+type ApplicationOptions struct {
+	MongoConfig *MongoConfig   // MongoDB配置，用于日志存储
+	GeoIPConfig *GeoIP2Options // GeoIP配置，用于IP地理位置处理
+}
+
 type Application struct {
-	waf      coraza.WAF
-	cache    cache.ExpiringCache
-	logStore LogStore
+	waf         coraza.WAF
+	cache       cache.ExpiringCache
+	logStore    LogStore
+	ipProcessor IPProcessor
 
 	AppConfig
 }
@@ -420,17 +427,27 @@ func (a *Application) saveFirewallLog(matchedRules []types.MatchedRule, interrup
 	// 构建日志条目
 	logs := make([]model.Log, 0)
 
+	realIP := getRealClientIP(req)
+
 	// 初始化防火墙日志
 	firewallLog := model.WAFLog{
 		CreatedAt: time.Now(),
 		Request:   buildRequestString(req, headers),
 		Response:  "", // 暂时不处理响应
 		Domain:    getHostFromRequest(req),
-		SrcIP:     getRealClientIP(req),
+		SrcIP:     realIP,
 		DstIP:     req.DstIp.String(),
 		SrcPort:   int(req.SrcPort),
 		DstPort:   int(req.DstPort),
 		RequestID: req.ID,
+	}
+
+	// 获取并添加源IP的地理位置信息
+	if a.ipProcessor != nil && realIP != "" {
+		srcIPInfo := a.ipProcessor.GetIPInfo(realIP)
+		if srcIPInfo != nil {
+			firewallLog.SrcIPInfo = srcIPInfo
+		}
 	}
 
 	// 遍历所有匹配的规则
@@ -495,23 +512,45 @@ func (a *Application) saveFirewallLog(matchedRules []types.MatchedRule, interrup
 }
 
 // NewApplication creates a new Application with a custom context
-func (a AppConfig) NewApplicationWithContext(ctx context.Context, mongoConfig *MongoConfig, isDebug bool) (*Application, error) {
+func (a AppConfig) NewApplicationWithContext(ctx context.Context, options ApplicationOptions, isDebug bool) (*Application, error) {
 	// If no context is provided, use background context
 	isDev := os.Getenv("IS_DEV") == "true"
-	var app *Application
-	var logStore LogStore
-	if mongoConfig == nil {
-		app = &Application{
-			AppConfig: a,
+	app := &Application{
+		AppConfig: a,
+	}
+
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	if options.MongoConfig != nil && options.MongoConfig.Client != nil {
+		logStore := NewMongoLogStore(
+			options.MongoConfig.Client,
+			options.MongoConfig.Database,
+			options.MongoConfig.Collection,
+			a.Logger,
+		)
+		logStore.Start(ctx)
+		app.logStore = logStore
+	}
+
+	// 根据GeoIP配置初始化IP处理器
+	if options.GeoIPConfig != nil {
+		processor, err := NewIPProcessor(
+			ctx,
+			options.GeoIPConfig.CityDBPath,
+			options.GeoIPConfig.ASNDBPath,
+			a.Logger,
+		)
+		if err != nil {
+			a.Logger.Warn().Err(err).Msg("初始化IP处理器失败，将使用空实现")
+			app.ipProcessor = NewNullIPProcessor()
+		} else {
+			app.ipProcessor = processor
 		}
 	} else {
-		// 初始化日志存储器
-		logStore = NewMongoLogStore(mongoConfig.Client, mongoConfig.Database, mongoConfig.Collection, a.Logger)
-		logStore.Start(ctx)
-		app = &Application{
-			AppConfig: a,
-			logStore:  logStore,
-		}
+		// 如果未提供GeoIP配置，使用空实现
+		app.ipProcessor = NewNullIPProcessor()
 	}
 
 	debugLogger := debuglog.Default().
@@ -569,8 +608,8 @@ func (a AppConfig) NewApplicationWithContext(ctx context.Context, mongoConfig *M
 }
 
 // NewDefaultApplication creates a new Application with background context
-func (a AppConfig) NewApplication(mongoConfig *MongoConfig) (*Application, error) {
-	return a.NewApplicationWithContext(context.Background(), mongoConfig, false)
+func (a AppConfig) NewApplication(options ApplicationOptions) (*Application, error) {
+	return a.NewApplicationWithContext(context.Background(), options, false)
 }
 
 func (a *Application) logCallback(mr types.MatchedRule) {

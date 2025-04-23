@@ -24,6 +24,9 @@ func main() {
 	flag.StringVar(&config.MemProfile, "memprofile", "", "write memory profile to `file`")
 	flag.StringVar(&config.ConfigPath, "config", "", "configuration file")
 	flag.StringVar(&config.MongoURI, "mongo", "", "mongodb uri")
+	flag.StringVar(&config.ASNDBPath, "asn", "", "asn database path")
+	flag.StringVar(&config.CityDBPath, "city", "", "city database path")
+
 	flag.Parse()
 
 	if config.ConfigPath == "" {
@@ -71,7 +74,22 @@ func main() {
 		}
 	}
 
-	apps, err := cfg.NewApplicationsWithContext(ctx, mongoConfig)
+	var geoIPConfigPtr *internal.GeoIP2Options
+	if config.ASNDBPath != "" || config.CityDBPath != "" {
+		geoIPConfig := internal.GeoIP2Options{}
+		if config.ASNDBPath != "" {
+			geoIPConfig.ASNDBPath = config.ASNDBPath
+		}
+		if config.CityDBPath != "" {
+			geoIPConfig.CityDBPath = config.CityDBPath
+		}
+		geoIPConfigPtr = &geoIPConfig
+	}
+
+	apps, err := cfg.NewApplicationsWithContext(ctx, internal.ApplicationOptions{
+		MongoConfig: mongoConfig,
+		GeoIPConfig: geoIPConfigPtr,
+	})
 
 	if err != nil {
 		config.GlobalLogger.Fatal().Err(err).Msg("Failed creating applications")
@@ -133,7 +151,10 @@ outer:
 				continue
 			}
 
-			apps, err := newCfg.NewApplicationsWithContext(ctx, mongoConfig)
+			apps, err := newCfg.NewApplicationsWithContext(ctx, internal.ApplicationOptions{
+				MongoConfig: mongoConfig,
+				GeoIPConfig: geoIPConfigPtr,
+			})
 			if err != nil {
 				config.GlobalLogger.Error().Err(err).Msg("Error applying configuration, using old configuration")
 				continue

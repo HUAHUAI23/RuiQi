@@ -20,7 +20,6 @@ import (
 	mongodb "github.com/HUAHUAI23/simple-waf/pkg/database/mongo"
 	"github.com/HUAHUAI23/simple-waf/pkg/model"
 	"github.com/HUAHUAI23/simple-waf/pkg/utils/network"
-	"github.com/HUAHUAI23/simple-waf/server/config"
 )
 
 var globalLogger = zerolog.New(os.Stderr).With().Timestamp().Logger()
@@ -106,6 +105,11 @@ func (s *AgentServerImpl) Start() error {
 		Collection: wafLog.GetCollectionName(),
 	}
 
+	geoIPConfig := internal.GeoIP2Options{
+		ASNDBPath:  globalConfig.Engine.ASNDBPath,
+		CityDBPath: globalConfig.Engine.CityDBPath,
+	}
+
 	appConfigs := globalConfig.Engine.AppConfig
 
 	// Convert model.AppConfig to internal.AppConfig and create applications
@@ -134,7 +138,10 @@ func (s *AgentServerImpl) Start() error {
 		}
 
 		// 创建应用
-		application, err := internalAppConfig.NewApplicationWithContext(ctx, mongoConfig, globalConfig.IsDebug)
+		application, err := internalAppConfig.NewApplicationWithContext(ctx, internal.ApplicationOptions{
+			MongoConfig: mongoConfig,
+			GeoIPConfig: &geoIPConfig,
+		}, globalConfig.IsDebug)
 		if err != nil {
 			s.logger.Fatal().Err(err).Msg("Failed creating application: " + appConfig.Name)
 
@@ -251,6 +258,11 @@ func (s *AgentServerImpl) UpdateApplications() error {
 		Collection: wafLog.GetCollectionName(),
 	}
 
+	geoIPConfig := internal.GeoIP2Options{
+		ASNDBPath:  globalConfig.Engine.ASNDBPath,
+		CityDBPath: globalConfig.Engine.CityDBPath,
+	}
+
 	// 从 Config 中提取 AppConfig 列表
 	appConfigs := globalConfig.Engine.AppConfig
 
@@ -280,7 +292,11 @@ func (s *AgentServerImpl) UpdateApplications() error {
 		}
 
 		// 创建应用
-		application, err := internalAppConfig.NewApplicationWithContext(s.ctx, mongoConfig, globalConfig.IsDebug)
+		application, err := internalAppConfig.NewApplicationWithContext(s.ctx, internal.ApplicationOptions{
+			MongoConfig: mongoConfig,
+			GeoIPConfig: &geoIPConfig,
+		}, globalConfig.IsDebug)
+
 		if err != nil {
 			s.logger.Fatal().Err(err).Msg("Failed creating application: " + appConfig.Name)
 			return err
@@ -346,7 +362,7 @@ func (s *AgentServerImpl) GetLatestConfig() (*model.Config, error) {
 
 	var cfg model.Config
 	// 获取配置集合
-	db := client.Database(config.Global.DBConfig.Database)
+	db := client.Database("waf")
 	collection := db.Collection(cfg.GetCollectionName())
 
 	// 创建带超时的上下文

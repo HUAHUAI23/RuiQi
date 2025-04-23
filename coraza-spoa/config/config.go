@@ -18,6 +18,8 @@ var ConfigPath string
 var CpuProfile string
 var MemProfile string
 var MongoURI string
+var ASNDBPath string
+var CityDBPath string
 var GlobalLogger = zerolog.New(os.Stderr).With().Timestamp().Logger()
 
 func ReadConfig() (*config, error) {
@@ -63,7 +65,7 @@ func (c config) NetworkAddressFromBind() (network string, address string) {
 	return "tcp", c.Bind
 }
 
-func (c config) NewApplicationsWithContext(ctx context.Context, mongoConfig *internal.MongoConfig) (map[string]*internal.Application, error) {
+func (c config) NewApplicationsWithContext(ctx context.Context, options internal.ApplicationOptions) (map[string]*internal.Application, error) {
 	allApps := make(map[string]*internal.Application)
 
 	for index, a := range c.Applications {
@@ -79,7 +81,7 @@ func (c config) NewApplicationsWithContext(ctx context.Context, mongoConfig *int
 			TransactionTTL: time.Duration(a.TransactionTTLMS) * time.Millisecond,
 		}
 
-		application, err := appConfig.NewApplicationWithContext(ctx, mongoConfig, false)
+		application, err := appConfig.NewApplicationWithContext(ctx, options, false)
 		if err != nil {
 			return nil, fmt.Errorf("initializing application %q: %v", index, err)
 		}
@@ -91,7 +93,7 @@ func (c config) NewApplicationsWithContext(ctx context.Context, mongoConfig *int
 }
 
 func (c config) NewApplications() (map[string]*internal.Application, error) {
-	return c.NewApplicationsWithContext(context.Background(), nil)
+	return c.NewApplicationsWithContext(context.Background(), internal.ApplicationOptions{})
 }
 
 type LogConfig struct {

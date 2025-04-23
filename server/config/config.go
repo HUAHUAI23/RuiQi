@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -154,11 +155,18 @@ func InitDB(db *mongo.Database) error {
 // 创建默认配置
 func createDefaultConfig() model.Config {
 	now := time.Now()
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		Logger.Error().Err(err).Msg("无法获取用户主目录")
+	}
+
 	return model.Config{
 		Name: constant.GetString("APP_CONFIG_NAME", "AppConfig"),
 		Engine: model.EngineConfig{
 			Bind:            "127.0.0.1:2342",
 			UseBuiltinRules: true,
+			ASNDBPath:       filepath.Join(homeDir, "simple-waf", "geo-ip", "GeoLite2-ASN.mmdb"),
+			CityDBPath:      filepath.Join(homeDir, "simple-waf", "geo-ip", "GeoLite2-City.mmdb"),
 			AppConfig: []model.AppConfig{
 				{
 					Name: constant.GetString("Default_ENGINE_NAME", "coraza"),
@@ -185,7 +193,7 @@ SecRuleUpdateTargetById 933120 !ARGS:json.engine.appConfig.0.directives`,
 			},
 		},
 		Haproxy: model.HaproxyConfig{
-			ConfigBaseDir: "/simple-waf",
+			ConfigBaseDir: filepath.Join(homeDir, "simple-waf"),
 			HaproxyBin:    "haproxy",
 			BackupsNumber: 5,
 			SpoeAgentAddr: "127.0.0.1",

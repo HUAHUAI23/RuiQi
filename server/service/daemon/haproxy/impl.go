@@ -100,7 +100,7 @@ func (s *HAProxyServiceImpl) Start() error {
 	}
 
 	// 如果是生产环境，添加安静模式参数
-	if s.isDebug {
+	if !s.isDebug {
 		args = append([]string{"-q"}, args...)
 	}
 

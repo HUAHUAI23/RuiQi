@@ -17,6 +17,8 @@ type Config struct {
 type EngineConfig struct {
 	Bind            string      `bson:"bind" json:"bind"`
 	UseBuiltinRules bool        `bson:"useBuiltinRules" json:"useBuiltinRules"`
+	ASNDBPath       string      `bson:"asnDBPath" json:"asnDBPath"`
+	CityDBPath      string      `bson:"cityDBPath" json:"cityDBPath"`
 	AppConfig       []AppConfig `bson:"appConfig" json:"appConfig"`
 }
 

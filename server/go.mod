@@ -12,7 +12,6 @@ require (
 	github.com/haproxytech/client-native/v6 v6.1.2
 	github.com/joho/godotenv v1.5.1
 	github.com/mvrilo/go-redoc v0.1.5
-	github.com/mvrilo/go-redoc/gin v0.0.0-20250209151614-3a15e2c08553
 	github.com/rs/zerolog v1.33.0
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0
@@ -64,6 +63,8 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
+	github.com/oschwald/geoip2-golang v1.11.0 // indirect
+	github.com/oschwald/maxminddb-golang v1.13.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/petar-dambovaliev/aho-corasick v0.0.0-20240411101913-e07a1f0e8eb4 // indirect
 	github.com/tidwall/gjson v1.18.0 // indirect
