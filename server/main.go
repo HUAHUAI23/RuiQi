@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -21,13 +22,13 @@ import (
 	"github.com/HUAHUAI23/simple-waf/server/validator"
 )
 
-//	@title			Simple-WAF API
+//	@title			RuiQi-WAF API
 //	@version		1.0
-//	@description	简单的 Web 应用防火墙管理系统 API
+//	@description	RuiQi 应用防火墙管理系统 API
 //	@termsOfService	http://swagger.io/terms/
 
 //	@contact.name	API Support
-//	@contact.url	http://www.swagger.io/support
+//	@contact.url	https://github.com/HUAHUAI23/simple-waf
 //	@contact.email	support@swagger.io
 
 //	@license.name	Apache 2.0
@@ -103,10 +104,48 @@ func main() {
 		ginSwagger.PersistAuthorization(true),
 	))
 
+	route.GET("/scalar", func(c *gin.Context) {
+		c.Header("Content-Type", "text/html")
+		scheme := "http://"
+		if c.Request.TLS != nil {
+			scheme = "https://"
+		}
+
+		swaggerJsonUrl := scheme + c.Request.Host + "/swagger/doc.json"
+
+		content := fmt.Sprintf(`
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<title>RuiQi-WAF API Reference</title>
+			<meta charset="utf-8" />
+			<meta name="viewport" content="width=device-width, initial-scale=1" />
+			<style>
+				body {
+					margin: 0;
+				}
+			</style>
+		</head>
+		<body>
+			<script
+			id="api-reference"
+			type="application/json"
+			data-url="%s"
+			data-theme="light"
+			data-layout="modern"
+			></script>
+			<script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+		</body>
+		</html>
+		`, swaggerJsonUrl)
+
+		c.String(http.StatusOK, content)
+	})
+
 	// 获取Redoc处理器
 	doc := redoc.Redoc{
-		Title:       "Simple-WAF API",
-		Description: "简单的 Web 应用防火墙管理系统 API",
+		Title:       "RuiQi-WAF API",
+		Description: "RuiQi 应用防火墙管理系统 API",
 		SpecFile:    "./docs/swagger.json",
 		SpecPath:    "/swagger.json",
 		DocsPath:    "/redoc",

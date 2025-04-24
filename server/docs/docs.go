@@ -12,7 +12,7 @@ const docTemplate = `{
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
             "name": "API Support",
-            "url": "http://www.swagger.io/support",
+            "url": "https://github.com/HUAHUAI23/simple-waf",
             "email": "support@swagger.io"
         },
         "license": {
@@ -2248,6 +2248,8 @@ const docTemplate = `{
                 "thread": {
                     "description": "线程数",
                     "type": "integer",
+                    "maximum": 256,
+                    "minimum": 0,
                     "example": 4
                 }
             }
@@ -2798,6 +2800,117 @@ const docTemplate = `{
                 }
             }
         },
+        "model.IPInfo": {
+            "description": "IP地址地理位置详细信息，包含城市、区域、国家和ASN等数据",
+            "type": "object",
+            "properties": {
+                "asn": {
+                    "type": "object",
+                    "properties": {
+                        "number": {
+                            "description": "ASN号码",
+                            "type": "integer",
+                            "example": 4134
+                        },
+                        "organization": {
+                            "description": "组织名称",
+                            "type": "string",
+                            "example": "China Telecom"
+                        }
+                    }
+                },
+                "city": {
+                    "type": "object",
+                    "properties": {
+                        "nameEn": {
+                            "description": "城市英文名称",
+                            "type": "string",
+                            "example": "Hangzhou"
+                        },
+                        "nameZh": {
+                            "description": "城市中文名称",
+                            "type": "string",
+                            "example": "杭州"
+                        }
+                    }
+                },
+                "continent": {
+                    "type": "object",
+                    "properties": {
+                        "nameEn": {
+                            "description": "大洲英文名称",
+                            "type": "string",
+                            "example": "Asia"
+                        },
+                        "nameZh": {
+                            "description": "大洲中文名称",
+                            "type": "string",
+                            "example": "亚洲"
+                        }
+                    }
+                },
+                "country": {
+                    "type": "object",
+                    "properties": {
+                        "isoCode": {
+                            "description": "国家ISO代码",
+                            "type": "string",
+                            "example": "CN"
+                        },
+                        "nameEn": {
+                            "description": "国家英文名称",
+                            "type": "string",
+                            "example": "China"
+                        },
+                        "nameZh": {
+                            "description": "国家中文名称",
+                            "type": "string",
+                            "example": "中国"
+                        }
+                    }
+                },
+                "location": {
+                    "type": "object",
+                    "properties": {
+                        "latitude": {
+                            "description": "纬度",
+                            "type": "number",
+                            "example": 30.2943
+                        },
+                        "longitude": {
+                            "description": "经度",
+                            "type": "number",
+                            "example": 120.1663
+                        },
+                        "timeZone": {
+                            "description": "时区",
+                            "type": "string",
+                            "example": "Asia/Shanghai"
+                        }
+                    }
+                },
+                "subdivision": {
+                    "type": "object",
+                    "properties": {
+                        "isoCode": {
+                            "description": "省/州代码",
+                            "type": "string",
+                            "example": "ZJ"
+                        },
+                        "nameEn": {
+                            "description": "省/州英文名称",
+                            "type": "string",
+                            "example": "Zhejiang"
+                        },
+                        "nameZh": {
+                            "description": "省/州中文名称",
+                            "type": "string",
+                            "example": "浙江"
+                        }
+                    }
+                }
+            }
+        },
         "model.Log": {
             "description": "详细的WAF规则匹配记录，包含规则触发的详细信息和原始日志",
             "type": "object",
@@ -3026,6 +3139,11 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 9
                 },
+                "clientIp": {
+                    "description": "来源IP地址",
+                    "type": "string",
+                    "example": "192.168.1.1"
+                },
                 "createdAt": {
                     "description": "事件发生时间戳",
                     "type": "string",
@@ -3102,6 +3220,11 @@ const docTemplate = `{
                     "type": "string",
                     "example": "web_scanner"
                 },
+                "serverIp": {
+                    "description": "目标IP地址",
+                    "type": "string",
+                    "example": "10.0.0.1"
+                },
                 "severity": {
                     "description": "事件严重级别(0-5)",
                     "type": "integer",
@@ -3111,6 +3234,14 @@ const docTemplate = `{
                     "description": "来源IP地址",
                     "type": "string",
                     "example": "192.168.1.1"
+                },
+                "srcIpInfo": {
+                    "description": "来源IP地理位置信息",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.IPInfo"
+                        }
+                    ]
                 },
                 "srcPort": {
                     "description": "来源端口",
@@ -3156,8 +3287,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:2333",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "Simple-WAF API",
-	Description:      "简单的 Web 应用防火墙管理系统 API",
+	Title:            "RuiQi-WAF API",
+	Description:      "RuiQi 应用防火墙管理系统 API",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

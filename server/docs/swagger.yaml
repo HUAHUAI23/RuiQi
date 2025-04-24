@@ -459,6 +459,8 @@ definitions:
       thread:
         description: 线程数
         example: 4
+        maximum: 256
+        minimum: 0
         type: integer
     type: object
   dto.LoginResponseData:
@@ -851,6 +853,88 @@ definitions:
         example: "2023-01-01T12:00:00Z"
         type: string
     type: object
+  model.IPInfo:
+    description: IP地址地理位置详细信息，包含城市、区域、国家和ASN等数据
+    properties:
+      asn:
+        properties:
+          number:
+            description: ASN号码
+            example: 4134
+            type: integer
+          organization:
+            description: 组织名称
+            example: China Telecom
+            type: string
+        type: object
+      city:
+        properties:
+          nameEn:
+            description: 城市英文名称
+            example: Hangzhou
+            type: string
+          nameZh:
+            description: 城市中文名称
+            example: 杭州
+            type: string
+        type: object
+      continent:
+        properties:
+          nameEn:
+            description: 大洲英文名称
+            example: Asia
+            type: string
+          nameZh:
+            description: 大洲中文名称
+            example: 亚洲
+            type: string
+        type: object
+      country:
+        properties:
+          isoCode:
+            description: 国家ISO代码
+            example: CN
+            type: string
+          nameEn:
+            description: 国家英文名称
+            example: China
+            type: string
+          nameZh:
+            description: 国家中文名称
+            example: 中国
+            type: string
+        type: object
+      location:
+        properties:
+          latitude:
+            description: 纬度
+            example: 30.2943
+            type: number
+          longitude:
+            description: 经度
+            example: 120.1663
+            type: number
+          timeZone:
+            description: 时区
+            example: Asia/Shanghai
+            type: string
+        type: object
+      subdivision:
+        properties:
+          isoCode:
+            description: 省/州代码
+            example: ZJ
+            type: string
+          nameEn:
+            description: 省/州英文名称
+            example: Zhejiang
+            type: string
+          nameZh:
+            description: 省/州中文名称
+            example: 浙江
+            type: string
+        type: object
+    type: object
   model.Log:
     description: 详细的WAF规则匹配记录，包含规则触发的详细信息和原始日志
     properties:
@@ -1016,6 +1100,10 @@ definitions:
         description: 规则匹配准确度(0-10)
         example: 9
         type: integer
+      clientIp:
+        description: 来源IP地址
+        example: 192.168.1.1
+        type: string
       createdAt:
         description: 事件发生时间戳
         example: "2024-03-18T08:12:33Z"
@@ -1082,6 +1170,10 @@ definitions:
         description: 安全标记
         example: web_scanner
         type: string
+      serverIp:
+        description: 目标IP地址
+        example: 10.0.0.1
+        type: string
       severity:
         description: 事件严重级别(0-5)
         example: 2
@@ -1090,6 +1182,10 @@ definitions:
         description: 来源IP地址
         example: 192.168.1.1
         type: string
+      srcIpInfo:
+        allOf:
+        - $ref: '#/definitions/model.IPInfo'
+        description: 来源IP地理位置信息
       srcPort:
         description: 来源端口
         example: 52134
@@ -1115,13 +1211,13 @@ info:
   contact:
     email: support@swagger.io
     name: API Support
-    url: http://www.swagger.io/support
-  description: 简单的 Web 应用防火墙管理系统 API
+    url: https://github.com/HUAHUAI23/simple-waf
+  description: RuiQi 应用防火墙管理系统 API
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
-  title: Simple-WAF API
+  title: RuiQi-WAF API
   version: "1.0"
 paths:
   /api/runner/control:
