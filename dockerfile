@@ -25,6 +25,7 @@ COPY coraza-spoa/ ./coraza-spoa/
 COPY pkg/ ./pkg/
 COPY server/ ./server/
 COPY go.work ./
+COPY geo-ip/ ./geo-ip/
 # 复制前端构建产物到正确位置
 COPY --from=frontend-builder /app/dist ./server/web/dist
 # 使用Go的工作区功能进行构建
@@ -43,10 +44,8 @@ RUN apt-get update && \
     apt-get install -y haproxy=3.0.* && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-
 # 创建必要的目录
 WORKDIR /app
-
 # 从构建器复制Go二进制文件
 COPY --from=backend-builder /build/simple-waf-server .
 # 复制前端构建产物
@@ -54,14 +53,15 @@ COPY --from=backend-builder /build/server/web/dist ./web/dist
 # 复制Swagger文档文件
 COPY --from=backend-builder /build/server/docs/ ./docs/
 
+# 创建root用户家目录下的simple-waf目录并移动geo-ip文件夹进去
+RUN mkdir -p /root/simple-waf
+COPY --from=backend-builder /build/geo-ip/ /root/simple-waf/geo-ip/
+
 # 设置运行权限
 RUN chmod +x /app/simple-waf-server
-
 # 设置环境变量
 ENV GIN_MODE=release
-
 # 暴露端口
 EXPOSE 2333
-
 # 运行应用
 CMD ["/app/simple-waf-server"]

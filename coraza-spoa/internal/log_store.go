@@ -63,27 +63,63 @@ func (s *MongoLogStore) Close() {
 }
 
 // processLogs 处理日志存储循环
+// processLogs 处理日志存储循环，使用批处理提高效率
 func (s *MongoLogStore) processLogs(ctx context.Context) {
 	collection := s.mongo.Database(s.mongoDB).Collection(s.mongoCollection)
+
+	const (
+		batchSize     = 100
+		batchInterval = 3 * time.Second
+	)
+
+	batch := make([]interface{}, 0, batchSize)
+	ticker := time.NewTicker(batchInterval)
+	defer ticker.Stop()
+
+	// 刷新批次函数
+	flushBatch := func() {
+		if len(batch) == 0 {
+			return
+		}
+
+		// 使用带超时的上下文进行存储操作
+		storeCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		_, err := collection.InsertMany(storeCtx, batch)
+		cancel()
+
+		if err != nil {
+			s.logger.Error().Err(err).Int("batch_size", len(batch)).
+				Msg("failed to save firewall logs to MongoDB")
+		}
+
+		// 清空批次
+		batch = batch[:0]
+	}
 
 	for {
 		select {
 		case log, ok := <-s.logChan:
 			if !ok {
+				// 通道已关闭，刷新剩余的日志
+				flushBatch()
 				return // 通道已关闭
 			}
 
-			// 使用带超时的上下文进行存储操作
-			storeCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+			// 添加到批次
+			batch = append(batch, log)
 
-			_, err := collection.InsertOne(storeCtx, log)
-			cancel()
-
-			if err != nil {
-				s.logger.Error().Err(err).Msg("failed to save firewall log to MongoDB")
+			// 如果批次已满，立即刷新
+			if len(batch) >= batchSize {
+				flushBatch()
 			}
 
+		case <-ticker.C:
+			// 定时刷新，确保低流量情况下日志也能及时写入
+			flushBatch()
+
 		case <-ctx.Done():
+			// 上下文取消，刷新剩余的日志
+			flushBatch()
 			return
 		}
 	}
