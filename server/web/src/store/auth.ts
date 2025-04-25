@@ -8,7 +8,6 @@ export const useAuthStore = create<AuthState>()(
             user: null,
             token: null,
             isAuthenticated: false,
-            isAuthenticating: false,
             needPasswordReset: false,
 
             login: (token: string, user: User) => {

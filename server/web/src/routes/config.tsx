@@ -8,10 +8,10 @@ import { ProtectedRoute } from "@/feature/auth/components/ProtectedRoute"
 
 // 直接导入布局组件
 import { RootLayout } from "@/components/layout/root-layout"
-import { MonitorPage } from "@/pages/monitor/layout"
-import { RulesPage } from "@/pages/rule/layout"
-import { SettingPage } from "@/pages/setting/layout"
-import { LogAndEventPage } from "@/pages/logs/layout"
+import { MonitorLayOut } from "@/pages/monitor/layout"
+import { RulesLayOut } from "@/pages/rule/layout"
+import { SettingLayOut } from "@/pages/setting/layout"
+import { LogLayOut } from "@/pages/logs/layout"
 
 // 直接导入子组件
 import GlobalSettingPage from "@/pages/setting/pages/global-setting/page"
@@ -123,22 +123,22 @@ export function useRoutes(): RouteObject[] {
                 },
                 {
                     path: ROUTES.LOGS,
-                    element: <LogAndEventPage />,
+                    element: <LogLayOut />,
                     children: createChildRoutes(breadcrumbMap[ROUTES.LOGS])
                 },
                 {
                     path: ROUTES.MONITOR,
-                    element: <MonitorPage />,
+                    element: <MonitorLayOut />,
                     children: createChildRoutes(breadcrumbMap[ROUTES.MONITOR])
                 },
                 {
                     path: ROUTES.RULES,
-                    element: <RulesPage />,
+                    element: <RulesLayOut />,
                     children: createChildRoutes(breadcrumbMap[ROUTES.RULES])
                 },
                 {
                     path: ROUTES.SETTINGS,
-                    element: <SettingPage />,
+                    element: <SettingLayOut />,
                     children: createChildRoutes(breadcrumbMap[ROUTES.SETTINGS])
                 }
             ]
