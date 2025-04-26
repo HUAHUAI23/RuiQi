@@ -11,7 +11,7 @@ export default function LoginPage() {
     const { t } = useTranslation()
 
     // Get the redirect path from location state, or default to '/'
-    const from = location.state?.from?.pathname || '/'
+    const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/'
 
     useEffect(() => {
         // If already authenticated

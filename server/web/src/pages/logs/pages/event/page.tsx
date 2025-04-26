@@ -70,7 +70,19 @@ export default function EventsPage() {
     }
 
     const navigateToLogs = (domain: string, srcIp: string) => {
-        navigate(`/logs/protect?domain=${encodeURIComponent(domain)}&srcIp=${encodeURIComponent(srcIp)}`)
+        const params = new URLSearchParams();
+        params.append('domain', domain);
+        params.append('srcIp', srcIp);
+        
+        // 如果有设置时间，也传递过去
+        if (queryParams.startTime) {
+            params.append('startTime', queryParams.startTime);
+        }
+        if (queryParams.endTime) {
+            params.append('endTime', queryParams.endTime);
+        }
+        
+        navigate(`/logs/protect?${params.toString()}`);
     }
 
     const columns: ColumnDef<AttackEventAggregateResult>[] = [

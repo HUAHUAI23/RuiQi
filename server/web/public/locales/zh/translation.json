@@ -29,7 +29,7 @@
     "common": {
         "loading": "加载中...",
         "language": "选择语言",
-         "copied": "已复制"
+        "copied": "已复制"
     },
     "error": {
         "title": "发生了错误",
@@ -135,7 +135,7 @@
     "attackDetail": {
         "title": "攻击日志详情",
         "highRiskAttack": "高危攻击",
-        "overview": "攻击概述",
+        "overview": "攻击详情",
         "target": "攻击目标",
         "message": "攻击信息",
         "viewRuleDetail": "查看规则详情",
@@ -157,6 +157,8 @@
         "title": "通用设置",
         "description": "部分设置需要重启引擎才会生效，例如站点的变更，引擎的配置",
         "engine": {
+            "management": "引擎管理",
+            "setting": "引擎设置",
             "status": "引擎状态",
             "currentStatus": "当前状态:",
             "loading": "加载中...",

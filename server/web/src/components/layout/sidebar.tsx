@@ -1,43 +1,43 @@
+"use client"
+
 import { Link, useLocation, useNavigate } from "react-router"
 import { cn } from "@/lib/utils"
 import { Settings, Shield, BarChart2, FileText, LogOut } from "lucide-react"
 import { ROUTES } from "@/routes/constants"
-import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from "@/components/ui/card"
-import { useTranslation } from 'react-i18next'
-import { TFunction } from 'i18next'
+import { useTranslation } from "react-i18next"
+import type { TFunction } from "i18next"
 import { useAuthStore } from "@/store/auth"
 
-// 为每个导航项添加 display 选项
+// Create sidebar config with display options
 function createSidebarConfig(t: TFunction) {
     return [
         {
-            title: t('sidebar.monitor'),
+            title: t("sidebar.monitor"),
             icon: BarChart2,
             href: ROUTES.MONITOR,
-            display: true  // 控制是否显示此导航项
+            display: true,
         },
         {
-            title: t('sidebar.logs'),
+            title: t("sidebar.logs"),
             icon: FileText,
             href: ROUTES.LOGS,
-            display: true  // 控制是否显示此导航项
+            display: true,
         },
         {
-            title: t('sidebar.rules'),
+            title: t("sidebar.rules"),
             icon: Shield,
             href: ROUTES.RULES,
-            display: true  // 控制是否显示此导航项
+            display: true,
         },
         {
-            title: t('sidebar.settings'),
+            title: t("sidebar.settings"),
             icon: Settings,
             href: ROUTES.SETTINGS,
-            display: true  // 控制是否显示此导航项
-        }
+            display: true,
+        },
     ] as const
 }
 
-// 添加一个配置接口，允许传入对象来控制各导航项显示状态
 interface SidebarDisplayConfig {
     monitor?: boolean
     logs?: boolean
@@ -55,116 +55,97 @@ export function Sidebar({ displayConfig = {} }: SidebarProps) {
     const navigate = useNavigate()
     const { logout } = useAuthStore()
 
-    // 获取当前路径的第一级
-    const currentFirstLevelPath = '/' + location.pathname.split('/')[1]
+    // Get current first level path
+    const currentFirstLevelPath = "/" + location.pathname.split("/")[1]
 
-    // 使用 t 函数生成 sidebarItems，并应用 display 配置
-    const sidebarItems = createSidebarConfig(t).map(item => {
-        // 根据路径名确定哪个配置属性
-        let configKey: keyof SidebarDisplayConfig = 'monitor'
-        if (item.href === ROUTES.LOGS) configKey = 'logs'
-        if (item.href === ROUTES.RULES) configKey = 'rules'
-        if (item.href === ROUTES.SETTINGS) configKey = 'settings'
+    // Generate sidebar items with display config
+    const sidebarItems = createSidebarConfig(t).map((item) => {
+        // Determine which config property based on path
+        let configKey: keyof SidebarDisplayConfig = "monitor"
+        if (item.href === ROUTES.LOGS) configKey = "logs"
+        if (item.href === ROUTES.RULES) configKey = "rules"
+        if (item.href === ROUTES.SETTINGS) configKey = "settings"
 
-        // 如果配置中指定了该项的显示状态，则使用配置的值
-        // 否则使用默认值 true
-        const shouldDisplay = displayConfig[configKey] !== undefined ?
-            displayConfig[configKey] : item.display
+        // Use config value or default
+        const shouldDisplay = displayConfig[configKey] !== undefined ? displayConfig[configKey] : item.display
 
         return {
             ...item,
-            display: shouldDisplay
+            display: shouldDisplay,
         }
     })
 
     const handleLogout = () => {
         logout()
-        navigate('/login')
+        navigate("/login")
     }
 
     return (
-        <Card className="w-[17.69rem] min-w-[17.69rem] flex flex-col rounded-none gap-1 border-0 shadow-none overflow-auto">
-            <CardHeader className="pt-[0.0625rem] pb-0 gap-5 w-full items-center justify-center space-y-0 ">
-                <CardTitle
-                    className="w-[5rem] h-[5rem] rounded-full flex justify-center items-center"
-                >
-                    <img src="/logo.svg" alt="logo" className="w-[5rem] h-[5rem] rounded-full" />
-                </CardTitle>
-                {/* <CardDescription className="text-[1.75rem] font-bold leading-[1.4] tracking-[0.0125rem] normal-case bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-cyan-300 drop-shadow-sm"> */}
-                <CardDescription className="text-[1.75rem] font-bold leading-[1.4] tracking-[0.0125rem] normal-case bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-cyan-400 to-purple-300 drop-shadow-sm">
-                    {t('sidebar.title')}
-                </CardDescription>
-            </CardHeader>
+        <div
+            className="w-64 text-white flex flex-col border-r border-slate-200 relative overflow-hidden"
+            style={{
+                background: `linear-gradient(135deg, 
+                    rgba(147, 112, 219, 0.95) 0%, 
+                    rgba(138, 100, 208, 0.9) 50%, 
+                    rgba(123, 79, 214, 0.95) 100%)`,
+            }}
+        >
+            {/* Decorative background elements */}
+            <div className="absolute bottom-0 left-0 w-full h-48 overflow-hidden opacity-20 pointer-events-none">
+                <div className="absolute bottom-[-10px] left-[-10px] w-20 h-20 bg-white/30 rotate-45 transform animate-float"></div>
+                <div className="absolute bottom-[-5px] left-[40px] w-12 h-12 bg-white/20 rotate-12 transform animate-float-reverse"></div>
+                <div className="absolute bottom-[30px] left-[80px] w-16 h-16 bg-white/25 rotate-30 transform animate-float"></div>
+                <div className="absolute bottom-[10px] left-[120px] w-24 h-24 bg-white/15 rotate-20 transform animate-float-reverse"></div>
+                <div className="absolute bottom-[40px] left-[180px] w-14 h-14 bg-white/20 rotate-45 transform animate-float"></div>
+                <div className="absolute bottom-[-20px] left-[220px] w-20 h-20 bg-white/10 rotate-30 transform animate-float-reverse"></div>
+            </div>
 
-            <CardContent className="pt-[6rem] pl-[3rem] pb-0 pr-0">
-                <nav className="flex flex-col gap-[1.125rem]">
-                    {sidebarItems
-                        .filter(item => item.display) // 只显示 display 为 true 的项
-                        .map((item) => {
-                            const isActive = currentFirstLevelPath === item.href
-                            return (
-                                <Link
-                                    key={item.href}
-                                    to={item.href}
-                                    className="flex items-center gap-[1.125rem] group"
-                                >
-                                    <div className={cn(
-                                        "p-2 rounded-md w-[3.5rem] h-[3.5rem]",
-                                        "transform transition-all duration-500 ease-out",
-                                        isActive
-                                            ? "bg-zinc-600 scale-110"
-                                            : "bg-gray-100 group-hover:scale-105 group-hover:bg-gray-900/20"
-                                    )}>
-                                        <item.icon
-                                            strokeWidth={1}
-                                            className={cn(
-                                                "w-full h-full shrink-0",
-                                                "transform transition-all duration-500 ease-out",
-                                                isActive ? "stroke-white animate-icon-shake" : "stroke-gray-500 group-hover:stroke-gray-900"
-                                            )}
-                                        />
-                                    </div>
-                                    <span className={cn(
-                                        "text-[1.5rem] leading-[1.6] tracking-[0.0625rem] text-gray-600",
-                                        "transform transition-all duration-500 ease-out",
-                                        isActive
-                                            ? "font-bold translate-x-2"
-                                            : "font-normal group-hover:translate-x-1"
-                                    )}>
-                                        {item.title}
-                                    </span>
-                                </Link>
-                            )
-                        })}
-                </nav>
-            </CardContent>
-
-            <CardFooter className="pt-[6.25rem] pl-[3rem] pb-0 pr-0">
-                <div className="flex items-center gap-[1.125rem] cursor-pointer group" onClick={handleLogout}>
-                    <div className={cn(
-                        "p-2 rounded-md w-[3.5rem] h-[3.5rem]",
-                        "transform transition-all duration-500 ease-out",
-                        "bg-gray-100 group-hover:bg-gray-900/20 group-hover:scale-105",
-                        "group-active:bg-gray-900"
-                    )}>
-                        <LogOut strokeWidth={1}
-                            className={cn(
-                                "w-full h-full shrink-0",
-                                "transform transition-all duration-500 ease-out",
-                                "stroke-gray-500 group-hover:stroke-gray-900",
-                                "group-active:stroke-white"
-                            )} />
-                    </div>
-                    <span className={cn(
-                        "text-[1.5rem] leading-[1.6] tracking-[0.0625rem] text-gray-600",
-                        "transform transition-all duration-500 ease-out",
-                        "font-normal group-hover:translate-x-1",
-                        "group-active:font-bold group-active:translate-x-2"
-                    )}>
-                        {t('sidebar.logout')}
-                    </span>
+            {/* Logo and title */}
+            <div className="flex flex-col items-center gap-2 py-6 border-b border-white/10">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#A48BEA] to-[#8861DB] flex items-center justify-center shadow-lg animate-pulse-glow">
+                    <Shield className="w-8 h-8 text-white" />
                 </div>
-            </CardFooter>
-        </Card>
+                <div className="font-bold text-xl mt-2">
+                    <span className="text-[#E8DFFF]">RuiQi</span>
+                    <span className="text-[#8ED4FF]"> WAF</span>
+                </div>
+            </div>
+
+            {/* Navigation items */}
+            <div className="flex-1 py-4">
+                {sidebarItems
+                    .filter((item) => item.display)
+                    .map((item) => {
+                        const isActive = currentFirstLevelPath === item.href
+                        return (
+                            <Link
+                                key={item.href}
+                                to={item.href}
+                                className={cn(
+                                    "flex items-center gap-3 font-medium px-6 py-3 w-full group",
+                                    isActive
+                                        ? "bg-white/15 hover:bg-white/25 text-white"
+                                        : "text-white/90 hover:bg-white/10 hover:text-white",
+                                )}
+                            >
+                                <item.icon className="w-5 h-5 group-hover:animate-icon-shake" />
+                                {item.title}
+                            </Link>
+                        )
+                    })}
+            </div>
+
+            {/* Logout button */}
+            <div className="mt-auto py-4 border-t border-white/10 relative z-10">
+                <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 font-medium text-white/90 hover:bg-white/10 hover:text-white px-6 py-3 w-full group"
+                >
+                    <LogOut className="w-5 h-5 group-hover:animate-icon-shake" />
+                    {t("sidebar.logout")}
+                </button>
+                <div className="text-center text-xs text-white/60 mt-4 px-4">© 2025 RuiQi WAF. All Rights Reserved.</div>
+            </div>
+        </div>
     )
-} 
+}

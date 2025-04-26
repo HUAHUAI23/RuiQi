@@ -38,14 +38,22 @@ export default function LogsPage() {
         const params = new URLSearchParams(location.search)
         const domain = params.get('domain')
         const srcIp = params.get('srcIp')
+        const startTime = params.get('startTime')
+        const endTime = params.get('endTime')
 
-        if (domain || srcIp) {
+        if (domain || srcIp || startTime || endTime) {
             setQueryParams(produce(draft => {
                 if (domain) draft.domain = domain
                 else delete draft.domain
 
                 if (srcIp) draft.srcIp = srcIp
                 else delete draft.srcIp
+
+                if (startTime) draft.startTime = startTime
+                else delete draft.startTime
+
+                if (endTime) draft.endTime = endTime
+                else delete draft.endTime
             }))
         }
     }, [location.search])

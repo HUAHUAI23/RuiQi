@@ -4,22 +4,23 @@ import { Breadcrumb } from "./breadcrumb"
 
 export function RootLayout() {
     return (
-        <div className="flex h-screen py-4">
+        <div className="flex h-screen">
             <Sidebar
                 displayConfig={{
                     monitor: false,
                     logs: true,
                     rules: false,
-                    settings: true
+                    settings: true,
                 }}
             />
-            <div className="w-[0.125rem] min-w-[0.125rem] bg-gray-300" />
-            <main className="flex-1 flex flex-col px-6 h-full">
-                <Breadcrumb />
-                <div className="flex-1 overflow-auto h-full">
-                    <Outlet />
-                </div>
-            </main>
+            <div className="flex-1 overflow-auto bg-gradient-to-br from-slate-50 to-white hide-scrollbar">
+                <main className="flex flex-col h-full">
+                    <Breadcrumb />
+                    <div className="flex-1 overflow-auto">
+                        <Outlet />
+                    </div>
+                </main>
+            </div>
         </div>
     )
-} 
+}

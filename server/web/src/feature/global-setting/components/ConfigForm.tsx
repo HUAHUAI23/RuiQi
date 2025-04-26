@@ -134,7 +134,7 @@ export function ConfigForm({ config, isLoading }: ConfigFormProps) {
             <CardContent className="p-0 flex flex-col gap-8">
                 <div className="flex items-center gap-2">
                     <Shield className="h-5 w-5 text-primary" />
-                    <h3 className="text-lg font-medium">{t("globalSetting.config.generalConfig")}</h3>
+                    <h3 className="text-lg font-medium">{t("globalSetting.engine.setting")}</h3>
                 </div>
 
                 <Form {...form}>

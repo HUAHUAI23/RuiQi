@@ -236,7 +236,7 @@ export function CertificateTable() {
             <Card className="border-none shadow-none p-6 flex flex-col h-full">
                 {/* 标题和操作按钮 - 固定在顶部 */}
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold">{t("certificate.management")}</h2>
+                    <h2 className="text-xl font-semibold text-primary">{t("certificate.management")}</h2>
                     <div className="flex gap-2">
                         <AnimatedButton >
                             <Button

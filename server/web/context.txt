@@ -15,7 +15,7 @@ ui 使用的是 shadcn
 4. 使用 tailwindcss 进行样式开发
 5. 使用 shadcn 进行 ui 开发
 6. 使用 react-router "react-router": "^7.1.3", 进行路由开发
-7. 使用 tanstack query @tanstack/react-query@4 进行数据请求
+7. 使用 tanstack query @tanstack/react-query@5.69.0 进行数据请求
 8. 使用 tanstack table 进行表格开发
 9. 使用 zustand 进行状态管理
 10. 使用 react-hook-form 进行表单开发
@@ -114,8 +114,8 @@ src/validation/certificate.ts: 使用zod定义证书表单验证规则
 
 src/feature 功能模块 一些页面的功能，组件可以单独抽离出来
 src/feature 下是项目功能模块文件，负责项目的功能模块管理
-src/feature/auth/hook 下是认证功能模块的 tanstack query 数据管理封装 
 src/feature/auth 下是认证功能模块文件，负责项目的认证功能模块管理
+src/feature/auth/hook 下是认证功能模块的 tanstack query 数据管理封装 
 src/feature/auth/components 下是认证功能模块组件文件，负责项目的认证功能模块组件管理
 src/feature/auth/components/LoginForm.tsx 是登录表单组件文件，负责项目的登录表单组件管理
 src/feature/auth/components/PasswordResetForm.tsx 是密码重置表单组件文件，负责项目的密码重置表单组件管理

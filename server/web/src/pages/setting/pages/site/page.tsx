@@ -64,7 +64,7 @@ export default function SiteManagerPage() {
     return (
         <Card className="p-6 w-full h-full border-none shadow-none">
             <div className="flex justify-between items-center mb-6  bg-zinc-50 rounded-md p-4">
-                <h2 className="text-xl font-semibold">{t('site.management')}</h2>
+                <h2 className="text-xl font-semibold text-primary">{t('site.management')}</h2>
                 <div className="flex gap-2">
                     <AnimatedButton >
                         <Button
@@ -94,11 +94,11 @@ export default function SiteManagerPage() {
 
             <Tabs value={view} onValueChange={(v) => setView(v as 'grid' | 'table')}>
                 <TabsList className="mb-4">
-                    <TabsTrigger value="grid" className="flex items-center gap-1">
-                        <LayoutGrid className="h-4 w-4 text-primary fill-primary" />
+                    <TabsTrigger value="grid" className="flex items-center gap-1 group">
+                        <LayoutGrid className="h-4 w-4 group-data-[state=active]:text-primary group-data-[state=active]:fill-primary group-hover:text-primary group-hover:fill-primary transition-colors" />
                     </TabsTrigger>
-                    <TabsTrigger value="table" className="flex items-center gap-1">
-                        <AlignJustify className="h-4 w-4" />
+                    <TabsTrigger value="table" className="flex items-center gap-1 group">
+                        <AlignJustify className="h-4 w-4 group-data-[state=active]:text-primary group-data-[state=active]:fill-primary group-hover:text-primary group-hover:fill-primary transition-colors" />
                     </TabsTrigger>
                 </TabsList>
 

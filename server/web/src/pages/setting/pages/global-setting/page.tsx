@@ -1,36 +1,29 @@
-// src/pages/setting/pages/global-setting/page.tsx
-import { useEffect } from 'react'
-import { useConfigQuery } from '@/feature/global-setting/hooks/useConfig'
-import { useRunnerStatusQuery, useRunnerControl } from '@/feature/global-setting/hooks/useRunner'
-import { EngineStatus } from '@/feature/global-setting/components/EngineStatus'
-import { ConfigForm } from '@/feature/global-setting/components/ConfigForm'
-import { Settings } from 'lucide-react'
-import { AdvancedErrorDisplay } from '@/components/common/error/errorDisplay'
-import { Card } from '@/components/ui/card'
-import { AnimatedContainer } from '@/components/ui/animation/components/animated-container'
-import { useTranslation } from 'react-i18next'
+import { useEffect } from "react"
+import { useConfigQuery } from "@/feature/global-setting/hooks/useConfig"
+import { useRunnerStatusQuery, useRunnerControl } from "@/feature/global-setting/hooks/useRunner"
+import { EngineStatus } from "@/feature/global-setting/components/EngineStatus"
+import { ConfigForm } from "@/feature/global-setting/components/ConfigForm"
+import { Settings, Info } from "lucide-react"
+import { AdvancedErrorDisplay } from "@/components/common/error/errorDisplay"
+import { AnimatedContainer } from "@/components/ui/animation/components/animated-container"
+import { useTranslation } from "react-i18next"
 
 export default function GlobalSettingPage() {
     const { t } = useTranslation()
-    
+
     // 获取配置数据
-    const {
-        config,
-        isLoading: isConfigLoading,
-        error: configError,
-        refetch: refetchConfig
-    } = useConfigQuery()
+    const { config, isLoading: isConfigLoading, error: configError, refetch: refetchConfig } = useConfigQuery()
 
     // 获取运行器状态
-    const {
-        status,
-        isLoading: isStatusLoading,
-        error: statusError,
-        refetch: refetchStatus
-    } = useRunnerStatusQuery()
+    const { status, isLoading: isStatusLoading, error: statusError, refetch: refetchStatus } = useRunnerStatusQuery()
 
     // 运行器控制
-    const { controlRunner, isLoading: isControlLoading, error: controlError, clearError: clearControlError } = useRunnerControl()
+    const {
+        controlRunner,
+        isLoading: isControlLoading,
+        error: controlError,
+        clearError: clearControlError,
+    } = useRunnerControl()
 
     // 当页面加载时获取最新配置
     useEffect(() => {
@@ -42,23 +35,23 @@ export default function GlobalSettingPage() {
     // 运行器控制处理函数
     const handleStart = () => {
         clearControlError()
-        controlRunner('start')
+        controlRunner("start")
     }
     const handleStop = () => {
         clearControlError()
-        controlRunner('stop')
+        controlRunner("stop")
     }
     const handleRestart = () => {
         clearControlError()
-        controlRunner('restart')
+        controlRunner("restart")
     }
     const handleForceStop = () => {
         clearControlError()
-        controlRunner('force_stop')
+        controlRunner("force_stop")
     }
     const handleReload = () => {
         clearControlError()
-        controlRunner('reload')
+        controlRunner("reload")
     }
 
     // 根据错误类型选择适当的重试函数
@@ -69,50 +62,53 @@ export default function GlobalSettingPage() {
 
     return (
         <AnimatedContainer variant="smooth" className="h-full overflow-y-auto hide-scrollbar p-0">
-            <div className="container p-6  max-w-2xl flex flex-col gap-10">
-                {/* header */}
-                <Card className="border-none shadow-none gap-4 flex flex-col bg-zinc-50 rounded-md p-4">
-                    <div className="flex items-center gap-2">
-                        <Settings className="h-5 w-5 text-primary" />
-                        <h2 className="text-xl font-semibold">{t("globalSetting.title")}</h2>
-                    </div>
-                    <p className="text-muted-foreground">
-                        {t("globalSetting.description")}
-                    </p>
-                </Card>
-
-
+            <div className="max-w-5xl p-6 center mx-auto">
                 {/* 错误处理：优先显示配置错误，其次显示状态错误 */}
                 {(configError || statusError) && (
-                    <AdvancedErrorDisplay
-                        error={configError || statusError}
-                        onRetry={handleRetry}
-                    />
+                    <AdvancedErrorDisplay error={configError || statusError} onRetry={handleRetry} />
                 )}
-                {controlError && (
-                    <AdvancedErrorDisplay
-                        error={controlError}
-                    />
-                )}
+                {controlError && <AdvancedErrorDisplay error={controlError} />}
 
-                {/* 引擎状态和配置表单 */}
+                {/* 通用设置 */}
+                <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mb-6 animate-fade-in-up">
+                    <div className="space-y-3 mb-8">
+                        <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                            <Settings className="w-5 h-5 text-iconStroke" />
+                            <h3 className="text-lg font-medium">{t("globalSetting.config.generalConfig")}</h3>
+                            {/* <h3 className="text-base font-medium text-slate-700">{t("globalSetting.title")}</h3> */}
+                        </div>
+                        <div className="pl-7">
+                            <p className="text-sm text-slate-500">{t("globalSetting.description")}</p>
+                        </div>
+                    </div>
 
-                <div className="pb-6  border-none shadow-none flex flex-col gap-8">
-                    <EngineStatus
-                        status={status}
-                        isLoading={isStatusLoading}
-                        onStart={handleStart}
-                        onStop={handleStop}
-                        onRestart={handleRestart}
-                        onForceStop={handleForceStop}
-                        onReload={handleReload}
-                        isControlLoading={isControlLoading}
-                    />
+                    {/* 引擎状态 */}
+                    <div className="space-y-3 mb-8">
+                        <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                            <Info className="w-5 h-5 text-iconStroke" />
+                            <h3 className="text-base font-medium text-slate-700">{t("globalSetting.engine.management")}</h3>
+                        </div>
+                        <div className="pl-7">
+                            <EngineStatus
+                                status={status}
+                                isLoading={isStatusLoading}
+                                onStart={handleStart}
+                                onStop={handleStop}
+                                onRestart={handleRestart}
+                                onForceStop={handleForceStop}
+                                onReload={handleReload}
+                                isControlLoading={isControlLoading}
+                            />
+                        </div>
+                    </div>
+                </div>
 
-                    <ConfigForm
-                        config={config}
-                        isLoading={isConfigLoading}
-                    />
+                {/* 配置表单 */}
+                <div
+                    className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mb-6 animate-fade-in-up"
+                    style={{ animationDelay: "0.1s" }}
+                >
+                    <ConfigForm config={config} isLoading={isConfigLoading} />
                 </div>
             </div>
         </AnimatedContainer>

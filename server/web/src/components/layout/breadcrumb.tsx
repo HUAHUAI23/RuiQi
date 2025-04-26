@@ -1,8 +1,8 @@
 import { useLocation, Link } from "react-router"
 import { useBreadcrumbMap } from "@/routes/config"
-import { RoutePath } from "@/routes/constants"
+import type { RoutePath } from "@/routes/constants"
 import { cn } from "@/lib/utils"
-import { Slash } from "lucide-react"
+import { ChevronRight } from "lucide-react"
 
 export function Breadcrumb() {
   const location = useLocation()
@@ -15,35 +15,35 @@ export function Breadcrumb() {
   const currentPath = subPath || config.defaultPath
 
   return (
-    <div className="flex items-center p-0 h-14 mb-6">
-      {config.items.map((item, index) => (
-        <div key={item.path} className="flex items-center">
-          {index > 0 && <div className="w-4 h-4 p-0 mx-2">
-            <Slash className="text-muted-foreground w-full h-full [transform:rotate(-25deg)]" />
-          </div>}
-          <Link
-            to={`/${mainPath}/${item.path}`}
-            className={cn(
-              "transition-colors duration-200",
-              index === 0
-                ? cn(
-                  "text-2xl font-semibold",
-                  currentPath === item.path
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-muted-foreground/80"
-                )
-                : cn(
-                  "text-lg",
-                  currentPath === item.path
-                    ? "text-primary font-medium"
-                    : "text-muted-foreground hover:text-muted-foreground/80"
-                )
-            )}
-          >
-            {item.title}
-          </Link>
+    <div className="bg-white border-b border-slate-100 shadow-sm">
+      <div className="px-6 py-4">
+        <div className="flex items-center gap-2">
+          {config.items.map((item, index) => (
+            <div key={item.path} className="flex items-center">
+              {index > 0 && <ChevronRight className="w-4 h-4 mx-2 text-primary/60" />}
+              <Link
+                to={`/${mainPath}/${item.path}`}
+                className={cn(
+                  "transition-colors duration-200",
+                  index === 0
+                    ? cn(
+                        "text-lg font-medium",
+                        currentPath === item.path ? "text-primary" : "text-slate-600 hover:text-primary",
+                      )
+                    : cn(
+                        "text-lg",
+                        currentPath === item.path
+                          ? "text-primary font-medium"
+                          : "text-slate-600 hover:text-primary",
+                      ),
+                )}
+              >
+                {item.title}
+              </Link>
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
     </div>
   )
-} 
+}

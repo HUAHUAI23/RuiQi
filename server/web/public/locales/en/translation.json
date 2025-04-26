@@ -135,7 +135,7 @@
     "attackDetail": {
         "title": "Attack Log Details",
         "highRiskAttack": "High Risk Attack",
-        "overview": "Attack Overview",
+        "overview": "Attack Detail",
         "target": "Attack Target",
         "message": "Attack Information",
         "viewRuleDetail": "View Rule Details",
@@ -157,6 +157,8 @@
         "title": "General Settings",
         "description": "Some settings require restarting the engine to take effect, such as site changes and engine configurations",
         "engine": {
+            "management": "Engine Management",
+            "setting": "Engine Settings",
             "status": "Engine Status",
             "currentStatus": "Current Status:",
             "loading": "Loading...",
