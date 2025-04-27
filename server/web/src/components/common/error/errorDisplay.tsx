@@ -124,7 +124,7 @@ export const AdvancedErrorDisplay = ({
 
                         <CollapsibleContent>
                             <div className="mt-3 p-3 bg-red-50 rounded-md text-xs font-mono overflow-auto">
-                                <p>{t('error.message', '错误信息')}: {String(errorMessage)}</p>
+                                <p className="break-words overflow-hidden max-h-[100px]">{String(errorMessage)}</p>
                                 {errorCode && <p className="mt-1">{t('error.code', '错误代码')}: {errorCode}</p>}
                                 {requestId && <p className="mt-1">{t('error.requestId', '请求ID')}: {requestId}</p>}
                                 {formattedErrorDetail && (
@@ -192,7 +192,7 @@ export const AdvancedErrorDisplay = ({
 
                     <CollapsibleContent>
                         <div className="mt-3 p-3 bg-red-50 rounded text-xs font-mono overflow-auto">
-                            <p>{t('error.message', '错误信息')}: {String(errorMessage)}</p>
+                            <p className="break-words overflow-hidden max-h-[100px]">{String(errorMessage)}</p>
                             {errorCode && <p className="mt-1">{t('error.code', '错误代码')}: {errorCode}</p>}
                             {requestId && <p className="mt-1">{t('error.requestId', '请求ID')}: {requestId}</p>}
                             {formattedErrorDetail && (
