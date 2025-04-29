@@ -132,7 +132,7 @@ export function PasswordResetForm() {
 
                         <Button
                             type="submit"
-                            className="w-full mt-6 py-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg animate-fade-in-up [animation-delay:450ms] hover:translate-y-[-2px]"
+                            className="w-full mt-6 py-6 text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg animate-fade-in-up [animation-delay:450ms] hover:translate-y-[-2px]"
                             disabled={isLoading}
                         >
                             {isLoading ? t('auth.submitting') : t('auth.resetPassword')}

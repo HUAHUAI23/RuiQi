@@ -113,7 +113,7 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
             cell: ({ row }) => {
                 const isInactive = !row.original.activeStatus
                 return (
-                    <div className={`font-medium ${isInactive ? 'text-gray-400' : ''}`}>
+                    <div className={`font-medium ${isInactive ? 'text-gray-400 dark:text-gray-500' : 'dark:text-slate-200'}`}>
                         {row.original.name}
                     </div>
                 )
@@ -125,7 +125,7 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
             cell: ({ row }) => {
                 const isInactive = !row.original.activeStatus
                 return (
-                    <div className={`flex items-center gap-1 ${isInactive ? 'text-gray-400' : ''}`}>
+                    <div className={`flex items-center gap-1 ${isInactive ? 'text-gray-400 dark:text-gray-500' : 'dark:text-slate-200'}`}>
                         <Globe className="h-3.5 w-3.5" />
                         <span>{row.original.domain}</span>
                     </div>
@@ -138,7 +138,7 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
             cell: ({ row }) => {
                 const isInactive = !row.original.activeStatus
                 return (
-                    <div className={isInactive ? 'text-gray-400' : ''}>
+                    <div className={isInactive ? 'text-gray-400 dark:text-gray-500' : 'dark:text-slate-200'}>
                         {row.original.listenPort}
                     </div>
                 )
@@ -152,7 +152,7 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
                 const servers = row.original.backend.servers
 
                 return (
-                    <div className={`flex flex-col gap-1 ${isInactive ? 'text-gray-400' : ''}`}>
+                    <div className={`flex flex-col gap-1 ${isInactive ? 'text-gray-400 dark:text-gray-500' : 'dark:text-slate-300'}`}>
                         {servers.map((server, index) => (
                             <div key={index} className="flex items-center gap-1 text-xs">
                                 <Server className="h-3 w-3" />
@@ -174,13 +174,17 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
                 const enabled = row.original.enableHTTPS
 
                 return (
-                    <div className={`${isInactive ? 'text-gray-400' : ''}`}>
+                    <div className={`${isInactive ? 'text-gray-400 dark:text-gray-500' : ''}`}>
                         {enabled ? (
-                            <Badge variant="outline" className="bg-blue-50 border-blue-200 text-blue-700 rounded-full px-3 py-1 flex items-center gap-1">
+                            <Badge variant="outline" className="bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800/60 dark:text-blue-300 rounded-full px-3 py-1 flex items-center gap-1">
                                 <span className="font-medium whitespace-nowrap">{t('site.enabled')}</span>
                             </Badge>
                         ) : (
-                            <Badge variant="outline" className={`rounded-full px-3 py-1 ${isInactive ? 'bg-gray-200 border-gray-200 text-gray-700' : 'bg-slate-100 border-slate-200 text-slate-700'}`}>
+                            <Badge variant="outline" className={`rounded-full px-3 py-1 ${
+                                isInactive 
+                                    ? 'bg-gray-200 border-gray-200 text-gray-700 dark:bg-gray-800/70 dark:border-gray-700 dark:text-gray-300' 
+                                    : 'bg-slate-100 border-slate-200 text-slate-700 dark:bg-slate-800/70 dark:border-slate-700 dark:text-slate-300'
+                            }`}>
                                 <span className="font-medium whitespace-nowrap">{t('site.disabled')}</span>
                             </Badge>
                         )}
@@ -197,13 +201,13 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
                 return (
                     <div className="flex items-center gap-1">
                         {isActive ? (
-                            <Badge variant="outline" className="bg-green-300 border-green-300 text-green-700 rounded-full px-3 py-1 flex items-center gap-1">
-                                <CheckCircle className="h-3 w-3 text-green-600" />
+                            <Badge variant="outline" className="bg-green-300 border-green-300 text-green-700 dark:bg-green-900/50 dark:border-green-800 dark:text-green-300 rounded-full px-3 py-1 flex items-center gap-1">
+                                <CheckCircle className="h-3 w-3 text-green-600 dark:text-green-300" />
                                 <span className="font-medium whitespace-nowrap">{t('site.active')}</span>
                             </Badge>
                         ) : (
-                            <Badge variant="outline" className="bg-gray-200 border-gray-200 text-gray-700 rounded-full px-3 py-1 flex items-center gap-1">
-                                <XCircle className="h-3 w-3 text-gray-600" />
+                            <Badge variant="outline" className="bg-gray-200 border-gray-200 text-gray-700 dark:bg-gray-800/70 dark:border-gray-700 dark:text-gray-300 rounded-full px-3 py-1 flex items-center gap-1">
+                                <XCircle className="h-3 w-3 text-gray-600 dark:text-gray-300" />
                                 <span className="font-medium whitespace-nowrap">{t('site.inactive')}</span>
                             </Badge>
                         )}
@@ -221,22 +225,34 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
 
                 if (!wafEnabled) {
                     return (
-                        <Badge variant="outline" className={`rounded-full px-3 py-1 ${isInactive ? 'bg-gray-200 border-gray-200 text-gray-700' : 'bg-slate-100 border-slate-200 text-slate-700'}`}>
+                        <Badge variant="outline" className={`rounded-full px-3 py-1 ${
+                            isInactive 
+                                ? 'bg-gray-200 border-gray-200 text-gray-700 dark:bg-gray-800/70 dark:border-gray-700 dark:text-gray-300' 
+                                : 'bg-slate-100 border-slate-200 text-slate-700 dark:bg-slate-800/70 dark:border-slate-700 dark:text-slate-300'
+                        }`}>
                             <span className="font-medium whitespace-nowrap">{t('site.disabled')}</span>
                         </Badge>
                     )
                 }
 
                 return (
-                    <div className={`flex items-center gap-1 ${isInactive ? 'text-gray-400' : ''}`}>
+                    <div className={`flex items-center gap-1 ${isInactive ? 'text-gray-400 dark:text-gray-500' : ''}`}>
                         {wafMode === WAFMode.Protection ? (
-                            <Badge variant="outline" className={`flex items-center gap-1 rounded-full px-3 py-1 ${isInactive ? 'bg-gray-200 border-gray-200 text-gray-700' : 'bg-sky-300 border-sky-300 text-sky-700'}`}>
-                                <Shield className="h-3 w-3 text-sky-700" />
+                            <Badge variant="outline" className={`flex items-center gap-1 rounded-full px-3 py-1 ${
+                                isInactive 
+                                    ? 'bg-gray-200 border-gray-200 text-gray-700 dark:bg-gray-800/70 dark:border-gray-700 dark:text-gray-300' 
+                                    : 'bg-sky-300 border-sky-300 text-sky-700 dark:bg-sky-900/40 dark:border-sky-800/70 dark:text-sky-300'
+                            }`}>
+                                <Shield className="h-3 w-3 text-sky-700 dark:text-sky-300" />
                                 <span className="font-medium whitespace-nowrap">{t('site.dialog.protectionMode')}</span>
                             </Badge>
                         ) : (
-                            <Badge variant="outline" className={`flex items-center gap-1 rounded-full px-3 py-1 ${isInactive ? 'bg-gray-200 border-gray-200 text-gray-700' : 'bg-yellow-300 border-yellow-300 text-yellow-700'}`}>
-                                <ShieldAlert className="h-3 w-3 text-yellow-700" />
+                            <Badge variant="outline" className={`flex items-center gap-1 rounded-full px-3 py-1 ${
+                                isInactive 
+                                    ? 'bg-gray-200 border-gray-200 text-gray-700 dark:bg-gray-800/70 dark:border-gray-700 dark:text-gray-300' 
+                                    : 'bg-yellow-300 border-yellow-300 text-yellow-700 dark:bg-yellow-900/40 dark:border-yellow-800/70 dark:text-yellow-300'
+                            }`}>
+                                <ShieldAlert className="h-3 w-3 text-yellow-700 dark:text-yellow-300" />
                                 <span className="font-medium whitespace-nowrap">{t('site.dialog.observationMode')}</span>
                             </Badge>
                         )}
@@ -249,7 +265,7 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
             cell: ({ row }) => (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" className="hover:bg-slate-100 dark:hover:bg-slate-800/70">
                             <MoreHorizontal className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -262,7 +278,7 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                             onClick={() => onDelete(row.original.id)}
-                            className="text-red-600"
+                            className="text-red-600 dark:text-red-400"
                         >
                             <Trash2 className="mr-2 h-4 w-4" />
                             {t('site.delete')}

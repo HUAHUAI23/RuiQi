@@ -125,19 +125,19 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
                 >
                     <Card
                         className={`
-        p-5 rounded-md shadow-none h-full relative group
+        p-5 rounded-md shadow-none h-full relative group transition-all duration-200
         ${isInactive || !site.wafEnabled
-                                ? 'bg-gradient-to-r from-slate-100 to-white'
+                                ? 'bg-gradient-to-r from-slate-100 to-white dark:from-zinc-800/60 dark:to-accent/40'
                                 : site.wafMode === WAFMode.Protection
-                                    ? 'bg-gradient-to-r from-green-50 to-white'
+                                    ? 'bg-gradient-to-r from-green-50 to-white dark:from-green-950/20 dark:to-accent/50'
                                     : site.wafMode === WAFMode.Observation
-                                        ? 'bg-gradient-to-r from-amber-50 to-white'
-                                        : 'bg-gradient-to-r from-slate-100 to-white'
+                                        ? 'bg-gradient-to-r from-amber-50 to-white dark:from-amber-900/20 dark:to-accent/50'
+                                        : 'bg-gradient-to-r from-slate-100 to-white dark:from-zinc-800/60 dark:to-accent/40'
                             }
     `}
                     >
                         <div className="flex justify-between items-start mb-4">
-                            <div className={`flex flex-col ${isInactive ? 'text-gray-400' : 'text-slate-700'}`}>
+                            <div className={`flex flex-col ${isInactive ? 'text-gray-400 dark:text-gray-500' : 'text-slate-700 dark:text-slate-200'}`}>
                                 <h3 className="font-medium text-lg">{site.name}</h3>
                                 <div className="flex items-center text-sm mt-1">
                                     <Globe className="h-3.5 w-3.5 mr-1" />
@@ -148,7 +148,7 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
                             <div>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="rounded-full bg-slate-100 hover:bg-slate-200">
+                                        <Button variant="ghost" size="icon" className="rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700">
                                             <MoreHorizontal className="h-4 w-4" />
                                         </Button>
                                     </DropdownMenuTrigger>
@@ -161,7 +161,7 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                             onClick={() => onDelete(site.id)}
-                                            className="text-red-600"
+                                            className="text-red-600 dark:text-red-400"
                                         >
                                             <Trash2 className="mr-2 h-4 w-4" />
                                             {t("site.delete")}
@@ -176,20 +176,24 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
                             <div className="flex flex-wrap gap-2">
                                 {/* 站点状态 */}
                                 {site.activeStatus ? (
-                                    <Badge variant="outline" className="flex items-center gap-1 bg-green-300 border-green-300 text-green-700 rounded-full px-3 py-1">
-                                        <CheckCircle className="h-3 w-3 text-green-600" />
+                                    <Badge variant="outline" className="flex items-center gap-1 bg-green-300 border-green-300 text-green-700 dark:bg-green-900/50 dark:border-green-800 dark:text-green-300 rounded-full px-3 py-1">
+                                        <CheckCircle className="h-3 w-3 text-green-600 dark:text-green-300" />
                                         <span className="font-medium">{t("site.active")}</span>
                                     </Badge>
                                 ) : (
-                                    <Badge variant="outline" className="flex items-center gap-1 bg-gray-200 border-gray-200 text-gray-700 rounded-full px-3 py-1">
-                                        <XCircle className="h-3 w-3 text-gray-600" />
+                                    <Badge variant="outline" className="flex items-center gap-1 bg-gray-200 border-gray-200 text-gray-700 dark:bg-gray-800/70 dark:border-gray-700 dark:text-gray-300 rounded-full px-3 py-1">
+                                        <XCircle className="h-3 w-3 text-gray-600 dark:text-gray-300" />
                                         <span className="font-medium">{t("site.inactive")}</span>
                                     </Badge>
                                 )}
 
                                 {/* HTTPS状态 */}
                                 {site.enableHTTPS ? (
-                                    <Badge variant="outline" className={`flex items-center gap-1 rounded-full px-3 py-1 ${isInactive ? 'bg-gray-200 border-gray-200 text-gray-700' : 'bg-blue-50 border-blue-200 text-blue-700'}`}>
+                                    <Badge variant="outline" className={`flex items-center gap-1 rounded-full px-3 py-1 ${
+                                        isInactive 
+                                            ? 'bg-gray-200 border-gray-200 text-gray-700 dark:bg-gray-800/70 dark:border-gray-700 dark:text-gray-300' 
+                                            : 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800/60 dark:text-blue-300'
+                                    }`}>
                                         <LinkIcon className="h-3 w-3" />
                                         <span className="font-medium">HTTPS</span>
                                     </Badge>
@@ -198,14 +202,22 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
                                 {/* WAF状态 */}
                                 {site.wafEnabled && (
                                     site.wafMode === WAFMode.Protection ? (
-                                        <Badge variant="outline" className={`flex items-center gap-1 rounded-full px-3 py-1 ${isInactive ? 'bg-gray-200 border-gray-200 text-gray-700' : 'bg-sky-300 border-sky-300 text-sky-700'}`}>
-                                            <Shield className="h-3 w-3 text-sky-700" />
+                                        <Badge variant="outline" className={`flex items-center gap-1 rounded-full px-3 py-1 ${
+                                            isInactive 
+                                                ? 'bg-gray-200 border-gray-200 text-gray-700 dark:bg-gray-800/70 dark:border-gray-700 dark:text-gray-300' 
+                                                : 'bg-sky-300 border-sky-300 text-sky-700 dark:bg-sky-900/40 dark:border-sky-800/70 dark:text-sky-300'
+                                        }`}>
+                                            <Shield className="h-3 w-3 text-sky-700 dark:text-sky-300" />
                                             <span className="font-medium">{t("site.dialog.protectionMode")}</span>
                                         </Badge>
 
                                     ) : (
-                                        <Badge variant="outline" className={`flex items-center gap-1 rounded-full px-3 py-1 ${isInactive ? 'bg-gray-200 border-gray-200 text-gray-700' : 'bg-yellow-300 border-yellow-300 text-yellow-700'}`}>
-                                            <ShieldAlert className="h-3 w-3 text-yellow-700" />
+                                        <Badge variant="outline" className={`flex items-center gap-1 rounded-full px-3 py-1 ${
+                                            isInactive 
+                                                ? 'bg-gray-200 border-gray-200 text-gray-700 dark:bg-gray-800/70 dark:border-gray-700 dark:text-gray-300' 
+                                                : 'bg-yellow-300 border-yellow-300 text-yellow-700 dark:bg-yellow-900/40 dark:border-yellow-800/70 dark:text-yellow-300'
+                                        }`}>
+                                            <ShieldAlert className="h-3 w-3 text-yellow-700 dark:text-yellow-300" />
                                             <span className="font-medium">{t("site.dialog.observationMode")}</span>
                                         </Badge>
                                     )
@@ -213,7 +225,7 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
                             </div>
 
                             {/* 上游服务器信息 */}
-                            <div className={`space-y-1 ${isInactive ? 'text-gray-400' : 'text-slate-700'}`}>
+                            <div className={`space-y-1 ${isInactive ? 'text-gray-400 dark:text-gray-500' : 'text-slate-700 dark:text-slate-300'}`}>
                                 <div className="text-sm font-medium">{t("site.card.upstreamServers")}</div>
                                 <div className="space-y-1">
                                     {site.backend.servers.map((server, index) => (
@@ -230,7 +242,7 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
 
                             {/* 如果有证书，显示证书信息 */}
                             {site.enableHTTPS && site.certificate && (
-                                <div className={`space-y-1 ${isInactive ? 'text-gray-400' : 'text-slate-700'}`}>
+                                <div className={`space-y-1 ${isInactive ? 'text-gray-400 dark:text-gray-500' : 'text-slate-700 dark:text-slate-300'}`}>
                                     <div className="text-sm font-medium">{t("site.card.certInfo")}</div>
                                     <div className="text-xs pl-2">
                                         <span>{site.certificate.certName}</span>

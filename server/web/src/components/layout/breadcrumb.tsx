@@ -15,7 +15,7 @@ export function Breadcrumb() {
   const currentPath = subPath || config.defaultPath
 
   return (
-    <div className="bg-white border-b border-slate-100 shadow-sm">
+    <div className="bg-white dark:bg-background border-b border-slate-100 dark:border-background shadow-sm">
       <div className="px-6 py-4">
         <div className="flex items-center gap-2">
           {config.items.map((item, index) => (

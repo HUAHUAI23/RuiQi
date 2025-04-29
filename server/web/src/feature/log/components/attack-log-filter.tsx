@@ -78,7 +78,7 @@ export function AttackLogFilter({ onFilter, onRefresh, defaultValues = {} }: Att
 
 
     return (
-        <Card className="p-4 bg-zinc-50 border-none shadow-none rounded-sm">
+        <Card className="p-4 bg-zinc-50 dark:bg-muted/30 border-none shadow-none rounded-sm">
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(handleSubmit)}>
                     <div className="flex items-center justify-between mb-2">
@@ -148,7 +148,7 @@ export function AttackLogFilter({ onFilter, onRefresh, defaultValues = {} }: Att
                                                 placeholder={t('ruleIdPlaceholder')}
                                                 {...field}
                                                 onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
-                                                className="h-8 text-sm bg-white"
+                                                className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30"
                                             />
                                         </FormControl>
                                     </FormItem>
@@ -162,7 +162,7 @@ export function AttackLogFilter({ onFilter, onRefresh, defaultValues = {} }: Att
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
                                         <FormLabel className="text-xs">{t('domain')}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder={t('domainPlaceholder')} {...field} className="h-8 text-sm bg-white" />
+                                            <Input placeholder={t('domainPlaceholder')} {...field} className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30" />
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -175,7 +175,7 @@ export function AttackLogFilter({ onFilter, onRefresh, defaultValues = {} }: Att
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
                                         <FormLabel className="text-xs">{t('srcIp')}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder={t('ipPlaceholder')} {...field} className="h-8 text-sm bg-white" />
+                                            <Input placeholder={t('ipPlaceholder')} {...field} className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30" />
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -188,7 +188,7 @@ export function AttackLogFilter({ onFilter, onRefresh, defaultValues = {} }: Att
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
                                         <FormLabel className="text-xs">{t('dstIp')}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder={t('ipPlaceholder')} {...field} className="h-8 text-sm bg-white" />
+                                            <Input placeholder={t('ipPlaceholder')} {...field} className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30" />
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -206,7 +206,7 @@ export function AttackLogFilter({ onFilter, onRefresh, defaultValues = {} }: Att
                                                 placeholder={t('portPlaceholder')}
                                                 {...field}
                                                 onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
-                                                className="h-8 text-sm bg-white"
+                                                className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30"
                                             />
                                         </FormControl>
                                     </FormItem>
@@ -225,7 +225,7 @@ export function AttackLogFilter({ onFilter, onRefresh, defaultValues = {} }: Att
                                                 placeholder={t('portPlaceholder')}
                                                 {...field}
                                                 onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
-                                                className="h-8 text-sm bg-white"
+                                                className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30"
                                             />
                                         </FormControl>
                                     </FormItem>
@@ -239,7 +239,7 @@ export function AttackLogFilter({ onFilter, onRefresh, defaultValues = {} }: Att
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
                                         <FormLabel className="text-xs">{t('requestId')}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder={t('requestIdPlaceholder')} {...field} className="h-8 text-sm bg-white" />
+                                            <Input placeholder={t('requestIdPlaceholder')} {...field} className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30" />
                                         </FormControl>
                                     </FormItem>
                                 )}

@@ -23,12 +23,14 @@ interface DeleteSiteDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     siteId: string | null
+    onDeleted?: () => void
 }
 
 export function DeleteSiteDialog({
     open,
     onOpenChange,
-    siteId
+    siteId,
+    onDeleted
 }: DeleteSiteDialogProps) {
     const { t } = useTranslation()
     const { deleteSite, isLoading } = useDeleteSite()
@@ -39,6 +41,7 @@ export function DeleteSiteDialog({
         deleteSite(siteId, {
             onSettled: () => {
                 onOpenChange(false)
+                onDeleted?.()
             }
         })
     }

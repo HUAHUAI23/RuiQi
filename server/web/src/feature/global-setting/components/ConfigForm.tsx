@@ -22,11 +22,13 @@ import {
     Code,
     Folder,
     Terminal,
-    Globe
+    Globe,
+    Palette
 } from 'lucide-react'
 import { useUpdateConfig, getEngineNameConstant } from '../hooks/useConfig'
 import { AdvancedErrorDisplay } from '@/components/common/error/errorDisplay'
 import { LanguageSelector } from '@/components/common/language-selector'
+import { ThemeToggle } from '@/components/common/theme-toggle'
 import { useTranslation } from 'react-i18next'
 import { AnimatedButton } from '@/components/ui/animation/components/animated-button'
 
@@ -167,7 +169,7 @@ export function ConfigForm({ config, isLoading }: ConfigFormProps) {
                                         {t("globalSetting.config.threadsDescription")}
                                     </FormDescription>
                                     {showThreadWarning && (
-                                        <Alert variant="default" className="mt-2 bg-zinc-50 border-none shadow-none">
+                                        <Alert variant="default" className="mt-2 bg-zinc-50 dark:bg-muted border-none shadow-none">
                                             <AlertCircle className="h-4 w-4" />
                                             <AlertDescription>
                                                 {t("globalSetting.config.threadsWarning")}
@@ -242,7 +244,7 @@ export function ConfigForm({ config, isLoading }: ConfigFormProps) {
                                     <FormControl>
                                         <Textarea
                                             placeholder={t("globalSetting.config.engineDirectivesPlaceholder")}
-                                            className="min-h-[200px] font-mono text-sm"
+                                            className="min-h-[200px] font-mono text-sm scrollbar-custom"
                                             {...field}
                                         />
                                     </FormControl>
@@ -314,6 +316,20 @@ export function ConfigForm({ config, isLoading }: ConfigFormProps) {
                                 </div>
                             </div>
                             <LanguageSelector />
+                        </div>
+
+                        {/* 主题切换 */}
+                        <div className="flex flex-row items-center justify-between p-0 mt-6">
+                            <div className="space-y-0.5">
+                                <div className="flex items-center gap-2">
+                                    <Palette className="h-4 w-4 text-muted-foreground" />
+                                    <div className="text-base font-medium">{t("globalSetting.config.theme") || "主题设置"}</div>
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                    {t("globalSetting.config.themeDescription") || "切换浅色和深色主题模式"}
+                                </div>
+                            </div>
+                            <ThemeToggle />
                         </div>
 
                         {error && (

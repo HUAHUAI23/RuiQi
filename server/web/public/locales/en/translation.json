@@ -193,6 +193,8 @@
             "haproxyBinPathDescription": "Path to the HAProxy binary executable file, requires restart to take effect",
             "internationalization": "Internationalization",
             "internationalizationDescription": "Set system interface language",
+            "theme": "Theme",
+            "themeDescription": "Toggle between light and dark theme modes",
             "saving": "Saving...",
             "saveSettings": "Save Settings",
             "updateSuccess": "Update Successful",

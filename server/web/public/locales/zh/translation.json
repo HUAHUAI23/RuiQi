@@ -193,6 +193,8 @@
             "haproxyBinPathDescription": "HAProxy二进制执行文件的路径，需重启生效",
             "internationalization": "国际化",
             "internationalizationDescription": "设置系统界面语言",
+            "theme": "主题设置",
+            "themeDescription": "切换浅色和深色主题模式",
             "saving": "保存中...",
             "saveSettings": "保存设置",
             "updateSuccess": "更新成功",

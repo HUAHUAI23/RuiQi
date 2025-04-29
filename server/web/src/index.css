@@ -40,6 +40,16 @@
         --chart-4: 199 89% 48%;
         --chart-5: 168 83% 41%;
 
+        /* 滚动条颜色 */
+        --scrollbar-track: 210 40% 96.1%;
+        --scrollbar-thumb: 215 20% 75%;
+        --scrollbar-thumb-hover: 215 20% 65%;
+
+        /* 侧边栏渐变颜色 */
+        --sidebar-gradient-start: 267 59% 65% / 0.95;
+        --sidebar-gradient-middle: 267 53% 60% / 0.9;
+        --sidebar-gradient-end: 267 46% 57% / 0.95;
+
         --radius: 0.5rem;
     }
 
@@ -53,9 +63,9 @@
         --popover: 222.2 84% 4.9%;
         --popover-foreground: 210 40% 98%;
 
-        /* 保持紫色主题 */
+        /* 优化紫色主题 */
         --primary: 267 59% 62%;
-        --primary-foreground: 222.2 47.4% 11.2%;
+        --primary-foreground: 210 40% 98%; /* 改为浅色以提高对比度 */
 
         --secondary: 217.2 32.6% 17.5%;
         --secondary-foreground: 210 40% 98%;
@@ -63,22 +73,33 @@
         --muted: 217.2 32.6% 17.5%;
         --muted-foreground: 215 20.2% 65.1%;
 
-        --accent: 217.2 32.6% 17.5%;
-        --accent-foreground: 210 40% 98%;
+        /* 优化暗色模式下的强调色 */
+        --accent: 267 59% 25%; /* 更深的紫色作为背景 */
+        --accent-foreground: 267 59% 85%; /* 更亮的紫色作为前景 */
 
         --destructive: 0 62.8% 30.6%;
-        --destructive-foreground: 210 40% 98%;
+        --destructive-foreground: 0 85.7% 97.3%; /* 提高对比度 */
 
         --border: 217.2 32.6% 17.5%;
         --input: 217.2 32.6% 17.5%;
-        --ring: 267 59% 62%;
+        --ring: 267 59% 70%; /* 更亮的紫色环 */
 
-        /* 深色模式图表颜色 */
+        /* 优化深色模式图表颜色 */
         --chart-1: 267 70% 70%;
         --chart-2: 262 83% 65%;
         --chart-3: 231 60% 60%;
         --chart-4: 199 89% 65%;
         --chart-5: 168 83% 60%;
+
+        /* 优化深色模式滚动条颜色 */
+        --scrollbar-track: 222.2 36% 10%;
+        --scrollbar-thumb: 267 30% 40%;
+        --scrollbar-thumb-hover: 267 40% 50%;
+
+        /* 优化深色模式侧边栏渐变颜色 */
+        --sidebar-gradient-start: 267 52% 50% / 0.95;
+        --sidebar-gradient-middle: 267 46% 45% / 0.9;
+        --sidebar-gradient-end: 267 40% 40% / 0.95;
     }
 }
 
@@ -100,4 +121,49 @@
 /* Webkit浏览器 (Chrome, Safari) */
 .hide-scrollbar::-webkit-scrollbar {
     display: none;
+}
+
+/* 自定义滚动条 */
+.scrollbar-custom {
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: hsl(var(--scrollbar-thumb)) hsl(var(--scrollbar-track)); /* Firefox */
+}
+
+/* Webkit浏览器 (Chrome, Safari) 的滚动条样式 */
+.scrollbar-custom::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+    background: hsl(var(--scrollbar-track));
+    border-radius: 4px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+    background: hsl(var(--scrollbar-thumb));
+    border-radius: 4px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--scrollbar-thumb-hover));
+}
+
+/* 侧边栏渐变背景 */
+.bg-sidebar-gradient {
+    background: linear-gradient(
+        135deg,
+        hsl(var(--sidebar-gradient-start)) 0%,
+        hsl(var(--sidebar-gradient-middle)) 50%,
+        hsl(var(--sidebar-gradient-end)) 100%
+    );
+}
+
+.bg-sidebar-gradient-dark {
+    background: linear-gradient(
+        135deg,
+        hsl(var(--sidebar-gradient-start)) 0%,
+        hsl(var(--sidebar-gradient-middle)) 50%,
+        hsl(var(--sidebar-gradient-end)) 100%
+    );
 }
