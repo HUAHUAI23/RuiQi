@@ -70,74 +70,74 @@ export default function EventsPage() {
     }
 
     const navigateToLogs = (domain: string, srcIp: string) => {
-        const params = new URLSearchParams();
-        params.append('domain', domain);
-        params.append('srcIp', srcIp);
-        
+        const params = new URLSearchParams()
+        params.append('domain', domain)
+        params.append('srcIp', srcIp)
+
         // 如果有设置时间，也传递过去
         if (queryParams.startTime) {
-            params.append('startTime', queryParams.startTime);
+            params.append('startTime', queryParams.startTime)
         }
         if (queryParams.endTime) {
-            params.append('endTime', queryParams.endTime);
+            params.append('endTime', queryParams.endTime)
         }
-        
-        navigate(`/logs/protect?${params.toString()}`);
+
+        navigate(`/logs/protect?${params.toString()}`)
     }
 
     const columns: ColumnDef<AttackEventAggregateResult>[] = [
         {
             accessorKey: "domain",
-            header: () => <div className="whitespace-nowrap">{t('domain')}</div>,
-            cell: ({ row }) => <span className="font-medium break-all">{row.getValue("domain")}</span>
+            header: () => <div className="whitespace-nowrap dark:text-shadow-glow-white dark:text-white">{t('domain')}</div>,
+            cell: ({ row }) => <span className="font-medium break-all dark:text-shadow-glow-white">{row.getValue("domain")}</span>
         },
         {
             accessorKey: "dstPort",
-            header: () => <div className="whitespace-nowrap">{t('dstPort')}</div>,
-            cell: ({ row }) => <span>{row.getValue("dstPort")}</span>
+            header: () => <div className="whitespace-nowrap dark:text-shadow-glow-white dark:text-white">{t('dstPort')}</div>,
+            cell: ({ row }) => <span className="dark:text-shadow-glow-white">{row.getValue("dstPort")}</span>
         },
         {
             accessorKey: "srcIp",
-            header: () => <div className="whitespace-nowrap">{t('srcIp')}</div>,
-            cell: ({ row }) => <span className="break-all">{row.getValue("srcIp")}</span>
+            header: () => <div className="whitespace-nowrap dark:text-shadow-glow-white dark:text-white">{t('srcIp')}</div>,
+            cell: ({ row }) => <span className="break-all dark:text-shadow-glow-white">{row.getValue("srcIp")}</span>
         },
         {
             accessorKey: "count",
-            header: () => <div className="whitespace-nowrap">{t('attackCount')}</div>,
+            header: () => <div className="whitespace-nowrap dark:text-shadow-glow-white dark:text-white">{t('attackCount')}</div>,
             cell: ({ row }) => (
                 <Button
                     variant="link"
                     onClick={() => navigateToLogs(row.original.domain, row.original.srcIp)}
-                    className="flex items-center gap-1 p-0"
+                    className="flex items-center gap-1 p-0 dark:text-shadow-glow-white"
                 >
                     {row.getValue("count")}
-                    <ExternalLink className="h-3 w-3" />
+                    <ExternalLink className="h-3 w-3 dark:text-shadow-glow-white" />
                 </Button>
             )
         },
         {
             accessorKey: "firstAttackTime",
-            header: () => <div className="whitespace-nowrap">{t('firstAttackTime')}</div>,
+            header: () => <div className="whitespace-nowrap dark:text-shadow-glow-white dark:text-white">{t('firstAttackTime')}</div>,
             cell: ({ row }) => (
                 <div className="flex flex-col">
-                    <span>{format(new Date(row.getValue("firstAttackTime")), "yyyy-MM-dd")}</span>
-                    <span className="text-sm text-muted-foreground">{format(new Date(row.getValue("firstAttackTime")), "HH:mm:ss")}</span>
+                    <span className="dark:text-shadow-glow-white">{format(new Date(row.getValue("firstAttackTime")), "yyyy-MM-dd")}</span>
+                    <span className="text-sm text-muted-foreground dark:text-shadow-glow-white">{format(new Date(row.getValue("firstAttackTime")), "HH:mm:ss")}</span>
                 </div>
             )
         },
         {
             accessorKey: "lastAttackTime",
-            header: () => <div className="whitespace-nowrap">{t('lastAttackTime')}</div>,
+            header: () => <div className="whitespace-nowrap dark:text-shadow-glow-white dark:text-white">{t('lastAttackTime')}</div>,
             cell: ({ row }) => (
                 <div className="flex flex-col">
-                    <span>{format(new Date(row.getValue("lastAttackTime")), "yyyy-MM-dd")}</span>
-                    <span className="text-sm text-muted-foreground">{format(new Date(row.getValue("lastAttackTime")), "HH:mm:ss")}</span>
+                    <span className="dark:text-shadow-glow-white">{format(new Date(row.getValue("lastAttackTime")), "yyyy-MM-dd")}</span>
+                    <span className="text-sm text-muted-foreground dark:text-shadow-glow-white">{format(new Date(row.getValue("lastAttackTime")), "HH:mm:ss")}</span>
                 </div>
             )
         },
         {
             accessorKey: "isOngoing",
-            header: () => <div className="whitespace-nowrap">{t('status')}</div>,
+            header: () => <div className="whitespace-nowrap dark:text-shadow-glow-white dark:text-white">{t('status')}</div>,
             cell: ({ row }) => {
                 const isOngoing = row.getValue("isOngoing")
                 const minutes = row.original.durationInMinutes || 0
@@ -149,20 +149,20 @@ export default function EventsPage() {
                 return isOngoing ? (
                     <div className="flex flex-col items-start gap-1">
                         <Badge variant="destructive" className="flex items-center gap-1 animate-pulse bg-red-500 text-white">
-                            <AlertTriangle className="h-3 w-3" />
+                            <AlertTriangle className="h-3 w-3 dark:text-shadow-glow-white" />
                             {t('ongoing')}
                         </Badge>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-xs text-muted-foreground dark:text-shadow-glow-white">
                             {t('attackDuration')}: {durationText}
                         </span>
                     </div>
                 ) : (
                     <div className="flex flex-col items-start gap-1">
                         <Badge variant="outline" className="flex items-center gap-1 bg-amber-400 text-amber-900 border-amber-500">
-                            <History className="h-3 w-3" />
+                            <History className="h-3 w-3 dark:text-shadow-glow-white" />
                             {t('attackEnded')}
                         </Badge>
-                        <span className="text-xs text-amber-500 font-medium">
+                        <span className="text-xs text-amber-500 font-medium dark:text-shadow-glow-white">
                             {t('noOngoingAttack')}
                         </span>
                     </div>

@@ -71,7 +71,7 @@ const NoResults = <TData, TValue>({
     const { t } = useTranslation()
     return (
         <TableRow>
-            <TableCell colSpan={columns.length} className="h-24 text-center">
+            <TableCell colSpan={columns.length} className="h-24 text-center dark:text-shadow-glow-white">
                 {t('noResult')}
             </TableCell>
         </TableRow>

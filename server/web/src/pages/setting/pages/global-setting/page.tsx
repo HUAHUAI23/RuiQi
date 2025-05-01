@@ -70,22 +70,22 @@ export default function GlobalSettingPage() {
                 {controlError && <AdvancedErrorDisplay error={controlError} />}
 
                 {/* 通用设置 */}
-                <div className="bg-background rounded-xl shadow-sm border border-border p-6 mb-6 animate-fade-in-up transition-colors duration-200">
+                <div className="bg-background rounded-xl border-none p-6 mb-6 animate-fade-in-up transition-colors duration-200">
                     <div className="space-y-3 mb-8">
                         <div className="flex items-center gap-2 pb-2 border-b border-border">
-                            <Settings className="w-5 h-5 text-iconStroke dark:text-primary" />
-                            <h3 className="text-lg font-medium text-foreground">{t("globalSetting.config.generalConfig")}</h3>
+                            <Settings className="w-5 h-5 text-iconStroke dark:text-primary dark:text-shadow-glow-white" />
+                            <h3 className="text-lg font-medium text-foreground text-shadow-glow-white dark:text-shadow-glow-white">{t("globalSetting.config.generalConfig")}</h3>
                         </div>
                         <div className="pl-7">
-                            <p className="text-sm text-muted-foreground">{t("globalSetting.description")}</p>
+                            <p className="text-sm text-muted-foreground text-shadow-glow-white dark:text-shadow-primary-bold">{t("globalSetting.description")}</p>
                         </div>
                     </div>
 
                     {/* 引擎状态 */}
                     <div className="space-y-3 mb-8">
                         <div className="flex items-center gap-2 pb-2 border-b border-border">
-                            <Info className="w-5 h-5 text-iconStroke dark:text-primary" />
-                            <h3 className="text-base font-medium text-foreground">{t("globalSetting.engine.management")}</h3>
+                            <Info className="w-5 h-5 text-iconStroke dark:text-primary dark:text-shadow-glow-white" />
+                            <h3 className="text-base font-medium text-foreground text-shadow-glow-white dark:text-shadow-glow-white">{t("globalSetting.engine.management")}</h3>
                         </div>
                         <div className="pl-7">
                             <EngineStatus
@@ -104,7 +104,7 @@ export default function GlobalSettingPage() {
 
                 {/* 配置表单 */}
                 <div
-                    className="bg-background rounded-xl shadow-sm border border-border p-6 mb-6 animate-fade-in-up"
+                    className="bg-background rounded-xl border-none p-6 mb-6 animate-fade-in-up"
                     style={{ animationDelay: "0.1s" }}
                 >
                     <ConfigForm config={config} isLoading={isConfigLoading} />

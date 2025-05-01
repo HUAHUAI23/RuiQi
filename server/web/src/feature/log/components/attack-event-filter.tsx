@@ -117,7 +117,7 @@ export function AttackEventFilter({
                                         onCheckedChange={(checked) => onPollingChange(checked, pollingInterval)}
                                         className="dark:data-[state=checked]:bg-primary"
                                     />
-                                    <span className="text-sm font-medium">{t('autoRefresh')}</span>
+                                    <span className="text-sm font-medium dark:text-shadow-glow-white">{t('autoRefresh')}</span>
                                 </div>
 
                                 <Display visible={enablePolling}>
@@ -125,7 +125,7 @@ export function AttackEventFilter({
                                         value={pollingInterval.toString()}
                                         onValueChange={(value) => onPollingChange(enablePolling, parseInt(value))}
                                     >
-                                        <SelectTrigger className="h-8 w-24">
+                                        <SelectTrigger className="h-8 w-24 dark:text-shadow-glow-white">
                                             <SelectValue placeholder={t('interval')} />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -189,9 +189,9 @@ export function AttackEventFilter({
                                 name="domain"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('domain')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('domain')}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder={t('domainPlaceholder')} {...field} className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30" />
+                                            <Input placeholder={t('domainPlaceholder')} {...field} className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white" />
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -202,9 +202,9 @@ export function AttackEventFilter({
                                 name="srcIp"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('srcIp')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('srcIp')}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder={t('ipPlaceholder')} {...field} className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30" />
+                                            <Input placeholder={t('ipPlaceholder')} {...field} className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white" />
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -215,9 +215,9 @@ export function AttackEventFilter({
                                 name="dstIp"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('dstIp')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('dstIp')}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder={t('ipPlaceholder')} {...field} className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30" />
+                                            <Input placeholder={t('ipPlaceholder')} {...field} className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white" />
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -228,14 +228,14 @@ export function AttackEventFilter({
                                 name="srcPort"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('srcPort')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('srcPort')}</FormLabel>
                                         <FormControl>
                                             <Input
                                                 type="number"
                                                 placeholder={t('portPlaceholder')}
                                                 {...field}
                                                 onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
-                                                className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30"
+                                                className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white"
                                             />
                                         </FormControl>
                                     </FormItem>
@@ -247,14 +247,14 @@ export function AttackEventFilter({
                                 name="dstPort"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('dstPort')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('dstPort')}</FormLabel>
                                         <FormControl>
                                             <Input
                                                 type="number"
                                                 placeholder={t('portPlaceholder')}
                                                 {...field}
                                                 onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
-                                                className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30"
+                                                className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white"
                                             />
                                         </FormControl>
                                     </FormItem>
@@ -266,7 +266,7 @@ export function AttackEventFilter({
                                 name="startTime"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('startTime')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('startTime')}</FormLabel>
                                         <FormControl>
                                             <DateTimePicker24h
                                                 type="dateHourMinuteSecond"
@@ -287,7 +287,7 @@ export function AttackEventFilter({
                                                         field.onChange("")
                                                     }
                                                 }}
-                                                className="dark:bg-background dark:border-muted-foreground/30"
+                                                className="dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white"
                                             />
                                         </FormControl>
                                     </FormItem>
@@ -299,7 +299,7 @@ export function AttackEventFilter({
                                 name="endTime"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('endTime')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('endTime')}</FormLabel>
                                         <FormControl>
                                             <DateTimePicker24h
                                                 type="dateHourMinuteSecond"
@@ -320,7 +320,7 @@ export function AttackEventFilter({
                                                         field.onChange("")
                                                     }
                                                 }}
-                                                className="dark:bg-background dark:border-muted-foreground/30"
+                                                className="dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white"
                                             />
                                         </FormControl>
                                     </FormItem>

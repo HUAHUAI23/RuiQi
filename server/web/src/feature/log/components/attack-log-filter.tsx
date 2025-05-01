@@ -141,14 +141,14 @@ export function AttackLogFilter({ onFilter, onRefresh, defaultValues = {} }: Att
                                 name="ruleId"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('ruleId')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('ruleId')}</FormLabel>
                                         <FormControl>
                                             <Input
                                                 type="number"
                                                 placeholder={t('ruleIdPlaceholder')}
                                                 {...field}
                                                 onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
-                                                className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30"
+                                                className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white"
                                             />
                                         </FormControl>
                                     </FormItem>
@@ -160,9 +160,9 @@ export function AttackLogFilter({ onFilter, onRefresh, defaultValues = {} }: Att
                                 name="domain"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('domain')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('domain')}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder={t('domainPlaceholder')} {...field} className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30" />
+                                            <Input placeholder={t('domainPlaceholder')} {...field} className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white" />
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -173,9 +173,9 @@ export function AttackLogFilter({ onFilter, onRefresh, defaultValues = {} }: Att
                                 name="srcIp"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('srcIp')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('srcIp')}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder={t('ipPlaceholder')} {...field} className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30" />
+                                            <Input placeholder={t('ipPlaceholder')} {...field} className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white" />
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -186,9 +186,9 @@ export function AttackLogFilter({ onFilter, onRefresh, defaultValues = {} }: Att
                                 name="dstIp"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('dstIp')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('dstIp')}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder={t('ipPlaceholder')} {...field} className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30" />
+                                            <Input placeholder={t('ipPlaceholder')} {...field} className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white" />
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -199,14 +199,14 @@ export function AttackLogFilter({ onFilter, onRefresh, defaultValues = {} }: Att
                                 name="srcPort"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('srcPort')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('srcPort')}</FormLabel>
                                         <FormControl>
                                             <Input
                                                 type="number"
                                                 placeholder={t('portPlaceholder')}
                                                 {...field}
                                                 onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
-                                                className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30"
+                                                className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white"
                                             />
                                         </FormControl>
                                     </FormItem>
@@ -218,14 +218,14 @@ export function AttackLogFilter({ onFilter, onRefresh, defaultValues = {} }: Att
                                 name="dstPort"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('dstPort')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('dstPort')}</FormLabel>
                                         <FormControl>
                                             <Input
                                                 type="number"
                                                 placeholder={t('portPlaceholder')}
                                                 {...field}
                                                 onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
-                                                className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30"
+                                                className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white"
                                             />
                                         </FormControl>
                                     </FormItem>
@@ -237,9 +237,9 @@ export function AttackLogFilter({ onFilter, onRefresh, defaultValues = {} }: Att
                                 name="requestId"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('requestId')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('requestId')}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder={t('requestIdPlaceholder')} {...field} className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30" />
+                                            <Input placeholder={t('requestIdPlaceholder')} {...field} className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white" />
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -250,7 +250,7 @@ export function AttackLogFilter({ onFilter, onRefresh, defaultValues = {} }: Att
                                 name="startTime"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('startTime')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('startTime')}</FormLabel>
                                         <FormControl>
                                             <DateTimePicker24h
                                                 type="dateHourMinuteSecond"
@@ -271,6 +271,7 @@ export function AttackLogFilter({ onFilter, onRefresh, defaultValues = {} }: Att
                                                         field.onChange("")
                                                     }
                                                 }}
+                                                className="dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white"
                                             />
                                         </FormControl>
                                     </FormItem>
@@ -282,7 +283,7 @@ export function AttackLogFilter({ onFilter, onRefresh, defaultValues = {} }: Att
                                 name="endTime"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('endTime')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('endTime')}</FormLabel>
                                         <FormControl>
                                             <DateTimePicker24h
                                                 type="dateHourMinuteSecond"
@@ -303,6 +304,7 @@ export function AttackLogFilter({ onFilter, onRefresh, defaultValues = {} }: Att
                                                         field.onChange("")
                                                     }
                                                 }}
+                                                className="dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white"
                                             />
                                         </FormControl>
                                     </FormItem>

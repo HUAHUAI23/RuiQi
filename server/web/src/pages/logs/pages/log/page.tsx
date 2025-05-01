@@ -88,46 +88,46 @@ export default function LogsPage() {
     const columns: ColumnDef<WAFLog>[] = [
         {
             accessorKey: "target",
-            header: () => <div className="whitespace-nowrap">{t('attackTarget')}</div>,
+            header: () => <div className="whitespace-nowrap dark:text-shadow-glow-white dark:text-white">{t('attackTarget')}</div>,
             cell: ({ row }) => (
-                <div className="max-w-[100px] truncate break-all">
+                <div className="max-w-[100px] truncate break-all dark:text-shadow-glow-white">
                     {`${row.original.domain}:${row.original.dstPort}${row.original.uri}`}
                 </div>
             )
         },
         {
             accessorKey: "srcIp",
-            header: () => <div className="whitespace-nowrap">{t('srcIp')}</div>,
-            cell: ({ row }) => <span className="break-all">{row.getValue("srcIp")}</span>
+            header: () => <div className="whitespace-nowrap dark:text-shadow-glow-white dark:text-white">{t('srcIp')}</div>,
+            cell: ({ row }) => <span className="break-all dark:text-shadow-glow-white">{row.getValue("srcIp")}</span>
         },
         {
             accessorKey: "srcPort",
-            header: () => <div className="whitespace-nowrap">{t('srcPort')}</div>,
-            cell: ({ row }) => <span>{row.getValue("srcPort")}</span>
+            header: () => <div className="whitespace-nowrap dark:text-shadow-glow-white dark:text-white">{t('srcPort')}</div>,
+            cell: ({ row }) => <span className="dark:text-shadow-glow-white">{row.getValue("srcPort")}</span>
         },
         {
             accessorKey: "dstPort",
-            header: () => <div className="whitespace-nowrap">{t('dstPort')}</div>,
-            cell: ({ row }) => <span>{row.getValue("dstPort")}</span>
+            header: () => <div className="whitespace-nowrap dark:text-shadow-glow-white dark:text-white">{t('dstPort')}</div>,
+            cell: ({ row }) => <span className="dark:text-shadow-glow-white">{row.getValue("dstPort")}</span>
         },
         {
             accessorKey: "dstIp",
-            header: () => <div className="whitespace-nowrap">{t('dstIp')}</div>,
-            cell: ({ row }) => <span className="break-all">{row.getValue("dstIp")}</span>
+            header: () => <div className="whitespace-nowrap dark:text-shadow-glow-white dark:text-white">{t('dstIp')}</div>,
+            cell: ({ row }) => <span className="break-all dark:text-shadow-glow-white">{row.getValue("dstIp")}</span>
         },
         {
             accessorKey: "createdAt",
-            header: () => <div className="whitespace-nowrap">{t('createdAt')}</div>,
+            header: () => <div className="whitespace-nowrap dark:text-shadow-glow-white dark:text-white">{t('createdAt')}</div>,
             cell: ({ row }) => (
                 <div className="flex flex-col">
-                    <span>{format(new Date(row.getValue("createdAt")), "yyyy-MM-dd")}</span>
-                    <span className="text-sm text-muted-foreground">{format(new Date(row.getValue("createdAt")), "HH:mm:ss")}</span>
+                    <span className="dark:text-shadow-glow-white">{format(new Date(row.getValue("createdAt")), "yyyy-MM-dd")}</span>
+                    <span className="text-sm text-muted-foreground dark:text-shadow-glow-white">{format(new Date(row.getValue("createdAt")), "HH:mm:ss")}</span>
                 </div>
             )
         },
         {
             id: "actions",
-            header: () => <div className="whitespace-nowrap">{t('detail')}</div>,
+            header: () => <div className="whitespace-nowrap dark:text-shadow-glow-white dark:text-white">{t('detail')}</div>,
             cell: ({ row }) => (
                 <Button
                     variant="ghost"
@@ -135,7 +135,7 @@ export default function LogsPage() {
                     onClick={() => handleOpenDetail(row.original)}
                     className="flex items-center gap-1"
                 >
-                    <Eye className="h-4 w-4 text-gray-600" />
+                    <Eye className="h-4 w-4 text-gray-600 dark:text-shadow-glow-white dark:text-white" />
                 </Button>
             )
         }

@@ -62,7 +62,7 @@ import {
                   <motion.div {...dialogHeaderAnimation}>
                     <DialogHeader className="p-6 pb-3">
                       <DialogTitle className="text-xl">{title}</DialogTitle>
-                      <DialogDescription>{description}</DialogDescription>
+                      <DialogDescription className='dark:text-shadow-glow-white'>{description}</DialogDescription>
                     </DialogHeader>
                   </motion.div>
                   

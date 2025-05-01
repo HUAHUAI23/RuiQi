@@ -125,7 +125,7 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
                 >
                     <Card
                         className={`
-        p-5 rounded-md shadow-none h-full relative group transition-all duration-200
+        p-5 rounded-md shadow-none h-full relative group transition-all duration-200 dark:card-neon
         ${isInactive || !site.wafEnabled
                                 ? 'bg-gradient-to-r from-slate-100 to-white dark:from-zinc-800/60 dark:to-accent/40'
                                 : site.wafMode === WAFMode.Protection
@@ -138,32 +138,32 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
                     >
                         <div className="flex justify-between items-start mb-4">
                             <div className={`flex flex-col ${isInactive ? 'text-gray-400 dark:text-gray-500' : 'text-slate-700 dark:text-slate-200'}`}>
-                                <h3 className="font-medium text-lg">{site.name}</h3>
+                                <h3 className="font-medium text-lg dark:text-shadow-glow-white">{site.name}</h3>
                                 <div className="flex items-center text-sm mt-1">
-                                    <Globe className="h-3.5 w-3.5 mr-1" />
-                                    <span>{site.domain}:{site.listenPort}</span>
+                                    <Globe className="h-3.5 w-3.5 mr-1 dark:text-shadow-glow-white" />
+                                    <span className="dark:text-shadow-glow-white">{site.domain}:{site.listenPort}</span>
                                 </div>
                             </div>
 
                             <div>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700">
-                                            <MoreHorizontal className="h-4 w-4" />
+                                        <Button variant="ghost" size="icon" className="rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:button-neon">
+                                            <MoreHorizontal className="h-4 w-4 dark:icon-neon" />
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
-                                        <DropdownMenuItem
+                                        <DropdownMenuItem className="dark:text-shadow-glow-white"
                                             onClick={() => onEdit(site)}
                                         >
-                                            <Pencil className="mr-2 h-4 w-4" />
+                                            <Pencil className="mr-2 h-4 w-4 dark:icon-neon" />
                                             {t("site.edit")}
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                             onClick={() => onDelete(site.id)}
-                                            className="text-red-600 dark:text-red-400"
+                                            className="text-red-600 dark:text-red-400 dark:text-shadow-glow-white"
                                         >
-                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            <Trash2 className="mr-2 h-4 w-4 dark:icon-neon" />
                                             {t("site.delete")}
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
@@ -176,49 +176,46 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
                             <div className="flex flex-wrap gap-2">
                                 {/* 站点状态 */}
                                 {site.activeStatus ? (
-                                    <Badge variant="outline" className="flex items-center gap-1 bg-green-300 border-green-300 text-green-700 dark:bg-green-900/50 dark:border-green-800 dark:text-green-300 rounded-full px-3 py-1">
-                                        <CheckCircle className="h-3 w-3 text-green-600 dark:text-green-300" />
-                                        <span className="font-medium">{t("site.active")}</span>
+                                    <Badge variant="outline" className="flex items-center gap-1 bg-green-300 border-green-300 text-green-700 dark:bg-green-900/50 dark:border-green-800 dark:text-green-300 rounded-full px-3 py-1 dark:badge-neon">
+                                        <CheckCircle className="h-3 w-3 text-green-600 dark:text-green-300 dark:icon-neon" />
+                                        <span className="font-medium dark:text-shadow-glow-white">{t("site.active")}</span>
                                     </Badge>
                                 ) : (
-                                    <Badge variant="outline" className="flex items-center gap-1 bg-gray-200 border-gray-200 text-gray-700 dark:bg-gray-800/70 dark:border-gray-700 dark:text-gray-300 rounded-full px-3 py-1">
-                                        <XCircle className="h-3 w-3 text-gray-600 dark:text-gray-300" />
-                                        <span className="font-medium">{t("site.inactive")}</span>
+                                    <Badge variant="outline" className="flex items-center gap-1 bg-gray-200 border-gray-200 text-gray-700 dark:bg-gray-800/70 dark:border-gray-700 dark:text-gray-300 rounded-full px-3 py-1 dark:badge-neon">
+                                        <XCircle className="h-3 w-3 text-gray-600 dark:text-gray-300 dark:icon-neon" />
+                                        <span className="font-medium dark:text-shadow-glow-white">{t("site.inactive")}</span>
                                     </Badge>
                                 )}
 
                                 {/* HTTPS状态 */}
                                 {site.enableHTTPS ? (
-                                    <Badge variant="outline" className={`flex items-center gap-1 rounded-full px-3 py-1 ${
-                                        isInactive 
-                                            ? 'bg-gray-200 border-gray-200 text-gray-700 dark:bg-gray-800/70 dark:border-gray-700 dark:text-gray-300' 
-                                            : 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800/60 dark:text-blue-300'
-                                    }`}>
-                                        <LinkIcon className="h-3 w-3" />
-                                        <span className="font-medium">HTTPS</span>
+                                    <Badge variant="outline" className={`flex items-center gap-1 rounded-full px-3 py-1 dark:badge-neon ${isInactive
+                                        ? 'bg-gray-200 border-gray-200 text-gray-700 dark:bg-gray-800/70 dark:border-gray-700 dark:text-gray-300'
+                                        : 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800/60 dark:text-blue-300'
+                                        }`}>
+                                        <LinkIcon className="h-3 w-3 dark:icon-neon" />
+                                        <span className="font-medium dark:text-shadow-glow-white">HTTPS</span>
                                     </Badge>
                                 ) : null}
 
                                 {/* WAF状态 */}
                                 {site.wafEnabled && (
                                     site.wafMode === WAFMode.Protection ? (
-                                        <Badge variant="outline" className={`flex items-center gap-1 rounded-full px-3 py-1 ${
-                                            isInactive 
-                                                ? 'bg-gray-200 border-gray-200 text-gray-700 dark:bg-gray-800/70 dark:border-gray-700 dark:text-gray-300' 
-                                                : 'bg-sky-300 border-sky-300 text-sky-700 dark:bg-sky-900/40 dark:border-sky-800/70 dark:text-sky-300'
-                                        }`}>
-                                            <Shield className="h-3 w-3 text-sky-700 dark:text-sky-300" />
-                                            <span className="font-medium">{t("site.dialog.protectionMode")}</span>
+                                        <Badge variant="outline" className={`flex items-center gap-1 rounded-full px-3 py-1 dark:badge-neon ${isInactive
+                                            ? 'bg-gray-200 border-gray-200 text-gray-700 dark:bg-gray-800/70 dark:border-gray-700 dark:text-gray-300'
+                                            : 'bg-sky-300 border-sky-300 text-sky-700 dark:bg-sky-900/40 dark:border-sky-800/70 dark:text-sky-300'
+                                            }`}>
+                                            <Shield className="h-3 w-3 text-sky-700 dark:text-sky-300 dark:icon-neon" />
+                                            <span className="font-medium dark:text-shadow-glow-white">{t("site.dialog.protectionMode")}</span>
                                         </Badge>
 
                                     ) : (
-                                        <Badge variant="outline" className={`flex items-center gap-1 rounded-full px-3 py-1 ${
-                                            isInactive 
-                                                ? 'bg-gray-200 border-gray-200 text-gray-700 dark:bg-gray-800/70 dark:border-gray-700 dark:text-gray-300' 
-                                                : 'bg-yellow-300 border-yellow-300 text-yellow-700 dark:bg-yellow-900/40 dark:border-yellow-800/70 dark:text-yellow-300'
-                                        }`}>
-                                            <ShieldAlert className="h-3 w-3 text-yellow-700 dark:text-yellow-300" />
-                                            <span className="font-medium">{t("site.dialog.observationMode")}</span>
+                                        <Badge variant="outline" className={`flex items-center gap-1 rounded-full px-3 py-1 dark:badge-neon ${isInactive
+                                            ? 'bg-gray-200 border-gray-200 text-gray-700 dark:bg-gray-800/70 dark:border-gray-700 dark:text-gray-300'
+                                            : 'bg-yellow-300 border-yellow-300 text-yellow-700 dark:bg-yellow-900/40 dark:border-yellow-800/70 dark:text-yellow-300'
+                                            }`}>
+                                            <ShieldAlert className="h-3 w-3 text-yellow-700 dark:text-yellow-300 dark:icon-neon" />
+                                            <span className="font-medium dark:text-shadow-glow-white">{t("site.dialog.observationMode")}</span>
                                         </Badge>
                                     )
                                 )}
@@ -226,12 +223,12 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
 
                             {/* 上游服务器信息 */}
                             <div className={`space-y-1 ${isInactive ? 'text-gray-400 dark:text-gray-500' : 'text-slate-700 dark:text-slate-300'}`}>
-                                <div className="text-sm font-medium">{t("site.card.upstreamServers")}</div>
+                                <div className="text-sm font-medium dark:text-shadow-glow-white">{t("site.card.upstreamServers")}</div>
                                 <div className="space-y-1">
                                     {site.backend.servers.map((server, index) => (
                                         <div key={index} className="flex items-center gap-1 text-xs pl-2">
-                                            <Server className="h-3 w-3" />
-                                            <span>
+                                            <Server className="h-3 w-3 dark:icon-neon" />
+                                            <span className="dark:text-shadow-glow-white">
                                                 {server.isSSL ? 'https://' : 'http://'}
                                                 {server.host}:{server.port}
                                             </span>
@@ -243,10 +240,10 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
                             {/* 如果有证书，显示证书信息 */}
                             {site.enableHTTPS && site.certificate && (
                                 <div className={`space-y-1 ${isInactive ? 'text-gray-400 dark:text-gray-500' : 'text-slate-700 dark:text-slate-300'}`}>
-                                    <div className="text-sm font-medium">{t("site.card.certInfo")}</div>
+                                    <div className="text-sm font-medium dark:text-shadow-glow-white">{t("site.card.certInfo")}</div>
                                     <div className="text-xs pl-2">
-                                        <span>{site.certificate.certName}</span>
-                                        <span className="text-muted-foreground ml-2">
+                                        <span className="dark:text-shadow-glow-white">{site.certificate.certName}</span>
+                                        <span className="text-muted-foreground ml-2 dark:text-shadow-glow-white">
                                             ({site.certificate.issuerName})
                                         </span>
                                     </div>
@@ -261,26 +258,26 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
 
     // 卡片加载骨架屏
     const SiteCardSkeleton = () => (
-        <Card className="p-5 rounded-md">
+        <Card className="p-5 rounded-md dark:border-neon-pulse">
             <div className="flex justify-between items-start mb-4">
                 <div>
-                    <Skeleton className="h-6 w-32 mb-2" />
-                    <Skeleton className="h-4 w-48" />
+                    <Skeleton className="h-6 w-32 mb-2 dark:text-shadow-glow-white" />
+                    <Skeleton className="h-4 w-48 dark:text-shadow-glow-white" />
                 </div>
-                <Skeleton className="h-8 w-8 rounded-full" />
+                <Skeleton className="h-8 w-8 rounded-full dark:text-shadow-glow-white" />
             </div>
 
             <div className="space-y-4">
                 <div className="flex flex-wrap gap-2">
-                    <Skeleton className="h-6 w-16" />
-                    <Skeleton className="h-6 w-16" />
-                    <Skeleton className="h-6 w-16" />
+                    <Skeleton className="h-6 w-16 dark:text-shadow-glow-white" />
+                    <Skeleton className="h-6 w-16 dark:text-shadow-glow-white" />
+                    <Skeleton className="h-6 w-16 dark:text-shadow-glow-white" />
                 </div>
 
                 <div>
-                    <Skeleton className="h-4 w-24 mb-2" />
-                    <Skeleton className="h-4 w-full mb-1" />
-                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-24 mb-2 dark:text-shadow-glow-white" />
+                    <Skeleton className="h-4 w-full mb-1 dark:text-shadow-glow-white" />
+                    <Skeleton className="h-4 w-full dark:text-shadow-glow-white" />
                 </div>
             </div>
         </Card>
@@ -300,7 +297,7 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
     return (
         <div>
             {sites.length === 0 ? (
-                <div className="text-center py-10 text-muted-foreground">
+                <div className="text-center py-10 text-muted-foreground dark:text-shadow-glow-white">
                     {t("site.noData")}
                 </div>
             ) : (
@@ -344,7 +341,7 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
                     className="h-5 flex justify-center items-center mt-4"
                 >
                     {isFetchingNextPage && (
-                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground dark:icon-neon" />
                     )}
                 </div>
             )}

@@ -79,7 +79,7 @@ export function Sidebar({ displayConfig = {} }: SidebarProps) {
 
     const handleLogout = () => {
         setIsLogoutActive(true)
-        
+
         // Visual feedback before actual logout
         setTimeout(() => {
             logout()
@@ -89,8 +89,11 @@ export function Sidebar({ displayConfig = {} }: SidebarProps) {
 
     return (
         <div
-            className="w-64 text-white flex flex-col border-r border-slate-200 dark:border-slate-800 relative overflow-hidden transition-all duration-300 bg-sidebar-gradient dark:bg-sidebar-gradient-dark"
+            className="w-64 text-white flex flex-col border-r border-slate-200 dark:border-none relative overflow-hidden transition-all duration-300 bg-sidebar-gradient"
         >
+            {/* 霓虹灯效果 暗色模式 */}
+            <div className="absolute inset-0 dark:animate-sidebar-neon-glow pointer-events-none"></div>
+
             {/* Decorative background elements */}
             <div className="absolute bottom-0 left-0 w-full h-48 overflow-hidden opacity-20 dark:opacity-15 pointer-events-none">
                 <div className="absolute bottom-[-10px] left-[-10px] w-20 h-20 bg-white/30 rotate-45 transform animate-float"></div>
@@ -107,8 +110,8 @@ export function Sidebar({ displayConfig = {} }: SidebarProps) {
                     <Shield className="w-8 h-8 text-white" />
                 </div>
                 <div className="font-bold text-xl mt-2">
-                    <span className="text-[#E8DFFF] dark:text-[#F0EBFF]">RuiQi</span>
-                    <span className="text-[#8ED4FF] dark:text-[#A5DEFF]"> WAF</span>
+                    <span className="text-[#E8DFFF] dark:text-[#F0EBFF] text-shadow-glow-purple transition-all duration-300">RuiQi</span>
+                    <span className="text-[#8ED4FF] dark:text-[#A5DEFF] text-shadow-glow-blue transition-all duration-300"> WAF</span>
                 </div>
             </div>
 
@@ -128,8 +131,8 @@ export function Sidebar({ displayConfig = {} }: SidebarProps) {
                                         ? "bg-white/15 dark:bg-white/10 shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.25)] text-white translate-x-1"
                                         : "text-white/90 hover:text-white hover:translate-x-1 hover:shadow-[0_0_10px_rgba(255,255,255,0.3)] dark:hover:shadow-[0_0_12px_rgba(255,255,255,0.2)]",
                                     "before:absolute before:content-[''] before:top-0 before:left-0 before:w-full before:h-full before:bg-gradient-to-r before:from-white/5 before:to-white/20 dark:before:from-white/5 dark:before:to-white/15 before:transition-opacity before:duration-300",
-                                    isActive 
-                                        ? "before:opacity-100" 
+                                    isActive
+                                        ? "before:opacity-100"
                                         : "before:opacity-0 hover:before:opacity-100"
                                 )}
                             >
@@ -139,7 +142,7 @@ export function Sidebar({ displayConfig = {} }: SidebarProps) {
                                         isActive ? "text-white" : "group-hover:animate-icon-shake"
                                     )} />
                                     <span className={cn(
-                                        "transition-all",
+                                        "transition-all dark:text-shadow-glow-white",
                                         isActive ? "font-semibold" : "group-hover:font-medium"
                                     )}>{item.title}</span>
                                 </span>
@@ -162,8 +165,8 @@ export function Sidebar({ displayConfig = {} }: SidebarProps) {
                             ? "bg-white/15 dark:bg-white/10 shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.25)] text-white translate-x-1"
                             : "text-white/90 hover:text-white hover:translate-x-1 hover:shadow-[0_0_10px_rgba(255,255,255,0.3)] dark:hover:shadow-[0_0_12px_rgba(255,255,255,0.2)]",
                         "before:absolute before:content-[''] before:top-0 before:left-0 before:w-full before:h-full before:bg-gradient-to-r before:from-white/5 before:to-white/20 dark:before:from-white/5 dark:before:to-white/15 before:transition-opacity before:duration-300",
-                        isLogoutActive 
-                            ? "before:opacity-100" 
+                        isLogoutActive
+                            ? "before:opacity-100"
                             : "before:opacity-0 hover:before:opacity-100"
                     )}
                 >
@@ -173,7 +176,7 @@ export function Sidebar({ displayConfig = {} }: SidebarProps) {
                             isLogoutActive ? "text-white" : "group-hover:animate-icon-shake"
                         )} />
                         <span className={cn(
-                            "transition-all",
+                            "transition-all dark:text-shadow-glow-white",
                             isLogoutActive ? "font-semibold" : "group-hover:font-medium"
                         )}>{t("sidebar.logout")}</span>
                     </span>
@@ -184,6 +187,6 @@ export function Sidebar({ displayConfig = {} }: SidebarProps) {
                 </button>
                 <div className="text-center text-xs text-white/60 dark:text-white/50 mt-4 px-4">© 2025 RuiQi WAF. All Rights Reserved.</div>
             </div>
-        </div>
+        </div >
     )
 }

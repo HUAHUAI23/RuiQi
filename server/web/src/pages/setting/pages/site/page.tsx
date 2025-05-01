@@ -63,15 +63,15 @@ export default function SiteManagerPage() {
 
     return (
         <Card className="p-6 w-full h-full border-none shadow-none rounded-none">
-            <div className="flex justify-between items-center mb-6 bg-zinc-50 dark:bg-muted rounded-md p-4 transition-colors duration-200">
-                <h2 className="text-xl font-semibold text-primary">{t('site.management')}</h2>
+            <div className="flex justify-between items-center mb-6 bg-zinc-50 dark:bg-muted/30 rounded-md p-4 transition-colors duration-200">
+                <h2 className="text-xl font-semibold text-primary dark:text-white">{t('site.management')}</h2>
                 <div className="flex gap-2">
                     <AnimatedButton >
                         <Button
                             variant="outline"
                             size="sm"
                             onClick={refreshSites}
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 dark:text-shadow-glow-white"
                         >
                             <AnimatedIcon animationVariant="continuous-spin" isAnimating={isRefreshAnimating} className="h-4 w-4">
                                 <RefreshCw className="h-4 w-4" />
@@ -83,7 +83,7 @@ export default function SiteManagerPage() {
                         <Button
                             size="sm"
                             onClick={handleAddSite}
-                            className="flex items-center gap-1"
+                            className="flex items-center gap-1 dark:text-shadow-glow-white"
                         >
                             <Plus className="h-4 w-4" />
                             {t('site.add')}
@@ -93,7 +93,7 @@ export default function SiteManagerPage() {
             </div>
 
             <Tabs value={view} onValueChange={(v) => setView(v as 'grid' | 'table')}>
-                <TabsList className="mb-4">
+                <TabsList className="mb-4 dark:bg-muted/30">
                     <TabsTrigger value="grid" className="flex items-center gap-1 group">
                         <LayoutGrid className="h-4 w-4 group-data-[state=active]:text-primary group-data-[state=active]:fill-primary group-hover:text-primary group-hover:fill-primary transition-colors" />
                     </TabsTrigger>

@@ -64,7 +64,7 @@ export function PasswordResetForm() {
                                             <Input
                                                 type="password"
                                                 placeholder={t('auth.enterCurrentPassword')}
-                                                className="pl-10 py-6 bg-gray-50 border-gray-200 focus:bg-white transition-all group-hover:border-purple-300"
+                                                className="pl-10 py-6 text-gray-700 bg-gray-50 border-gray-200 focus:bg-white transition-all group-hover:border-purple-300"
                                                 {...field}
                                                 onChange={(e) => {
                                                     clearError()
@@ -90,7 +90,7 @@ export function PasswordResetForm() {
                                             <Input
                                                 type="password"
                                                 placeholder={t('auth.enterNewPassword')}
-                                                className="pl-10 py-6 bg-gray-50 border-gray-200 focus:bg-white transition-all group-hover:border-purple-300"
+                                                className="pl-10 py-6 text-gray-700 bg-gray-50 border-gray-200 focus:bg-white transition-all group-hover:border-purple-300"
                                                 {...field}
                                                 onChange={(e) => {
                                                     clearError()
@@ -116,7 +116,7 @@ export function PasswordResetForm() {
                                             <Input
                                                 type="password"
                                                 placeholder={t('auth.enterNewPasswordAgain')}
-                                                className="pl-10 py-6 bg-gray-50 border-gray-200 focus:bg-white transition-all group-hover:border-purple-300"
+                                                className="pl-10 py-6 text-gray-700 bg-gray-50 border-gray-200 focus:bg-white transition-all group-hover:border-purple-300"
                                                 {...field}
                                                 onChange={(e) => {
                                                     clearError()

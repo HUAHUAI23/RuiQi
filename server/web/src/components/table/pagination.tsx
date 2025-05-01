@@ -26,7 +26,7 @@ export function DataTablePagination<TData>({
     const { t } = useTranslation()
     return (
         <div className="flex items-center justify-between px-2">
-            <div className="flex-1 text-sm text-muted-foreground whitespace-nowrap">
+            <div className="flex-1 text-sm text-muted-foreground whitespace-nowrap dark:text-shadow-glow-white">
                 {t('table.selected', {
                     selected: table.getFilteredSelectedRowModel().rows.length,
                     total: table.getFilteredRowModel().rows.length
@@ -34,14 +34,14 @@ export function DataTablePagination<TData>({
             </div>
             <div className="flex items-center space-x-6 lg:space-x-8">
                 <div className="flex items-center space-x-2">
-                    <p className="text-sm font-medium whitespace-nowrap">{t('table.rowsPerPage')}</p>
+                    <p className="text-sm font-medium whitespace-nowrap dark:text-shadow-glow-white">{t('table.rowsPerPage')}</p>
                     <Select
                         value={`${table.getState().pagination.pageSize}`}
                         onValueChange={(value) => {
                             table.setPageSize(Number(value))
                         }}
                     >
-                        <SelectTrigger className="h-8 w-[70px]">
+                        <SelectTrigger className="h-8 w-[70px] dark:text-shadow-glow-white">
                             <SelectValue placeholder={table.getState().pagination.pageSize} />
                         </SelectTrigger>
                         <SelectContent side="top">
@@ -53,7 +53,7 @@ export function DataTablePagination<TData>({
                         </SelectContent>
                     </Select>
                 </div>
-                <div className="flex w-[100px] items-center justify-center text-sm font-medium whitespace-nowrap">
+                <div className="flex w-[100px] items-center justify-center text-sm font-medium whitespace-nowrap dark:text-shadow-glow-white">
                     {t('table.pageInfo', {
                         current: table.getState().pagination.pageIndex + 1,
                         total: table.getPageCount()
@@ -66,8 +66,8 @@ export function DataTablePagination<TData>({
                         onClick={() => table.setPageIndex(0)}
                         disabled={!table.getCanPreviousPage()}
                     >
-                        <span className="sr-only">{t('table.firstPage')}</span>
-                        <ChevronsLeft />
+                        <span className="sr-only dark:text-shadow-glow-white">{t('table.firstPage')}</span>
+                        <ChevronsLeft className="dark:text-shadow-glow-white" />
                     </Button>
                     <Button
                         variant="outline"
@@ -75,8 +75,8 @@ export function DataTablePagination<TData>({
                         onClick={() => table.previousPage()}
                         disabled={!table.getCanPreviousPage()}
                     >
-                        <span className="sr-only">{t('table.previousPage')}</span>
-                        <ChevronLeft />
+                        <span className="sr-only dark:text-shadow-glow-white">{t('table.previousPage')}</span>
+                        <ChevronLeft className="dark:text-shadow-glow-white" />
                     </Button>
                     <Button
                         variant="outline"
@@ -84,8 +84,8 @@ export function DataTablePagination<TData>({
                         onClick={() => table.nextPage()}
                         disabled={!table.getCanNextPage()}
                     >
-                        <span className="sr-only">{t('table.nextPage')}</span>
-                        <ChevronRight />
+                        <span className="sr-only dark:text-shadow-glow-white">{t('table.nextPage')}</span>
+                        <ChevronRight className="dark:text-shadow-glow-white" />
                     </Button>
                     <Button
                         variant="outline"
@@ -93,8 +93,8 @@ export function DataTablePagination<TData>({
                         onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                         disabled={!table.getCanNextPage()}
                     >
-                        <span className="sr-only">{t('table.lastPage')}</span>
-                        <ChevronsRight />
+                        <span className="sr-only dark:text-shadow-glow-white">{t('table.lastPage')}</span>
+                        <ChevronsRight className="dark:text-shadow-glow-white" />
                     </Button>
                 </div>
             </div>
