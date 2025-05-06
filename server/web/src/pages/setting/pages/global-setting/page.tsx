@@ -61,7 +61,7 @@ export default function GlobalSettingPage() {
     }
 
     return (
-        <AnimatedContainer variant="smooth" className="h-full overflow-y-auto scrollbar-neon p-0">
+        <AnimatedContainer variant="smooth" className="h-full overflow-y-auto scrollbar-none p-0">
             <div className="max-w-5xl p-6 center mx-auto">
                 {/* 错误处理：优先显示配置错误，其次显示状态错误 */}
                 {(configError || statusError) && (
