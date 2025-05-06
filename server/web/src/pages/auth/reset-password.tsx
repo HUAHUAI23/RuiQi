@@ -29,7 +29,7 @@ export default function ResetPasswordPage() {
 
 
             <div className="mb-8 z-10 animate-fade-in-up">
-                <h1 className="text-3xl font-bold text-center text-white drop-shadow-md hover:animate-wiggle">
+                <h1 className="text-3xl font-bold text-center text-white drop-shadow-md hover:animate-wiggle text-shadow-glow-white">
                     {t('sidebar.title')}
                 </h1>
             </div>
