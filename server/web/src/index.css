@@ -15,7 +15,8 @@
 
         /* 保持紫色主题 */
         --primary: 267 59% 62%;
-        --primary-rgb: 157, 118, 219; /* RGB equivalent for text-shadow */
+        --primary-rgb: 157, 118, 219;
+        /* RGB equivalent for text-shadow */
         --primary-foreground: 210 40% 98%;
 
         --secondary: 210 40% 96.1%;
@@ -66,8 +67,10 @@
 
         /* 优化紫色主题 */
         --primary: 267 59% 62%;
-        --primary-rgb: 157, 118, 219; /* RGB equivalent for text-shadow */
-        --primary-foreground: 210 40% 98%; /* 改为浅色以提高对比度 */
+        --primary-rgb: 157, 118, 219;
+        /* RGB equivalent for text-shadow */
+        --primary-foreground: 210 40% 98%;
+        /* 改为浅色以提高对比度 */
 
         --secondary: 217.2 32.6% 17.5%;
         --secondary-foreground: 210 40% 98%;
@@ -76,15 +79,19 @@
         --muted-foreground: 215 20.2% 65.1%;
 
         /* 优化暗色模式下的强调色 */
-        --accent: 267 59% 25%; /* 更深的紫色作为背景 */
-        --accent-foreground: 267 59% 85%; /* 更亮的紫色作为前景 */
+        --accent: 267 59% 25%;
+        /* 更深的紫色作为背景 */
+        --accent-foreground: 267 59% 85%;
+        /* 更亮的紫色作为前景 */
 
         --destructive: 0 62.8% 30.6%;
-        --destructive-foreground: 0 85.7% 97.3%; /* 提高对比度 */
+        --destructive-foreground: 0 85.7% 97.3%;
+        /* 提高对比度 */
 
         --border: 217.2 32.6% 17.5%;
         --input: 217.2 32.6% 17.5%;
-        --ring: 267 59% 70%; /* 更亮的紫色环 */
+        --ring: 267 59% 70%;
+        /* 更亮的紫色环 */
 
         /* 优化深色模式图表颜色 */
         --chart-1: 267 70% 70%;
@@ -109,26 +116,32 @@
     * {
         @apply border-border;
     }
+
     body {
         @apply bg-background text-foreground;
     }
 }
 
-/* 隐藏滚动条但保留滚动功能 */
-.hide-scrollbar {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
+/* 滚动区域无滚动条样式 */
+.scrollbar-none {
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
 }
 
-/* Webkit浏览器 (Chrome, Safari) */
-.hide-scrollbar::-webkit-scrollbar {
+.scrollbar-none::-webkit-scrollbar {
     display: none;
+    width: 0;
+    height: 0;
 }
 
 /* 自定义滚动条 */
 .scrollbar-custom {
-    scrollbar-width: thin; /* Firefox */
-    scrollbar-color: hsl(var(--scrollbar-thumb)) hsl(var(--scrollbar-track)); /* Firefox */
+    scrollbar-width: thin;
+    /* Firefox */
+    scrollbar-color: hsl(var(--scrollbar-thumb)) hsl(var(--scrollbar-track));
+    /* Firefox */
 }
 
 /* Webkit浏览器 (Chrome, Safari) 的滚动条样式 */
@@ -153,8 +166,10 @@
 
 /* 霓虹灯滚动条 - 亮色模式 */
 .scrollbar-neon {
-    scrollbar-width: thin; /* Firefox */
-    scrollbar-color: hsl(var(--primary)) hsl(var(--scrollbar-track)); /* Firefox */
+    scrollbar-width: thin;
+    /* Firefox */
+    scrollbar-color: hsl(var(--primary)) hsl(var(--scrollbar-track));
+    /* Firefox */
 }
 
 .scrollbar-neon::-webkit-scrollbar {
@@ -171,39 +186,41 @@
     background: hsl(var(--primary));
     border-radius: 4px;
     animation: scrollbar-neon 2s ease-in-out infinite;
-    box-shadow: 0 0 8px rgba(var(--primary-rgb), 0.6),
-        0 0 16px rgba(var(--primary-rgb), 0.3);
+    box-shadow: 
+        0 0 8px rgba(var(--primary-rgb), 60%),
+        0 0 16px rgba(var(--primary-rgb), 30%);
 }
 
 .scrollbar-neon::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--primary) / 0.9);
-    box-shadow: 0 0 12px rgba(var(--primary-rgb), 0.8),
-        0 0 24px rgba(var(--primary-rgb), 0.5);
+    background: hsl(var(--primary) / 90%);
+    box-shadow: 
+        0 0 12px rgba(var(--primary-rgb), 80%),
+        0 0 24px rgba(var(--primary-rgb), 50%);
 }
 
 /* 霓虹灯滚动条 - 暗色模式 */
 .dark .scrollbar-neon::-webkit-scrollbar-thumb {
-    background: hsl(var(--primary) / 0.8);
-    box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.7),
-        0 0 20px rgba(var(--primary-rgb), 0.4),
-        0 0 30px rgba(var(--primary-rgb), 0.2);
+    background: hsl(var(--primary) / 80%);
+    box-shadow: 
+        0 0 10px rgba(var(--primary-rgb), 70%),
+        0 0 20px rgba(var(--primary-rgb), 40%),
+        0 0 30px rgba(var(--primary-rgb), 20%);
 }
 
 .dark .scrollbar-neon::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--primary) / 0.9);
-    box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.8),
-        0 0 30px rgba(var(--primary-rgb), 0.5),
-        0 0 45px rgba(var(--primary-rgb), 0.3);
+    background: hsl(var(--primary) / 90%);
+    box-shadow: 
+        0 0 15px rgba(var(--primary-rgb), 80%),
+        0 0 30px rgba(var(--primary-rgb), 50%),
+        0 0 45px rgba(var(--primary-rgb), 30%);
 }
 
 /* 侧边栏渐变背景 */
 .bg-sidebar-gradient {
-    background: linear-gradient(
-        135deg,
-        hsl(var(--sidebar-gradient-start)) 0%,
-        hsl(var(--sidebar-gradient-middle)) 50%,
-        hsl(var(--sidebar-gradient-end)) 100%
-    );
+    background: linear-gradient(135deg,
+            hsl(var(--sidebar-gradient-start)) 0%,
+            hsl(var(--sidebar-gradient-middle)) 50%,
+            hsl(var(--sidebar-gradient-end)) 100%);
 }
 
 /* 侧边栏霓虹灯效果 sidebar 边缘 - 暗色模式 */
@@ -220,25 +237,21 @@
     right: 0;
     width: 2px;
     height: 100%;
-    background: linear-gradient(
-        to bottom,
-        rgba(var(--primary-rgb), 0.8),
-        rgba(var(--primary-rgb), 0.4),
-        rgba(var(--primary-rgb), 0.8)
-    );
+    background: linear-gradient(to bottom,
+            rgba(var(--primary-rgb), 0.8),
+            rgba(var(--primary-rgb), 0.4),
+            rgba(var(--primary-rgb), 0.8));
     animation: aurora 10s ease infinite;
 }
 
 /* 侧边栏霓虹灯渐变背景 - 暗色模式 */
 .dark .bg-sidebar-gradient {
-    background: linear-gradient(
-        135deg,
-        hsl(267 59% 40% / 0.9) 0%,
-        hsl(262 70% 35% / 0.85) 25%,
-        hsl(267 65% 45% / 0.9) 50%,
-        hsl(272 70% 40% / 0.85) 75%,
-        hsl(267 75% 35% / 0.9) 100%
-    );
+    background: linear-gradient(135deg,
+            hsl(267 59% 40% / 0.9) 0%,
+            hsl(262 70% 35% / 0.85) 25%,
+            hsl(267 65% 45% / 0.9) 50%,
+            hsl(272 70% 40% / 0.85) 75%,
+            hsl(267 75% 35% / 0.9) 100%);
     background-size: 200% 200%;
     animation: sidebar-neon-flow;
     box-shadow: inset 0 0 30px rgba(var(--primary-rgb), 0.3);
@@ -253,16 +266,12 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: radial-gradient(
-            circle at 20% 30%,
+    background: radial-gradient(circle at 20% 30%,
             rgba(var(--primary-rgb), 0.4) 0%,
-            transparent 20%
-        ),
-        radial-gradient(
-            circle at 80% 70%,
+            transparent 20%),
+        radial-gradient(circle at 80% 70%,
             rgba(var(--primary-rgb), 0.3) 0%,
-            transparent 25%
-        );
+            transparent 25%);
     pointer-events: none;
     opacity: 0;
     animation: pulse-glow 8s ease-in-out infinite;
@@ -276,26 +285,18 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-image: radial-gradient(
-            circle at 30% 20%,
+    background-image: radial-gradient(circle at 30% 20%,
             rgba(255, 255, 255, 0.3) 0%,
-            transparent 1%
-        ),
-        radial-gradient(
-            circle at 70% 40%,
+            transparent 1%),
+        radial-gradient(circle at 70% 40%,
             rgba(255, 255, 255, 0.2) 0%,
-            transparent 1%
-        ),
-        radial-gradient(
-            circle at 40% 60%,
+            transparent 1%),
+        radial-gradient(circle at 40% 60%,
             rgba(255, 255, 255, 0.3) 0%,
-            transparent 1%
-        ),
-        radial-gradient(
-            circle at 80% 80%,
+            transparent 1%),
+        radial-gradient(circle at 80% 80%,
             rgba(255, 255, 255, 0.2) 0%,
-            transparent 1%
-        );
+            transparent 1%);
     background-size: 120% 120%;
     pointer-events: none;
     opacity: 0.5;
@@ -338,11 +339,13 @@
 
 /* 霓虹灯组件在深色模式中 */
 .dark {
+
     /* 标题霓虹灯效果 */
     h1,
     h2,
     h3,
     h4,
+    p,
     span {
         @apply text-shadow-glow-white;
     }
@@ -365,8 +368,7 @@
 
     /* 图标霓虹灯效果 */
     .icon-neon {
-        filter: drop-shadow(0 0 3px rgba(var(--primary-rgb), 0.5))
-            drop-shadow(0 0 5px rgba(var(--primary-rgb), 0.3));
+        filter: drop-shadow(0 0 3px rgba(var(--primary-rgb), 0.5)) drop-shadow(0 0 5px rgba(var(--primary-rgb), 0.3));
     }
 
     /* 强调文本霓虹灯效果 */

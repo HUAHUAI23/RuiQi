@@ -166,7 +166,7 @@ export function CertificateTable() {
             cell: ({ row }) => (
                 <div className="flex flex-wrap gap-1 max-w-xs">
                     {row.original.domains.map((domain, index) => (
-                        <span key={index} className="px-2 py-0.5 bg-gray-100 rounded text-xs dark:text-shadow-glow-white">
+                        <span key={index} className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs dark:text-shadow-glow-white">
                             {domain}
                         </span>
                     ))}

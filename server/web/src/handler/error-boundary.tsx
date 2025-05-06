@@ -40,31 +40,31 @@ interface ErrorDisplayProps {
 
 export function ErrorDisplay({ error }: ErrorDisplayProps) {
     const { t } = useTranslation()
-    
+
     // 如果在路由中使用，尝试获取路由错误
     try {
         const routeError = useRouteError()
         if (isRouteErrorResponse(routeError)) {
             return (
                 <div className="flex min-h-screen w-full flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-background to-muted/30">
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
                         className="w-full max-w-md p-8 rounded-lg bg-card shadow-lg border border-border"
                     >
-                        <motion.div 
+                        <motion.div
                             initial={{ scale: 0.8 }}
                             animate={{ scale: 1 }}
                             transition={{ delay: 0.2, type: "spring" }}
-                            className="mx-auto bg-red-100 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-6"
+                            className="mx-auto bg-red-100 dark:bg-red-900/30 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-6"
                         >
-                            <AlertCircle className="h-10 w-10 text-red-500" />
+                            <AlertCircle className="h-10 w-10 text-red-500 dark:text-red-400" />
                         </motion.div>
                         <h1 className="text-3xl font-bold mb-3">{t("error.code", "错误")} {routeError.status}</h1>
                         <p className="mb-4 text-muted-foreground text-lg">{routeError.statusText}</p>
                         <p className="text-sm text-muted-foreground mb-6">{routeError.data?.message || t("error.unexpected", "发生了意外错误")}</p>
-                        
+
                         <div className="flex flex-col sm:flex-row gap-3 justify-center">
                             <Button
                                 onClick={() => window.location.reload()}
@@ -95,32 +95,32 @@ export function ErrorDisplay({ error }: ErrorDisplayProps) {
     }
 
     return (
-        <div className="flex min-h-screen w-full flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-background to-muted/30">
-            <motion.div 
+        <div className="flex min-h-screen w-full flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-background to-muted/30 dark:bg-background/30">
+            <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="w-full max-w-md p-8 rounded-lg bg-card shadow-lg border border-border"
+                className="w-full max-w-md p-8 rounded-lg bg-card shadow-lg border border-border dark:bg-background/10 dark:border-gray-700"
             >
-                <motion.div 
+                <motion.div
                     initial={{ scale: 0.8 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.2, type: "spring" }}
-                    className="mx-auto bg-red-100 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-6"
+                    className="mx-auto bg-red-100 dark:bg-red-900/30 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-6"
                 >
-                    <AlertCircle className="h-10 w-10 text-red-500" />
+                    <AlertCircle className="h-10 w-10 text-red-500 dark:text-red-400" />
                 </motion.div>
                 <h1 className="text-3xl font-bold mb-3">{t("error.title", "发生了错误")}</h1>
                 <p className="mb-4 text-muted-foreground text-lg">{error?.message || t("error.appProblem", "应用程序遇到了意外问题")}</p>
-                
+
                 {error?.stack && (
                     <div className="mb-6 mx-auto max-w-md">
-                        <div className="bg-muted p-3 rounded-md text-left overflow-x-auto text-xs font-mono text-muted-foreground mb-4">
+                        <div className="bg-muted dark:bg-gray-800/30 p-3 rounded-md text-left overflow-x-auto text-xs font-mono text-muted-foreground dark:text-gray-300 dark:text-shadow-glow-white mb-4">
                             {error.stack.split('\n').slice(0, 3).join('\n')}
                         </div>
                     </div>
                 )}
-                
+
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <Button
                         onClick={() => window.location.reload()}

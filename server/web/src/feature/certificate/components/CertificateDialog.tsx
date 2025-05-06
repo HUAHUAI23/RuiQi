@@ -61,12 +61,12 @@ export function CertificateDialog({
             <AnimatePresence mode="wait">
                 {open && (
                     <motion.div {...dialogEnterExitAnimation}>
-                        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto hide-scrollbar p-0">
+                        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto scrollbar-neon p-0">
                             <motion.div {...dialogContentAnimation}>
                                 <motion.div {...dialogHeaderAnimation}>
                                     <DialogHeader className="p-6 pb-3">
                                         <DialogTitle className="text-xl">{title}</DialogTitle>
-                                        <DialogDescription>{description}</DialogDescription>
+                                        <DialogDescription className="dark:text-shadow-glow-white">{description}</DialogDescription>
                                     </DialogHeader>
                                 </motion.div>
 

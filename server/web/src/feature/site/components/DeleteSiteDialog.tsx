@@ -56,7 +56,7 @@ export function DeleteSiteDialog({
                                 <motion.div {...dialogHeaderAnimation}>
                                     <AlertDialogHeader className="p-6 pb-3">
                                         <AlertDialogTitle className="text-xl">{t('site.deleteDialog.confirmTitle')}</AlertDialogTitle>
-                                        <AlertDialogDescription>
+                                        <AlertDialogDescription className="dark:text-shadow-glow-white">
                                             {t('site.deleteDialog.confirmDescription')}
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>

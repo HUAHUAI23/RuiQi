@@ -4,7 +4,7 @@ import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area"
 import { cn } from "@/lib/utils"
 
 interface ScrollAreaProps extends React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> {
-  scrollbarVariant?: "default" | "neon"
+  scrollbarVariant?: "default" | "neon" | "none"
 }
 
 const ScrollArea = React.forwardRef<
@@ -26,7 +26,7 @@ const ScrollArea = React.forwardRef<
 ScrollArea.displayName = ScrollAreaPrimitive.Root.displayName
 
 interface ScrollBarProps extends React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar> {
-  variant?: "default" | "neon"
+  variant?: "default" | "neon" | "none"
 }
 
 const ScrollBar = React.forwardRef<
@@ -42,6 +42,7 @@ const ScrollBar = React.forwardRef<
         "h-full w-2.5 border-l border-l-transparent p-[1px]",
       orientation === "horizontal" &&
         "h-2.5 flex-col border-t border-t-transparent p-[1px]",
+      variant === "none" && "opacity-0",
       className
     )}
     {...props}
@@ -50,7 +51,10 @@ const ScrollBar = React.forwardRef<
       className={cn(
         "relative flex-1 rounded-full",
         variant === "default" && "bg-border dark:bg-slate-700",
-        variant === "neon" && "bg-primary dark:bg-primary/80 shadow-[0_0_8px_rgba(var(--primary-rgb),0.6),0_0_16px_rgba(var(--primary-rgb),0.3)] dark:shadow-[0_0_10px_rgba(var(--primary-rgb),0.7),0_0_20px_rgba(var(--primary-rgb),0.4),0_0_30px_rgba(var(--primary-rgb),0.2)]"
+        variant === "neon" && 
+          "bg-primary dark:bg-primary/80 " +
+          "shadow-[0_0_8px_rgba(var(--primary-rgb),60%),0_0_16px_rgba(var(--primary-rgb),30%)] " + 
+          "dark:shadow-[0_0_10px_rgba(var(--primary-rgb),70%),0_0_20px_rgba(var(--primary-rgb),40%),0_0_30px_rgba(var(--primary-rgb),20%)]"
       )} 
     />
   </ScrollAreaPrimitive.ScrollAreaScrollbar>

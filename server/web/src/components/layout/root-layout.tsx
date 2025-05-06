@@ -13,7 +13,7 @@ export function RootLayout() {
                     settings: true,
                 }}
             />
-            <div className="flex-1 overflow-auto bg-gradient-to-br from-slate-50 to-white hide-scrollbar">
+            <div className="flex-1 overflow-auto bg-gradient-to-br from-slate-50 to-white scrollbar-none">
                 <main className="flex flex-col h-full">
                     <Breadcrumb />
                     <div className="flex-1 overflow-auto">

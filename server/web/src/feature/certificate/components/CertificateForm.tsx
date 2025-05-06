@@ -214,7 +214,7 @@ export function CertificateForm({
         if (!parsedInfo) return null
 
         return (
-            <div className="p-4 border rounded-md bg-zinc-50">
+            <div className="p-4 border rounded-md bg-zinc-50 dark:bg-gray-800/10 dark:border-gray-700">
                 <h3 className="text-sm font-medium mb-2">{t("certificate.dialog.parsedInfo")}</h3>
                 <div className="space-y-2 text-sm">
                     <InfoRow label={t("certificate.dialog.issuer")} value={parsedInfo.issuerName} />
@@ -227,7 +227,7 @@ export function CertificateForm({
                         <span className="w-24 text-muted-foreground">{t("certificate.dialog.domains")}:</span>
                         <div className="flex flex-wrap gap-1">
                             {parsedInfo.domains.map((domain, index) => (
-                                <span key={index} className="px-2 py-0.5 bg-gray-200 rounded text-xs">
+                                <span key={index} className="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs dark:text-shadow-glow-white">
                                     {domain}
                                 </span>
                             ))}
@@ -264,9 +264,9 @@ export function CertificateForm({
                         name="name"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>{t("certificate.dialog.certName")}</FormLabel>
+                                <FormLabel className="dark:text-shadow-glow-white">{t("certificate.dialog.certName")}</FormLabel>
                                 <FormControl>
-                                    <Input placeholder={t("certificate.dialog.certName")} {...field} />
+                                    <Input className="dark:text-shadow-glow-white" placeholder={t("certificate.dialog.certName")} {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -278,11 +278,11 @@ export function CertificateForm({
                         name="description"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>{t("certificate.dialog.description")}</FormLabel>
+                                <FormLabel className="dark:text-shadow-glow-white">{t("certificate.dialog.description")}</FormLabel>
                                 <FormControl>
                                     <Textarea
                                         placeholder={t("certificate.dialog.descriptionPlaceholder")}
-                                        className="resize-none"
+                                        className="resize-none dark:text-shadow-glow-white"
                                         {...field}
                                     />
                                 </FormControl>
@@ -293,7 +293,7 @@ export function CertificateForm({
 
                     {/* 公钥文件上传 */}
                     <div className="space-y-2">
-                        <FormLabel>{t("certificate.dialog.publicKeyFile")}</FormLabel>
+                        <FormLabel className="dark:text-shadow-glow-white">{t("certificate.dialog.publicKeyFile")}</FormLabel>
                         {publicKeyFile ? (
                             <FilePreview
                                 filename={publicKeyFile}
@@ -314,11 +314,11 @@ export function CertificateForm({
                         name="publicKey"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>{t("certificate.dialog.publicKeyContent")}</FormLabel>
+                                <FormLabel className="dark:text-shadow-glow-white">{t("certificate.dialog.publicKeyContent")}</FormLabel>
                                 <FormControl>
                                     <Textarea
                                         placeholder={t("certificate.dialog.publicKeyPlaceholder")}
-                                        className="font-mono text-xs h-32"
+                                        className="font-mono text-xs h-32 dark:text-shadow-glow-white"
                                         {...field}
                                         onChange={(e) => {
                                             field.onChange(e)
@@ -333,7 +333,7 @@ export function CertificateForm({
 
                     {/* 私钥文件上传 */}
                     <div className="space-y-2">
-                        <FormLabel>{t("certificate.dialog.privateKeyFile")}</FormLabel>
+                        <FormLabel className='dark:text-shadow-glow-white'>{t("certificate.dialog.privateKeyFile")}</FormLabel>
                         {privateKeyFile ? (
                             <FilePreview
                                 filename={privateKeyFile}
@@ -354,11 +354,11 @@ export function CertificateForm({
                         name="privateKey"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>{t("certificate.dialog.privateKeyContent")}</FormLabel>
+                                <FormLabel className="dark:text-shadow-glow-white">{t("certificate.dialog.privateKeyContent")}</FormLabel>
                                 <FormControl>
                                     <Textarea
                                         placeholder={t("certificate.dialog.privateKeyPlaceholder")}
-                                        className="font-mono text-xs h-32"
+                                        className="font-mono text-xs h-32 dark:text-shadow-glow-white"
                                         {...field}
                                     />
                                 </FormControl>

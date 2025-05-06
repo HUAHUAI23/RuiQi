@@ -244,7 +244,7 @@ export function ConfigForm({ config, isLoading }: ConfigFormProps) {
                                     <FormControl>
                                         <Textarea
                                             placeholder={t("globalSetting.config.engineDirectivesPlaceholder")}
-                                            className="min-h-[200px] font-mono text-sm scrollbar-custom scrollbar-neon dark:text-shadow-glow-white"
+                                            className="min-h-[200px] font-mono text-sm scrollbar-neon dark:text-shadow-glow-white"
                                             {...field}
                                         />
                                     </FormControl>

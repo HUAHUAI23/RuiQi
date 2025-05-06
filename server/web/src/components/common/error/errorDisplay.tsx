@@ -87,16 +87,16 @@ export const AdvancedErrorDisplay = ({
 
     if (useCardStyle) {
         return (
-            <Card className={cn("mx-auto my-6 max-w-xl border-red-200 shadow-md", className)}>
+            <Card className={cn("mx-auto my-6 max-w-xl border-red-200 dark:border-red-900/50 shadow-md", className)}>
                 <CardHeader className="pb-2">
                     <div className="flex items-center gap-3">
-                        <div className="bg-red-50 p-2 rounded-full">
+                        <div className="bg-red-50 dark:bg-red-900/30 p-2 rounded-full">
                             {config.icon}
                         </div>
                         <div className="flex-1">
-                            <CardTitle className="text-lg text-red-700">{title}</CardTitle>
+                            <CardTitle className="text-lg text-red-700 dark:text-red-400">{title}</CardTitle>
                             {errorCode && (
-                                <Badge variant="outline" className="mt-1 text-xs border-red-200 text-red-500">
+                                <Badge variant="outline" className="mt-1 text-xs border-red-200 dark:border-red-900/50 text-red-500 dark:text-red-400">
                                     {t('error.code', '错误代码')}: {errorCode}
                                 </Badge>
                             )}
@@ -114,7 +114,7 @@ export const AdvancedErrorDisplay = ({
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="px-2 text-xs flex items-center gap-1 text-red-600 hover:bg-red-50"
+                                    className="px-2 text-xs flex items-center gap-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                                 >
                                     {showDetails ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                                     {showDetails ? t('error.hideDetails', '隐藏详情') : t('error.viewDetails', '查看详情')}
@@ -123,14 +123,14 @@ export const AdvancedErrorDisplay = ({
                         </div>
 
                         <CollapsibleContent>
-                            <div className="mt-3 p-3 bg-red-50 rounded-md text-xs font-mono overflow-auto">
-                                <p className="break-words overflow-hidden max-h-[100px]">{String(errorMessage)}</p>
-                                {errorCode && <p className="mt-1">{t('error.code', '错误代码')}: {errorCode}</p>}
-                                {requestId && <p className="mt-1">{t('error.requestId', '请求ID')}: {requestId}</p>}
+                            <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-md text-xs font-mono overflow-auto">
+                                <p className="break-words overflow-hidden max-h-[100px] dark:text-gray-300">{String(errorMessage)}</p>
+                                {errorCode && <p className="mt-1 dark:text-gray-300">{t('error.code', '错误代码')}: {errorCode}</p>}
+                                {requestId && <p className="mt-1 dark:text-gray-300">{t('error.requestId', '请求ID')}: {requestId}</p>}
                                 {formattedErrorDetail && (
                                     <div className="mt-1">
-                                        <p>{t('error.details', '错误详情')}:</p>
-                                        <pre className="mt-1 p-2 bg-red-100 rounded-md overflow-x-auto">
+                                        <p className="dark:text-gray-300">{t('error.details', '错误详情')}:</p>
+                                        <pre className="mt-1 p-2 bg-red-100 dark:bg-red-900/30 rounded-md overflow-x-auto dark:text-gray-300">
                                             {formattedErrorDetail}
                                         </pre>
                                     </div>
@@ -145,7 +145,7 @@ export const AdvancedErrorDisplay = ({
                             variant="outline"
                             size="sm"
                             onClick={onRetry}
-                            className="flex items-center gap-2 text-xs border-red-300 text-red-600 hover:bg-red-50 mt-2"
+                            className="flex items-center gap-2 text-xs border-red-300 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 mt-2"
                         >
                             <RefreshCw className="h-3 w-3" />
                             {t('error.retry', '重试')}
@@ -170,7 +170,7 @@ export const AdvancedErrorDisplay = ({
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="px-2 text-xs flex items-center gap-1 hover:bg-red-50"
+                                className="px-2 text-xs flex items-center gap-1 hover:bg-red-50 dark:hover:bg-red-900/20"
                             >
                                 <HelpCircle className="h-3 w-3" />
                                 {showDetails ? t('error.hideDetails', '隐藏详情') : t('error.viewDetails', '查看详情')}
@@ -182,7 +182,7 @@ export const AdvancedErrorDisplay = ({
                                 variant="outline"
                                 size="sm"
                                 onClick={onRetry}
-                                className="flex items-center gap-2 text-xs border-red-300 hover:bg-red-50 hover:text-red-600"
+                                className="flex items-center gap-2 text-xs border-red-300 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400"
                             >
                                 <RefreshCw className="h-3 w-3" />
                                 {t('error.retry', '重试')}
@@ -191,14 +191,14 @@ export const AdvancedErrorDisplay = ({
                     </div>
 
                     <CollapsibleContent>
-                        <div className="mt-3 p-3 bg-red-50 rounded text-xs font-mono overflow-auto">
-                            <p className="break-words overflow-hidden max-h-[100px]">{String(errorMessage)}</p>
-                            {errorCode && <p className="mt-1">{t('error.code', '错误代码')}: {errorCode}</p>}
-                            {requestId && <p className="mt-1">{t('error.requestId', '请求ID')}: {requestId}</p>}
+                        <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded text-xs font-mono overflow-auto">
+                            <p className="break-words overflow-hidden max-h-[100px] dark:text-gray-300">{String(errorMessage)}</p>
+                            {errorCode && <p className="mt-1 dark:text-gray-300">{t('error.code', '错误代码')}: {errorCode}</p>}
+                            {requestId && <p className="mt-1 dark:text-gray-300">{t('error.requestId', '请求ID')}: {requestId}</p>}
                             {formattedErrorDetail && (
                                 <div className="mt-1">
-                                    <p>{t('error.details', '错误详情')}:</p>
-                                    <pre className="mt-1 p-2 bg-red-100 rounded overflow-x-auto">
+                                    <p className="dark:text-gray-300">{t('error.details', '错误详情')}:</p>
+                                    <pre className="mt-1 p-2 bg-red-100 dark:bg-red-900/30 rounded overflow-x-auto dark:text-gray-300">
                                         {formattedErrorDetail}
                                     </pre>
                                 </div>

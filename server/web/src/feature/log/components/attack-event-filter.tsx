@@ -231,7 +231,6 @@ export function AttackEventFilter({
                                         <FormLabel className="text-xs dark:text-shadow-glow-white">{t('srcPort')}</FormLabel>
                                         <FormControl>
                                             <Input
-                                                type="number"
                                                 placeholder={t('portPlaceholder')}
                                                 {...field}
                                                 onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
@@ -250,7 +249,6 @@ export function AttackEventFilter({
                                         <FormLabel className="text-xs dark:text-shadow-glow-white">{t('dstPort')}</FormLabel>
                                         <FormControl>
                                             <Input
-                                                type="number"
                                                 placeholder={t('portPlaceholder')}
                                                 {...field}
                                                 onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}

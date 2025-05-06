@@ -133,6 +133,12 @@ const config = {
                     "50%": { boxShadow: "0 0 8px rgba(var(--primary-rgb), 0.6), 0 0 16px rgba(var(--primary-rgb), 0.3)" },
                     "100%": { boxShadow: "0 0 4px rgba(var(--primary-rgb), 0.3), 0 0 8px rgba(var(--primary-rgb), 0.1)" }
                 },
+                // 滚动条霓虹灯效果
+                "scrollbar-neon": {
+                    "0%": { boxShadow: "0 0 5px rgba(var(--primary-rgb), 0.4), 0 0 10px rgba(var(--primary-rgb), 0.2)" },
+                    "50%": { boxShadow: "0 0 10px rgba(var(--primary-rgb), 0.7), 0 0 20px rgba(var(--primary-rgb), 0.4)" },
+                    "100%": { boxShadow: "0 0 5px rgba(var(--primary-rgb), 0.4), 0 0 10px rgba(var(--primary-rgb), 0.2)" }
+                },
                 "sidebar-neon": {
                     "0%": { boxShadow: "inset 0 0 20px rgba(var(--primary-rgb), 0.2), 0 0 15px rgba(var(--primary-rgb), 0.1)" },
                     "50%": { boxShadow: "inset 0 0 30px rgba(var(--primary-rgb), 0.4), 0 0 25px rgba(var(--primary-rgb), 0.2)" },
@@ -185,6 +191,7 @@ const config = {
                 "logo-pulse": "logo-pulse 1.5s infinite ease-in-out",
                 "border-pulsate": "border-pulsate 1.5s infinite alternate",
                 "scrollbar-glow": "scrollbar-glow 1.5s infinite alternate",
+                "scrollbar-neon": "scrollbar-neon 2s ease-in-out infinite",
                 "sidebar-neon-glow": "sidebar-neon 4s ease-in-out infinite",
                 "sidebar-neon-flow": "sidebar-neon-gradient 15s ease infinite, aurora 20s ease infinite",
                 "neon-pulse": "neon-pulse 3s infinite alternate",

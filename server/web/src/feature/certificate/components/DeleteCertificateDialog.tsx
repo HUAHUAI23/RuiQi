@@ -58,7 +58,7 @@ export function DeleteCertificateDialog({
                                 <motion.div {...dialogHeaderAnimation}>
                                     <AlertDialogHeader className="p-6 pb-3">
                                         <AlertDialogTitle className="text-xl">{t("certificate.deleteDialog.confirmTitle")}</AlertDialogTitle>
-                                        <AlertDialogDescription>
+                                        <AlertDialogDescription className="dark:text-shadow-glow-white">
                                             {t("certificate.deleteDialog.confirmDescription")}
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>

@@ -241,16 +241,13 @@ export function SiteForm({
                                     name="listenPort"
                                     render={({ field }) => (
                                         <div className="flex flex-col gap-1.5">
-                                            <FormLabel className="text-sm font-medium dark:text-shadow-glow-white">{t('site.listenPort')}</FormLabel>
+                                            <FormLabel className="text-sm font-medium">{t('site.listenPort')}</FormLabel>
                                             <FormControl>
                                                 <Input
-                                                    type="number"
-                                                    min={1}
-                                                    max={65535}
                                                     placeholder="80"
                                                     className="rounded-md p-3 h-12 dark:text-shadow-glow-white"
                                                     {...field}
-                                                    onChange={(e) => field.onChange(Number(e.target.value))}
+                                                    onChange={(e) => field.onChange(e.target.value)}
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -349,8 +346,8 @@ export function SiteForm({
 
 
                                     {selectedCertificate && (
-                                        <div className="mt-4 p-4 border rounded-md bg-gray-50">
-                                            <h4 className="text-sm font-medium mb-2">{t('site.dialog.selectedCertInfo')}</h4>
+                                        <div className="mt-4 p-4 border rounded-md bg-zinc-50 dark:bg-gray-800/10 dark:border-gray-700">
+                                            <h4 className="text-sm font-medium mb-2 dark:text-shadow-glow-white">{t('site.dialog.selectedCertInfo')}</h4>
                                             <div className="space-y-2 text-sm">
                                                 <InfoRow label={t('certificate.name')} value={selectedCertificate?.name || ''} />
                                                 <InfoRow
@@ -365,7 +362,7 @@ export function SiteForm({
                                                     <span className="w-24 text-muted-foreground dark:text-shadow-glow-white">{t('certificate.dialog.domains')}:</span>
                                                     <div className="flex flex-wrap gap-1">
                                                         {selectedCertificate?.domains.map((domain, index) => (
-                                                            <span key={index} className="px-2 py-0.5 bg-gray-200 rounded text-xs">
+                                                            <span key={index} className="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs dark:text-shadow-glow-white">
                                                                 {domain}
                                                             </span>
                                                         ))}
@@ -447,13 +444,10 @@ export function SiteForm({
                                                         <FormLabel className="text-sm font-medium dark:text-shadow-glow-white">{t('site.dialog.port')}</FormLabel>
                                                         <FormControl>
                                                             <Input
-                                                                type="number"
-                                                                min={1}
-                                                                max={65535}
                                                                 placeholder="80"
                                                                 className="rounded-md p-3 dark:text-shadow-glow-white"
                                                                 {...field}
-                                                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                                                onChange={(e) => field.onChange(e.target.value)}
                                                             />
                                                         </FormControl>
                                                         <FormMessage />

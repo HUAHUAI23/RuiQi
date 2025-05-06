@@ -86,7 +86,7 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                     </motion.div>
                                 </DialogHeader>
 
-                                <ScrollArea scrollbarVariant="neon" className="px-4 py-2 h-[calc(90vh-6rem)] transition-colors duration-200">
+                                <ScrollArea scrollbarVariant="none" className="px-4 py-2 h-[calc(90vh-6rem)] transition-colors duration-200">
                                     <div className="space-y-2 p-0 max-w-full max-h-full">
                                         {/* 攻击概述卡片 */}
                                         <motion.div {...dialogContentItemAnimation}>
@@ -303,7 +303,7 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                                                         <Button
                                                                             variant="ghost"
                                                                             size="sm"
-                                                                            className="h-7 text-muted-foreground hover:text-card-foreground dark:text-slate-400 dark:hover:text-slate-200 dark:button-neon"
+                                                                            className="h-7 text-muted-foreground hover:text-card-foreground dark:text-slate-400 dark:hover:text-slate-200 dark:button-neon dark:text-shadow-glow-white"
                                                                             onClick={() => handleCopy(data.request, "requestCopy")}
                                                                         >
                                                                             {copyState["requestCopy"] ? (
@@ -314,7 +314,7 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                                                             {t("attackDetail.copyAll")}
                                                                         </Button>
                                                                     </div>
-                                                                    <ScrollArea scrollbarVariant="neon" className="transition-colors duration-200 max-h-[300px]">
+                                                                    <ScrollArea scrollbarVariant="neon" className="transition-colors duration-200 max-h-[18.75rem] overflow-auto scrollbar-neon">
                                                                         <pre className="p-4 text-sm whitespace-pre-wrap font-mono text-card-foreground bg-background dark:bg-slate-900 dark:text-slate-200 dark:text-shadow-glow-white">
                                                                             <code className="text-sm break-all font-mono text-card-foreground dark:text-slate-200 dark:text-shadow-glow-white whitespace-pre-wrap break-words block w-full overflow-hidden">
                                                                                 {data.request}
@@ -330,7 +330,7 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                                                         <Button
                                                                             variant="ghost"
                                                                             size="sm"
-                                                                            className="h-7 text-muted-foreground hover:text-card-foreground dark:text-slate-400 dark:hover:text-slate-200 dark:button-neon"
+                                                                            className="h-7 text-muted-foreground hover:text-card-foreground dark:text-slate-400 dark:hover:text-slate-200 dark:button-neon dark:text-shadow-glow-white"
                                                                             onClick={() => handleCopy(data.response, "responseCopy")}
                                                                         >
                                                                             {copyState["responseCopy"] ? (
@@ -341,7 +341,7 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                                                             {t("attackDetail.copyAll")}
                                                                         </Button>
                                                                     </div>
-                                                                    <ScrollArea scrollbarVariant="neon" className="transition-colors duration-200 max-h-[300px]">
+                                                                    <ScrollArea scrollbarVariant="neon" className="transition-colors duration-200 max-h-[18.75rem] overflow-auto">
                                                                         <pre className="p-4 text-sm whitespace-pre-wrap font-mono text-card-foreground bg-background dark:bg-slate-900 dark:text-slate-200 dark:text-shadow-glow-white">
                                                                             <code className="text-sm break-all font-mono text-card-foreground dark:text-slate-200 dark:text-shadow-glow-white whitespace-pre-wrap break-words block w-full overflow-hidden">
                                                                                 {data.response ? data.response : t("attackDetail.noResponse")}
@@ -357,7 +357,7 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                                                         <Button
                                                                             variant="ghost"
                                                                             size="sm"
-                                                                            className="h-7 text-muted-foreground hover:text-card-foreground dark:text-slate-400 dark:hover:text-slate-200 dark:button-neon"
+                                                                            className="h-7 text-muted-foreground hover:text-card-foreground dark:text-slate-400 dark:hover:text-slate-200 dark:button-neon dark:text-shadow-glow-white"
                                                                             onClick={() => handleCopy(data.logs, "logsCopy")}
                                                                         >
                                                                             {copyState["logsCopy"] ? (
@@ -368,7 +368,7 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                                                             {t("attackDetail.copyAll")}
                                                                         </Button>
                                                                     </div>
-                                                                    <ScrollArea scrollbarVariant="neon" className="transition-colors duration-200 max-h-[300px]">
+                                                                    <ScrollArea scrollbarVariant="neon" className="transition-colors duration-200 max-h-[18.75rem] overflow-auto">
                                                                         <pre className="p-4 text-sm whitespace-pre-wrap font-mono text-card-foreground bg-background dark:bg-slate-900 dark:text-slate-200 dark:text-shadow-glow-white">
                                                                             <code className="text-sm break-all font-mono text-card-foreground dark:text-slate-200 dark:text-shadow-glow-white whitespace-pre-wrap break-words block w-full overflow-hidden">
                                                                                 {data.logs}
