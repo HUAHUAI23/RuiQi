@@ -90,9 +90,9 @@ func (c *SimpleCondition) Match(eng *RuleEngine, ip, url, path string) (bool, er
 
 // CompositeCondition 复合条件
 type CompositeCondition struct {
-	Type       ConditionType     `json:"type" bson:"type"`
-	Operator   LogicalOperator   `json:"operator" bson:"operator"`
-	Conditions []json.RawMessage `json:"conditions" bson:"conditions"`
+	Type       ConditionType   `json:"type" bson:"type"`
+	Operator   LogicalOperator `json:"operator" bson:"operator"`
+	Conditions []bson.Raw      `json:"conditions" bson:"conditions"`
 
 	// 运行时字段，不用于JSON/BSON
 	parsedConditions []Matcher
@@ -137,26 +137,26 @@ func (c *CompositeCondition) Match(eng *RuleEngine, ip, url, path string) (bool,
 type ConditionFactory struct{}
 
 // ParseCondition 解析条件
-func (f *ConditionFactory) ParseCondition(data json.RawMessage) (Matcher, error) {
+func (f *ConditionFactory) ParseCondition(data bson.Raw) (Matcher, error) {
 	var baseCondition struct {
 		Type ConditionType `json:"type" bson:"type"`
 	}
 
-	if err := json.Unmarshal(data, &baseCondition); err != nil {
+	if err := bson.Unmarshal(data, &baseCondition); err != nil {
 		return nil, fmt.Errorf("解析条件类型失败: %v", err)
 	}
 
 	switch baseCondition.Type {
 	case SimpleConditionType:
 		var condition SimpleCondition
-		if err := json.Unmarshal(data, &condition); err != nil {
+		if err := bson.Unmarshal(data, &condition); err != nil {
 			return nil, fmt.Errorf("解析简单条件失败: %v", err)
 		}
 		return &condition, nil
 
 	case CompositeConditionType:
 		var condition CompositeCondition
-		if err := json.Unmarshal(data, &condition); err != nil {
+		if err := bson.Unmarshal(data, &condition); err != nil {
 			return nil, fmt.Errorf("解析复合条件失败: %v", err)
 		}
 
@@ -188,7 +188,7 @@ type Rule struct {
 
 // MongoDB配置
 type MongoDBConfig struct {
-	mongoClient       *mongo.Client
+	MongoClient       *mongo.Client
 	Database          string // 数据库名称
 	RuleCollection    string // 规则集合名称
 	IPGroupCollection string // IP组集合名称
@@ -200,40 +200,144 @@ type RuleEngine struct {
 	IPGroups    map[string]*model.IPGroup `json:"ip_groups"` // IP组映射表
 	regexCache  map[string]*regexp.Regexp // 正则表达式缓存
 	factory     ConditionFactory          // 条件工厂
-	mongoConfig MongoDBConfig             // MongoDB配置
+	mongoConfig *MongoDBConfig            // MongoDB配置
 }
 
 // NewRuleEngine 创建规则引擎
 func NewRuleEngine() *RuleEngine {
 	return &RuleEngine{
-		Rules:      make([]Rule, 0),
-		IPGroups:   make(map[string]*model.IPGroup),
+		Rules:    make([]Rule, 0),
+		IPGroups: make(map[string]*model.IPGroup),
+		// TODO: 使用 LRU 优化，设置缓存过期时间，避免缓存过大
 		regexCache: make(map[string]*regexp.Regexp),
 		factory:    ConditionFactory{},
 	}
 }
 
-func (e *RuleEngine) InitMongoConfig(config MongoDBConfig) error {
+func (e *RuleEngine) InitMongoConfig(config *MongoDBConfig) error {
 	e.mongoConfig = config
 	return nil
 }
 
-// LoadRulesFromMongoDB 从MongoDB加载规则
-
-func (e *RuleEngine) LoadRulesFromMongoDB() error {
-	if e.mongoConfig.mongoClient == nil {
+// LoadIPGroupsFromMongoDB 从MongoDB加载IP组
+func (e *RuleEngine) LoadIPGroupsFromMongoDB() error {
+	if e.mongoConfig.MongoClient == nil {
 		return fmt.Errorf("MongoDB客户端未初始化")
 	}
 
 	// 获取集合
-	collection := e.mongoConfig.mongoClient.
+	collection := e.mongoConfig.MongoClient.
 		Database(e.mongoConfig.Database).
-		Collection(e.mongoConfig.RuleCollection)
+		Collection(e.mongoConfig.IPGroupCollection)
 
-	// 查询所有规则
+	// 创建上下文
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
+	// 检查并创建默认IP组逻辑
+	defaultBlacklistCount, err := collection.CountDocuments(ctx, bson.D{{Key: "name", Value: "system_default_blacklist"}})
+	if err != nil {
+		return fmt.Errorf("检查默认黑名单是否存在失败: %v", err)
+	}
+
+	// 如果默认黑名单不存在，则创建
+	if defaultBlacklistCount == 0 {
+		// 创建默认黑名单组
+		defaultBlacklist := model.IPGroup{
+			Name:  "system_default_blacklist",
+			Items: []string{}, // 初始为空
+		}
+
+		// 插入到数据库
+		_, err := collection.InsertOne(ctx, defaultBlacklist)
+		if err != nil {
+			return fmt.Errorf("创建默认IP黑名单组失败: %v", err)
+		}
+	}
+
+	// 查询所有IP组
+	cursor, err := collection.Find(ctx, bson.D{})
+	if err != nil {
+		return fmt.Errorf("查询IP组失败: %v", err)
+	}
+	defer cursor.Close(ctx)
+
+	// 解码IP组
+	var ipGroups []model.IPGroup
+	if err = cursor.All(ctx, &ipGroups); err != nil {
+		return fmt.Errorf("解码IP组失败: %v", err)
+	}
+
+	// 初始化映射表
+	e.IPGroups = make(map[string]*model.IPGroup)
+
+	// 填充IP组映射
+	for _, group := range ipGroups {
+		for _, item := range group.Items {
+			if !isValidIPOrCIDR(item) {
+				return fmt.Errorf("IP组 %s 中包含无效的IP或CIDR: %s", group.Name, item)
+			}
+		}
+		e.IPGroups[group.Name] = &group
+	}
+
+	return nil
+}
+
+// LoadRulesFromMongoDB 从MongoDB加载规则
+func (e *RuleEngine) LoadRulesFromMongoDB() error {
+	if e.mongoConfig.MongoClient == nil {
+		return fmt.Errorf("MongoDB客户端未初始化")
+	}
+
+	// 获取集合
+	collection := e.mongoConfig.MongoClient.
+		Database(e.mongoConfig.Database).
+		Collection(e.mongoConfig.RuleCollection)
+
+	// 创建上下文
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// 检查并创建默认规则逻辑
+	defaultRuleCount, err := collection.CountDocuments(ctx, bson.D{{Key: "name", Value: "system_default_ip_block"}})
+	if err != nil {
+		return fmt.Errorf("检查默认规则是否存在失败: %v", err)
+	}
+
+	// 如果默认规则不存在，则创建
+	if defaultRuleCount == 0 {
+		// 创建默认规则条件
+		defaultCondition := SimpleCondition{
+			Type:       "simple",
+			Target:     "source_ip",
+			MatchType:  "in_ipgroup",
+			MatchValue: "system_default_blacklist",
+		}
+
+		// 将条件序列化为BSON
+		conditionBytes, err := bson.Marshal(defaultCondition)
+		if err != nil {
+			return fmt.Errorf("序列化默认规则条件失败: %v", err)
+		}
+
+		// 创建默认规则
+		defaultRule := model.MicroRule{
+			Name:      "system_default_ip_block",
+			Type:      "blacklist",
+			Status:    "enabled",
+			Priority:  9999, // 最高优先级
+			Condition: conditionBytes,
+		}
+
+		// 插入到数据库
+		_, err = collection.InsertOne(ctx, defaultRule)
+		if err != nil {
+			return fmt.Errorf("创建默认规则失败: %v", err)
+		}
+	}
+
+	// 查询所有规则
 	cursor, err := collection.Find(ctx, bson.D{})
 	if err != nil {
 		return fmt.Errorf("查询规则失败: %v", err)
@@ -246,7 +350,7 @@ func (e *RuleEngine) LoadRulesFromMongoDB() error {
 		return fmt.Errorf("解码规则失败: %v", err)
 	}
 
-	// 设置序列号 - 记录规则在原始配置中的顺序
+	// 设置序列号
 	for i := range rules {
 		rules[i].sequence = i
 	}
@@ -270,46 +374,6 @@ func (e *RuleEngine) LoadRulesFromMongoDB() error {
 	})
 
 	e.Rules = rules
-	return nil
-}
-
-// LoadIPGroupsFromMongoDB 从MongoDB加载IP组
-func (e *RuleEngine) LoadIPGroupsFromMongoDB() error {
-	if e.mongoConfig.mongoClient == nil {
-		return fmt.Errorf("MongoDB客户端未初始化")
-	}
-
-	// 获取集合
-	collection := e.mongoConfig.mongoClient.
-		Database(e.mongoConfig.Database).
-		Collection(e.mongoConfig.IPGroupCollection)
-
-	// 查询所有IP组
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	// 使用bson.D{}代替bson.M{}
-	cursor, err := collection.Find(ctx, bson.D{})
-	if err != nil {
-		return fmt.Errorf("查询IP组失败: %v", err)
-	}
-	defer cursor.Close(ctx)
-
-	// 解码IP组
-	var ipGroups []model.IPGroup
-	if err = cursor.All(ctx, &ipGroups); err != nil {
-		return fmt.Errorf("解码IP组失败: %v", err)
-	}
-
-	// 验证IP组并添加到映射表
-	for _, group := range ipGroups {
-		for _, item := range group.Items {
-			if !isValidIPOrCIDR(item) {
-				return fmt.Errorf("IP组 %s 中包含无效的IP或CIDR: %s", group.Name, item)
-			}
-		}
-		e.IPGroups[group.Name] = &group
-	}
 	return nil
 }
 
@@ -339,6 +403,7 @@ func (e *RuleEngine) AddIPGroup(group model.IPGroup) error {
 }
 
 // LoadRulesFromJSON 从JSON加载规则 - 修改加载逻辑，增加序列号处理
+// BUG type transform error bson raw and json raw
 func (e *RuleEngine) LoadRulesFromJSON(data []byte) error {
 	var rules []Rule
 	if err := json.Unmarshal(data, &rules); err != nil {
@@ -414,8 +479,16 @@ func (e *RuleEngine) MatchRequest(ip string, url string, path string) (shouldBlo
 		return false, "", nil, fmt.Errorf("无效的IP地址: %s", ip)
 	}
 
+	// 标记是否存在启用的白名单规则
+	hasWhitelistRule := false
+
 	// 遍历所有规则（已按优先级和序列号排序）
 	for _, r := range e.Rules {
+		// 检查是否存在启用的白名单规则
+		if r.Status == model.RuleEnabled && r.Type == model.WhitelistRule {
+			hasWhitelistRule = true
+		}
+
 		// 跳过禁用的规则
 		if r.Status == model.RuleDisabled {
 			continue
@@ -443,7 +516,13 @@ func (e *RuleEngine) MatchRequest(ip string, url string, path string) (shouldBlo
 		}
 	}
 
-	// 如果没有匹配任何规则，默认放行
+	// 如果没有匹配任何规则，且存在白名单规则，则拦截
+	if hasWhitelistRule {
+		// 存在白名单规则但未匹配任何规则 -> 拦截请求（安全默认值）
+		return true, "", nil, nil
+	}
+
+	// 如果没有匹配任何规则，且不存在白名单规则，则默认放行
 	return false, "", nil, nil
 }
 
@@ -580,6 +659,7 @@ func matchIPFuzzy(ip, pattern string) (bool, error) {
 }
 
 // isIPInGroup 检查IP是否在IP组中
+// TODO: 避免使用线性遍历 O(N)，使用 基数树 (Radix Tree/Patricia Trie) 优化
 func (e *RuleEngine) isIPInGroup(ip, groupName string) (bool, error) {
 	group, exists := e.IPGroups[groupName]
 	if !exists {

@@ -42,8 +42,9 @@ type AppConfig struct {
 
 // ApplicationOptions 应用程序配置选项 配置应用是否开启 ip 解析，日志记录
 type ApplicationOptions struct {
-	MongoConfig *MongoConfig   // MongoDB配置，用于日志存储
-	GeoIPConfig *GeoIP2Options // GeoIP配置，用于IP地理位置处理
+	MongoConfig        *MongoConfig   // MongoDB配置，用于日志存储
+	GeoIPConfig        *GeoIP2Options // GeoIP配置，用于IP地理位置处理
+	RuleEngineDbConfig *MongoDBConfig // 规则引擎数据库配置
 }
 
 type Application struct {
@@ -51,6 +52,7 @@ type Application struct {
 	cache       cache.ExpiringCache
 	logStore    LogStore
 	ipProcessor IPProcessor
+	ruleEngine  *RuleEngine
 
 	AppConfig
 }
@@ -158,6 +160,59 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 			sb.WriteRune(rune('A' + rand.Intn(26)))
 		}
 		req.ID = sb.String()
+	}
+
+	if a.ruleEngine != nil {
+		realIP := getRealClientIP(&req)
+		// 获取路径部分
+		path := string(req.Path)
+
+		// 组装完整的 URL
+		url := path
+		if len(req.Query) > 0 {
+			url = path + "?" + string(req.Query)
+		}
+		shouldBlock, _, rule, err := a.ruleEngine.MatchRequest(realIP, url, path)
+
+		if err != nil {
+			a.Logger.Error().Err(err).
+				Str("url", url).
+				Str("clientIP", realIP).
+				Msg("failed to match request")
+		}
+
+		ruleName := "whitelist block"
+		ruleId := "none"
+		if rule != nil {
+			ruleName = rule.Name
+			ruleId = rule.ID.String()
+		}
+
+		if shouldBlock && err == nil {
+			a.Logger.Info().
+				Str("ruleName", ruleName).
+				Str("ruleId", ruleId).
+				Str("url", url).
+				Str("clientIP", realIP).
+				Msg("request blocked by micro engine")
+
+			err := a.saveMicroEngineLog(rule, &req, req.Headers)
+			if err != nil {
+				a.Logger.Error().Err(err).
+					Str("ruleName", ruleName).
+					Str("ruleId", ruleId).
+					Str("url", url).
+					Str("clientIP", realIP).
+					Msg("failed to save micro engine log")
+			}
+
+			return ErrInterrupted{
+				Interruption: &types.Interruption{
+					Action: "deny",
+					Status: 403,
+				},
+			}
+		}
 	}
 
 	tx := a.waf.NewTransactionWithID(req.ID)
@@ -423,6 +478,61 @@ func buildRequestString(req *applicationRequest, headers []byte) string {
 	return sb.String()
 }
 
+func (a *Application) saveMicroEngineLog(rule *Rule, req *applicationRequest, headers []byte) error {
+	// 定义常量，避免重复字符串
+	const defaultRuleName = "whitelist block"
+	const defaultRuleID = "none"
+	const blockMessage = "request blocked by micro engine"
+
+	// 获取客户端真实IP
+	realIP := getRealClientIP(req)
+
+	// 确定规则信息
+	ruleName := defaultRuleName
+	ruleID := defaultRuleID
+	if rule != nil {
+		ruleName = rule.Name
+		ruleID = rule.ID.String()
+	}
+
+	// 构建日志消息 - 使用fmt.Sprintf而不是多次字符串拼接
+	logMessage := fmt.Sprintf("%s, ruleId: %s, ruleName: %s", blockMessage, ruleID, ruleName)
+
+	// 直接创建具有单个元素的日志切片
+	logs := []model.Log{
+		{
+			Message: logMessage,
+			LogRaw:  logMessage,
+		},
+	}
+
+	// 初始化防火墙日志
+	firewallLog := model.WAFLog{
+		CreatedAt: time.Now(),
+		Request:   buildRequestString(req, headers),
+		Response:  "", // 暂时不处理响应
+		Domain:    getHostFromRequest(req),
+		SrcIP:     realIP,
+		DstIP:     req.DstIp.String(),
+		SrcPort:   int(req.SrcPort),
+		DstPort:   int(req.DstPort),
+		RequestID: req.ID,
+		Logs:      logs, // 直接在初始化时设置日志
+		Payload:   logMessage,
+	}
+
+	// 获取并添加源IP的地理位置信息
+	if a.ipProcessor != nil && realIP != "" {
+		srcIPInfo := a.ipProcessor.GetIPInfo(realIP)
+		if srcIPInfo != nil {
+			firewallLog.SrcIPInfo = srcIPInfo
+		}
+	}
+
+	// 使用日志存储器异步存储
+	return a.logStore.Store(firewallLog)
+}
+
 func (a *Application) saveFirewallLog(matchedRules []types.MatchedRule, interruption *types.Interruption, req *applicationRequest, headers []byte) error {
 	// 构建日志条目
 	logs := make([]model.Log, 0)
@@ -532,6 +642,14 @@ func (a AppConfig) NewApplicationWithContext(ctx context.Context, options Applic
 		)
 		logStore.Start(ctx)
 		app.logStore = logStore
+	}
+
+	// 根据规则引擎数据库配置初始化规则引擎
+	if options.RuleEngineDbConfig != nil && options.RuleEngineDbConfig.MongoClient != nil {
+		ruleEngine := NewRuleEngine()
+		ruleEngine.InitMongoConfig(options.RuleEngineDbConfig)
+		ruleEngine.LoadAllFromMongoDB()
+		app.ruleEngine = ruleEngine
 	}
 
 	// 根据GeoIP配置初始化IP处理器

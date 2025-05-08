@@ -105,6 +105,16 @@ func (s *AgentServerImpl) Start() error {
 		Collection: wafLog.GetCollectionName(),
 	}
 
+	var microRule model.MicroRule
+	var ipGroup model.IPGroup
+
+	ruleEngineMongoConfig := &internal.MongoDBConfig{
+		MongoClient:       mongoClient,
+		Database:          "waf",
+		RuleCollection:    microRule.GetCollectionName(),
+		IPGroupCollection: ipGroup.GetCollectionName(),
+	}
+
 	geoIPConfig := internal.GeoIP2Options{
 		ASNDBPath:  globalConfig.Engine.ASNDBPath,
 		CityDBPath: globalConfig.Engine.CityDBPath,
@@ -139,8 +149,9 @@ func (s *AgentServerImpl) Start() error {
 
 		// 创建应用
 		application, err := internalAppConfig.NewApplicationWithContext(ctx, internal.ApplicationOptions{
-			MongoConfig: mongoConfig,
-			GeoIPConfig: &geoIPConfig,
+			MongoConfig:        mongoConfig,
+			GeoIPConfig:        &geoIPConfig,
+			RuleEngineDbConfig: ruleEngineMongoConfig,
 		}, globalConfig.IsDebug)
 		if err != nil {
 			s.logger.Fatal().Err(err).Msg("Failed creating application: " + appConfig.Name)
