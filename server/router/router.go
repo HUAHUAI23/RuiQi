@@ -30,6 +30,9 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 	wafLogRepo := repository.NewWAFLogRepository(db)
 	certRepo := repository.NewCertificateRepository(db)
 	configRepo := repository.NewConfigRepository(db)
+	ipGroupRepo := repository.NewIPGroupRepository(db)
+	ruleRepo := repository.NewMicroRuleRepository(db)
+
 	// 创建服务
 	authService := service.NewAuthService(userRepo, roleRepo)
 	siteService := service.NewSiteService(siteRepo)
@@ -37,6 +40,8 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 	certService := service.NewCertificateService(certRepo)
 	runnerService, _ := service.NewRunnerService()
 	configService := service.NewConfigService(configRepo)
+	ipGroupService := service.NewIPGroupService(ipGroupRepo)
+	ruleService := service.NewMicroRuleService(ruleRepo)
 	// 创建控制器
 	authController := controller.NewAuthController(authService)
 	siteController := controller.NewSiteController(siteService)
@@ -44,6 +49,8 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 	certController := controller.NewCertificateController(certService)
 	runnerController := controller.NewRunnerController(runnerService)
 	configController := controller.NewConfigController(configService)
+	ipGroupController := controller.NewIPGroupController(ipGroupService)
+	ruleController := controller.NewMicroRuleController(ruleService)
 	// 将仓库添加到上下文中，供中间件使用
 	route.Use(func(c *gin.Context) {
 		c.Set("userRepo", userRepo)
@@ -122,6 +129,26 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 		certRoutes.GET("/:id", middleware.HasPermission(model.PermCertRead), certController.GetCertificateByID)
 		certRoutes.PUT("/:id", middleware.HasPermission(model.PermCertUpdate), certController.UpdateCertificate)
 		certRoutes.DELETE("/:id", middleware.HasPermission(model.PermCertDelete), certController.DeleteCertificate)
+	}
+
+	// IP组管理路由
+	ipGroupRoutes := authenticated.Group("/ip-groups")
+	{
+		ipGroupRoutes.POST("", middleware.HasPermission(model.PermConfigUpdate), ipGroupController.CreateIPGroup)
+		ipGroupRoutes.GET("", middleware.HasPermission(model.PermConfigRead), ipGroupController.GetIPGroups)
+		ipGroupRoutes.GET("/:id", middleware.HasPermission(model.PermConfigRead), ipGroupController.GetIPGroupByID)
+		ipGroupRoutes.PUT("/:id", middleware.HasPermission(model.PermConfigUpdate), ipGroupController.UpdateIPGroup)
+		ipGroupRoutes.DELETE("/:id", middleware.HasPermission(model.PermConfigUpdate), ipGroupController.DeleteIPGroup)
+	}
+
+	// rule 管理路由
+	ruleRoutes := authenticated.Group("/micro-rules")
+	{
+		ruleRoutes.POST("", middleware.HasPermission(model.PermConfigUpdate), ruleController.CreateMicroRule)
+		ruleRoutes.GET("", middleware.HasPermission(model.PermConfigRead), ruleController.GetMicroRules)
+		ruleRoutes.GET("/:id", middleware.HasPermission(model.PermConfigRead), ruleController.GetMicroRuleByID)
+		ruleRoutes.PUT("/:id", middleware.HasPermission(model.PermConfigUpdate), ruleController.UpdateMicroRule)
+		ruleRoutes.DELETE("/:id", middleware.HasPermission(model.PermConfigUpdate), ruleController.DeleteMicroRule)
 	}
 
 	// 日志

@@ -9,7 +9,7 @@ export function RootLayout() {
                 displayConfig={{
                     monitor: false,
                     logs: true,
-                    rules: false,
+                    rules: true,
                     settings: true,
                 }}
             />

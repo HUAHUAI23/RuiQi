@@ -29,7 +29,12 @@
     "common": {
         "loading": "Loading...",
         "language": "Select a language",
-        "copied": "Copied"
+        "copied": "Copied",
+        "save": "Save",
+        "create": "Create",
+        "delete": "Delete",
+        "cancel": "Cancel",
+        "submitting": "Submitting..."
     },
     "error": {
         "title": "An Error Occurred",
@@ -361,5 +366,53 @@
         "previousPage": "Go to previous page",
         "nextPage": "Go to next page",
         "lastPage": "Go to last page"
+    },
+    "ipGroup": {
+        "title": "IP Group Management",
+        "createButton": "Create IP Group",
+        "table": {
+            "name": "Group Name",
+            "ipAddresses": "IP Addresses",
+            "actions": "Actions"
+        },
+        "form": {
+            "name": "Group Name",
+            "namePlaceholder": "Enter group name",
+            "ipAddresses": "IP Addresses",
+            "ipAddressPlaceholder": "Enter IP address or CIDR (e.g. 192.168.1.1 or 10.0.0.0/24)",
+            "noIpAddresses": "No IP addresses added"
+        },
+        "dialog": {
+            "createTitle": "Create IP Group",
+            "editTitle": "Edit IP Group",
+            "createDescription": "Create a new IP address group for rule matching",
+            "editDescription": "Edit the selected IP address group and its members"
+        },
+        "deleteDialog": {
+            "title": "Delete IP Group",
+            "description": "Are you sure you want to delete the IP group {{name}}? This action cannot be undone."
+        },
+        "validation": {
+            "nameRequired": "Group name is required",
+            "nameMaxLength": "Group name cannot exceed 50 characters",
+            "ipItemRequired": "IP address is required",
+            "ipItemInvalid": "Invalid IP address or CIDR format",
+            "ipItemDuplicate": "This IP address is already added",
+            "itemsRequired": "At least one IP address is required"
+        },
+        "toast": {
+            "createSuccess": "IP Group Created",
+            "ipGroupCreated": "IP Group has been created successfully",
+            "createFailed": "Creation Failed",
+            "createError": "An error occurred while creating the IP group",
+            "updateSuccess": "IP Group Updated",
+            "ipGroupUpdated": "IP Group has been updated successfully",
+            "updateFailed": "Update Failed",
+            "updateError": "An error occurred while updating the IP group",
+            "deleteSuccess": "IP Group Deleted",
+            "ipGroupDeleted": "IP Group has been deleted successfully",
+            "deleteFailed": "Deletion Failed",
+            "deleteError": "An error occurred while deleting the IP group"
+        }
     }
 }

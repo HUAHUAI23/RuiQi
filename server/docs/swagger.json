@@ -620,6 +620,742 @@
                 }
             }
         },
+        "/api/v1/ip-groups": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取所有IP组列表，支持分页",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "IP组管理"
+                ],
+                "summary": "获取IP组列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取IP组列表成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.IPGroupListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "创建一个新的IP地址组，用于后续IP规则匹配",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "IP组管理"
+                ],
+                "summary": "创建IP组",
+                "parameters": [
+                    {
+                        "description": "IP组信息",
+                        "name": "ipGroup",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.IPGroupCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "IP组创建成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.IPGroup"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "403": {
+                        "description": "禁止访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "409": {
+                        "description": "IP组名称已存在",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/ip-groups/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "根据ID获取IP组详情",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "IP组管理"
+                ],
+                "summary": "获取单个IP组",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "IP组ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取IP组详情成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.IPGroup"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "无效的ID格式",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "404": {
+                        "description": "IP组不存在",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "更新指定IP组的信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "IP组管理"
+                ],
+                "summary": "更新IP组",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "IP组ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "IP组更新信息",
+                        "name": "ipGroup",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.IPGroupUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "IP组更新成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.IPGroup"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "403": {
+                        "description": "禁止操作系统默认IP组",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "404": {
+                        "description": "IP组不存在",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "409": {
+                        "description": "IP组名称已存在",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "删除指定的IP组，系统默认IP组不允许删除",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "IP组管理"
+                ],
+                "summary": "删除IP组",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "IP组ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "IP组删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/model.SuccessResponseNoData"
+                        }
+                    },
+                    "400": {
+                        "description": "无效的ID格式",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "403": {
+                        "description": "禁止删除系统默认IP组",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "404": {
+                        "description": "IP组不存在",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/micro-rules": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取所有WAF微规则列表，支持分页",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "规则管理"
+                ],
+                "summary": "获取微规则列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取微规则列表成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.MicroRule"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "创建一个新的WAF微规则，用于匹配和过滤请求",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "规则管理"
+                ],
+                "summary": "创建微规则",
+                "parameters": [
+                    {
+                        "description": "微规则信息",
+                        "name": "rule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.MicroRuleCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "微规则创建成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.MicroRule"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "403": {
+                        "description": "禁止访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "409": {
+                        "description": "微规则名称已存在",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/micro-rules/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "根据ID获取微规则详情",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "规则管理"
+                ],
+                "summary": "获取单个微规则",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "微规则ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取微规则详情成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.MicroRule"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "无效的ID格式",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "404": {
+                        "description": "微规则不存在",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "更新指定微规则的信息，系统默认规则不允许修改",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "规则管理"
+                ],
+                "summary": "更新微规则",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "微规则ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "微规则更新信息",
+                        "name": "rule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.MicroRuleUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "微规则更新成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.MicroRule"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "403": {
+                        "description": "禁止修改系统默认规则",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "404": {
+                        "description": "微规则不存在",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "409": {
+                        "description": "微规则名称已存在",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "删除指定的微规则，系统默认规则不允许删除",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "规则管理"
+                ],
+                "summary": "删除微规则",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "微规则ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "微规则删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/model.SuccessResponseNoData"
+                        }
+                    },
+                    "400": {
+                        "description": "无效的ID格式",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "403": {
+                        "description": "禁止删除系统默认规则",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "404": {
+                        "description": "微规则不存在",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/site": {
             "get": {
                 "security": [
@@ -2248,6 +2984,69 @@
                 }
             }
         },
+        "dto.IPGroupCreateRequest": {
+            "description": "创建IP组的请求参数",
+            "type": "object",
+            "required": [
+                "items",
+                "name"
+            ],
+            "properties": {
+                "items": {
+                    "description": "IP地址或CIDR列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[\"192.168.1.1\"]"
+                    ]
+                },
+                "name": {
+                    "description": "IP组名称",
+                    "type": "string",
+                    "example": "内部服务器"
+                }
+            }
+        },
+        "dto.IPGroupListResponse": {
+            "description": "IP组列表响应",
+            "type": "object",
+            "properties": {
+                "items": {
+                    "description": "IP组列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.IPGroup"
+                    }
+                },
+                "total": {
+                    "description": "总数",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.IPGroupUpdateRequest": {
+            "description": "更新IP组的请求参数",
+            "type": "object",
+            "properties": {
+                "items": {
+                    "description": "IP地址或CIDR列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[\"192.168.1.1\"]"
+                    ]
+                },
+                "name": {
+                    "description": "IP组名称",
+                    "type": "string",
+                    "example": "内部服务器"
+                }
+            }
+        },
         "dto.LoginResponseData": {
             "type": "object",
             "properties": {
@@ -2263,6 +3062,89 @@
                             "$ref": "#/definitions/model.User"
                         }
                     ]
+                }
+            }
+        },
+        "dto.MicroRuleCreateRequest": {
+            "description": "创建微规则的请求参数",
+            "type": "object",
+            "required": [
+                "condition",
+                "name",
+                "priority",
+                "status",
+                "type"
+            ],
+            "properties": {
+                "condition": {
+                    "description": "规则条件",
+                    "type": "object"
+                },
+                "name": {
+                    "description": "规则名称",
+                    "type": "string",
+                    "example": "SQL注入防护规则"
+                },
+                "priority": {
+                    "description": "优先级字段，数字越大优先级越高",
+                    "type": "integer",
+                    "example": 100
+                },
+                "status": {
+                    "description": "规则状态",
+                    "type": "string",
+                    "enum": [
+                        "enabled",
+                        "disabled"
+                    ],
+                    "example": "enabled"
+                },
+                "type": {
+                    "description": "规则类型",
+                    "type": "string",
+                    "enum": [
+                        "whitelist",
+                        "blacklist"
+                    ],
+                    "example": "blacklist"
+                }
+            }
+        },
+        "dto.MicroRuleUpdateRequest": {
+            "description": "更新微规则的请求参数",
+            "type": "object",
+            "properties": {
+                "condition": {
+                    "description": "规则条件",
+                    "type": "object"
+                },
+                "name": {
+                    "description": "规则名称",
+                    "type": "string",
+                    "example": "SQL注入防护规则"
+                },
+                "priority": {
+                    "description": "优先级字段，数字越大优先级越高",
+                    "type": "integer",
+                    "example": 100
+                },
+                "status": {
+                    "description": "规则状态",
+                    "type": "string",
+                    "enum": [
+                        "enabled",
+                        "disabled"
+                    ],
+                    "example": "enabled"
+                },
+                "type": {
+                    "description": "规则类型",
+                    "type": "string",
+                    "enum": [
+                        "whitelist",
+                        "blacklist"
+                    ],
+                    "example": "blacklist"
                 }
             }
         },
@@ -2794,6 +3676,33 @@
                 }
             }
         },
+        "model.IPGroup": {
+            "description": "IP地址组信息，包含组名和IP地址列表",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "组唯一标识符",
+                    "type": "string",
+                    "example": "60d21b4367d0d8992e89e964"
+                },
+                "items": {
+                    "description": "IP地址或CIDR列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "['192.168.1.1'",
+                        " '10.0.0.1/24']"
+                    ]
+                },
+                "name": {
+                    "description": "组名称",
+                    "type": "string",
+                    "example": "内部服务器"
+                }
+            }
+        },
         "model.IPInfo": {
             "description": "IP地址地理位置详细信息，包含城市、区域、国家和ASN等数据",
             "type": "object",
@@ -2955,6 +3864,81 @@
                     "example": 2
                 }
             }
+        },
+        "model.MicroRule": {
+            "description": "WAF微规则信息，包含规则名称、类型、状态、优先级和条件",
+            "type": "object",
+            "properties": {
+                "condition": {
+                    "description": "@Schema(type=object, example={\"type\":\"composite\",\"operator\":\"AND\",\"conditions\":[{\"type\":\"simple\",\"target\":\"source_ip\",\"match_type\":\"in_ipgroup\",\"match_value\":\"blocked_ips\"},{\"type\":\"simple\",\"target\":\"path\",\"match_type\":\"regex\",\"match_value\":\"^/admin/.*$\"}]})",
+                    "type": "object"
+                },
+                "id": {
+                    "description": "规则唯一标识符",
+                    "type": "string",
+                    "example": "60d21b4367d0d8992e89e964"
+                },
+                "name": {
+                    "description": "规则名称",
+                    "type": "string",
+                    "example": "SQL注入防护规则"
+                },
+                "priority": {
+                    "description": "优先级字段，数字越大优先级越高",
+                    "type": "integer",
+                    "example": 100
+                },
+                "status": {
+                    "description": "规则状态",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.RuleStatus"
+                        }
+                    ],
+                    "example": "enabled"
+                },
+                "type": {
+                    "description": "规则类型",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.RuleType"
+                        }
+                    ],
+                    "example": "blacklist"
+                }
+            }
+        },
+        "model.RuleStatus": {
+            "description": "规则状态，表示规则是启用还是禁用",
+            "type": "string",
+            "enum": [
+                "enabled",
+                "disabled"
+            ],
+            "x-enum-comments": {
+                "RuleDisabled": "规则已禁用",
+                "RuleEnabled": "规则已启用"
+            },
+            "x-enum-varnames": [
+                "RuleEnabled",
+                "RuleDisabled"
+            ]
+        },
+        "model.RuleType": {
+            "description": "规则类型，表示规则是白名单还是黑名单",
+            "type": "string",
+            "enum": [
+                "whitelist",
+                "blacklist"
+            ],
+            "x-enum-comments": {
+                "BlacklistRule": "黑名单规则",
+                "WhitelistRule": "白名单规则"
+            },
+            "x-enum-varnames": [
+                "WhitelistRule",
+                "BlacklistRule"
+            ]
         },
         "model.Server": {
             "type": "object",

@@ -29,7 +29,12 @@
     "common": {
         "loading": "加载中...",
         "language": "选择语言",
-        "copied": "已复制"
+        "copied": "已复制",
+        "save": "保存",
+        "create": "创建",
+        "delete": "删除",
+        "cancel": "取消",
+        "submitting": "提交中..."
     },
     "error": {
         "title": "发生了错误",
@@ -361,5 +366,53 @@
         "previousPage": "转到上一页",
         "nextPage": "转到下一页",
         "lastPage": "转到最后一页"
+    },
+    "ipGroup": {
+        "title": "IP 组管理",
+        "createButton": "创建 IP 组",
+        "table": {
+            "name": "组名称",
+            "ipAddresses": "IP 地址",
+            "actions": "操作"
+        },
+        "form": {
+            "name": "组名称",
+            "namePlaceholder": "请输入组名称",
+            "ipAddresses": "IP 地址",
+            "ipAddressPlaceholder": "输入 IP 地址或 CIDR (例如 192.168.1.1 或 10.0.0.0/24)",
+            "noIpAddresses": "尚未添加 IP 地址"
+        },
+        "dialog": {
+            "createTitle": "创建 IP 组",
+            "editTitle": "编辑 IP 组",
+            "createDescription": "创建一个新的 IP 地址组用于规则匹配",
+            "editDescription": "编辑选中的 IP 地址组及其成员"
+        },
+        "deleteDialog": {
+            "title": "删除 IP 组",
+            "description": "确定要删除 IP 组 {{name}} 吗？此操作无法撤销。"
+        },
+        "validation": {
+            "nameRequired": "组名称不能为空",
+            "nameMaxLength": "组名称不能超过50个字符",
+            "ipItemRequired": "IP 地址不能为空",
+            "ipItemInvalid": "IP 地址或 CIDR 格式无效",
+            "ipItemDuplicate": "此 IP 地址已添加",
+            "itemsRequired": "至少需要添加一个 IP 地址"
+        },
+        "toast": {
+            "createSuccess": "创建成功",
+            "ipGroupCreated": "IP 组已成功创建",
+            "createFailed": "创建失败",
+            "createError": "创建 IP 组时出现错误",
+            "updateSuccess": "更新成功",
+            "ipGroupUpdated": "IP 组已成功更新",
+            "updateFailed": "更新失败",
+            "updateError": "更新 IP 组时出现错误",
+            "deleteSuccess": "删除成功",
+            "ipGroupDeleted": "IP 组已成功删除",
+            "deleteFailed": "删除失败",
+            "deleteError": "删除 IP 组时出现错误"
+        }
     }
 }

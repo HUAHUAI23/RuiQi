@@ -20,7 +20,7 @@ import EventsPage from "@/pages/logs/pages/event/page"
 import LogsPage from "@/pages/logs/pages/log/page"
 import SiteManagerPage from "@/pages/setting/pages/site/page"
 import { columns, MonitorOverview, payments } from "@/pages/monitor/components"
-import { SysRules, UserRules, IpGroup } from "@/pages/rule/components"
+import IPGroupPage from "@/pages/rule/pages/ip-group/page"
 import { LoadingFallback } from "@/components/common/loading-fallback"
 
 // 懒加载认证页面
@@ -63,11 +63,11 @@ export function createBreadcrumbConfig(t: TFunction): Record<RoutePath, Breadcru
             ]
         },
         [ROUTES.RULES]: {
-            defaultPath: "system",
+            defaultPath: "user",
             items: [
-                { title: t('breadcrumb.rules.system'), path: "system", component: <SysRules /> },
-                { title: t('breadcrumb.rules.user'), path: "user", component: <UserRules /> },
-                { title: t('breadcrumb.rules.ipGroup'), path: "ip", component: <IpGroup /> }
+                // { title: t('breadcrumb.rules.system'), path: "system", component: <SysRules /> },
+                { title: t('breadcrumb.rules.user'), path: "user", component: <div>123</div> },
+                { title: t('breadcrumb.rules.ipGroup'), path: "ip-group", component: <IPGroupPage /> }
             ]
         },
         [ROUTES.SETTINGS]: {

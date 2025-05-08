@@ -1,12 +1,12 @@
-@server @context.txt 
+使用中文回答
+@server @context.go 
 context.txt  为 server 的项目上下文信息，后续做的变更需要同步到 context.txt 上下文文件中
 
-@cert.go @cert.go 
-model/cert.go 是证书的数据模型，其中只有 PublicKey 和 PrivateKey 是必选字段，其余都是可选字段
+ip group 的模型文件 @ip_group.go ，按照要求实现下面功能
 
-@pkg @mongodb.go  是数据库驱动，使用 mongo mongo-driver/v2 驱动
-
-要求如下
-1. 参考  @auth.go @auth.go @user.go @auth.go  @site.go @site.go    完成证书管理的 curd 接口，增加证书，分页获取证书列表，删除证书，修改证书
-2. 完成 curd 请求的 dto 定义
-3. 要求代码有完整的 swagger 注释
+1. 完成 ip group 的 更新 删除 添加 获取 curd 接口，创建的时候要注意，已存在名字的不允许重复创建
+2. IPGroup.name = system_default_blacklist 为系统默认ip 组，不允许被删除
+3. @cert.go @cert.go @cert.go @cert.go @cert.go 为参考文件，可以参考相关代码写法
+4. @pkg @mongodb.go  是数据库驱动，使用 mongo mongo-driver/v2 驱动
+ 
+5. 代码有完整的 swagger 注释
