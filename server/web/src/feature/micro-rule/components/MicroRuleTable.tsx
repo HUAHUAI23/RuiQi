@@ -24,7 +24,6 @@ import { useTranslation } from 'react-i18next'
 import { AnimatedIcon } from '@/components/ui/animation/components/animated-icon'
 import { AnimatedButton } from '@/components/ui/animation/components/animated-button'
 import { Badge } from '@/components/ui/badge'
-import { parseConditionFromApi } from '@/utils/deep-clone'
 
 export function MicroRuleTable() {
     const { t } = useTranslation()
@@ -121,15 +120,9 @@ export function MicroRuleTable() {
 
     // 打开更新规则对话框
     const openUpdateDialog = (rule: MicroRule) => {
-        // 确保规则的condition是正确的格式
-        const preparedRule = {
-            ...rule,
-            condition: parseConditionFromApi(rule.condition)
-        };
-        
-        setDialogMode('update');
-        setSelectedRule(preparedRule);
-        setRuleDialogOpen(true);
+        setDialogMode('update')
+        setSelectedRule(rule)
+        setRuleDialogOpen(true)
     }
 
     // 打开删除对话框

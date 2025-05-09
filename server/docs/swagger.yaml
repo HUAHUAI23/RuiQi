@@ -554,6 +554,50 @@ definitions:
     - status
     - type
     type: object
+  dto.MicroRuleListResponse:
+    description: 微规则列表响应
+    properties:
+      items:
+        description: 微规则列表
+        items:
+          $ref: '#/definitions/dto.MicroRuleResponse'
+        type: array
+      total:
+        description: 总数
+        type: integer
+    type: object
+  dto.MicroRuleResponse:
+    description: 微规则响应参数
+    properties:
+      condition:
+        description: 规则条件
+        type: object
+      id:
+        example: 60a763d0f03239868b50e810
+        type: string
+      name:
+        description: 规则名称
+        example: SQL注入防护规则
+        type: string
+      priority:
+        description: 优先级字段，数字越大优先级越高
+        example: 100
+        type: integer
+      status:
+        description: 规则状态
+        enum:
+        - enabled
+        - disabled
+        example: enabled
+        type: string
+      type:
+        description: 规则类型
+        enum:
+        - whitelist
+        - blacklist
+        example: blacklist
+        type: string
+    type: object
   dto.MicroRuleUpdateRequest:
     description: 更新微规则的请求参数
     properties:
@@ -1107,59 +1151,6 @@ definitions:
         example: 2
         type: integer
     type: object
-  model.MicroRule:
-    description: WAF微规则信息，包含规则名称、类型、状态、优先级和条件
-    properties:
-      condition:
-        description: '@Schema(type=object, example={"type":"composite","operator":"AND","conditions":[{"type":"simple","target":"source_ip","match_type":"in_ipgroup","match_value":"blocked_ips"},{"type":"simple","target":"path","match_type":"regex","match_value":"^/admin/.*$"}]})'
-        type: object
-      id:
-        description: 规则唯一标识符
-        example: 60d21b4367d0d8992e89e964
-        type: string
-      name:
-        description: 规则名称
-        example: SQL注入防护规则
-        type: string
-      priority:
-        description: 优先级字段，数字越大优先级越高
-        example: 100
-        type: integer
-      status:
-        allOf:
-        - $ref: '#/definitions/model.RuleStatus'
-        description: 规则状态
-        example: enabled
-      type:
-        allOf:
-        - $ref: '#/definitions/model.RuleType'
-        description: 规则类型
-        example: blacklist
-    type: object
-  model.RuleStatus:
-    description: 规则状态，表示规则是启用还是禁用
-    enum:
-    - enabled
-    - disabled
-    type: string
-    x-enum-comments:
-      RuleDisabled: 规则已禁用
-      RuleEnabled: 规则已启用
-    x-enum-varnames:
-    - RuleEnabled
-    - RuleDisabled
-  model.RuleType:
-    description: 规则类型，表示规则是白名单还是黑名单
-    enum:
-    - whitelist
-    - blacklist
-    type: string
-    x-enum-comments:
-      BlacklistRule: 黑名单规则
-      WhitelistRule: 白名单规则
-    x-enum-varnames:
-    - WhitelistRule
-    - BlacklistRule
   model.Server:
     properties:
       host:
@@ -2015,7 +2006,7 @@ paths:
             - $ref: '#/definitions/model.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/model.MicroRule'
+                  $ref: '#/definitions/dto.MicroRuleListResponse'
               type: object
         "401":
           description: 未授权访问
@@ -2051,7 +2042,7 @@ paths:
             - $ref: '#/definitions/model.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/model.MicroRule'
+                  $ref: '#/definitions/dto.MicroRuleResponse'
               type: object
         "400":
           description: 请求参数错误
@@ -2137,7 +2128,7 @@ paths:
             - $ref: '#/definitions/model.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/model.MicroRule'
+                  $ref: '#/definitions/dto.MicroRuleResponse'
               type: object
         "400":
           description: 无效的ID格式
@@ -2186,7 +2177,7 @@ paths:
             - $ref: '#/definitions/model.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/model.MicroRule'
+                  $ref: '#/definitions/dto.MicroRuleResponse'
               type: object
         "400":
           description: 请求参数错误

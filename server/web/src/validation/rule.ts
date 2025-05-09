@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { TARGET_MATCH_TYPES } from '@/types/rule'
+import { MatchType, TARGET_MATCH_TYPES } from '@/types/rule'
 
 // 简单条件验证
 const simpleConditionSchema = z.object({
@@ -9,7 +9,7 @@ const simpleConditionSchema = z.object({
         (value) => {
             // 确保匹配方式正确
             const allMatchTypes = Object.values(TARGET_MATCH_TYPES).flat()
-            return allMatchTypes.includes(value as any)
+            return allMatchTypes.includes(value as MatchType)
         },
         { message: 'Invalid match type for the selected target' }
     ),
@@ -35,7 +35,6 @@ export const ruleCreateSchema = z.object({
     status: z.enum(['enabled', 'disabled']),
     priority: z.number().int().min(1).max(1000),
     condition: conditionSchema,
-    log_attack: z.boolean().optional()
 })
 
 // 更新规则请求验证

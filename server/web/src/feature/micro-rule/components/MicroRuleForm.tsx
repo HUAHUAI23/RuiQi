@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Input } from '@/components/ui/input'
@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/form'
 import { AlertCircle } from 'lucide-react'
 import { ruleCreateSchema } from '@/validation/rule'
-import { MicroRuleCreateRequest, MicroRule } from '@/types/rule'
+import { MicroRuleCreateRequest, Condition, MicroRule } from '@/types/rule'
 import { useCreateMicroRule, useUpdateMicroRule } from '../hooks/useMicroRule'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AnimatedContainer } from '@/components/ui/animation/components/animated-container'
@@ -27,11 +27,9 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { ConditionBuilder } from './ConditionBuilder'
-import { deepClone, formatConditionForApi } from '@/utils/deep-clone'
-import { Checkbox } from '@/components/ui/checkbox'
 
 // 默认复合条件
-const DEFAULT_CONDITION = {
+const DEFAULT_CONDITION: Condition = {
     type: 'composite',
     operator: 'AND',
     conditions: [
@@ -48,7 +46,7 @@ interface MicroRuleFormProps {
     mode?: 'create' | 'update'
     ruleId?: string
     onSuccess?: () => void
-    defaultValues?: Partial<MicroRuleCreateRequest>
+    defaultValues?: MicroRule
 }
 
 export function MicroRuleForm({
@@ -60,13 +58,12 @@ export function MicroRuleForm({
     const { t } = useTranslation()
 
     // 准备默认值
-    const initialValues = {
+    const initialValues: MicroRuleCreateRequest = defaultValues || {
         name: '',
         type: 'blacklist',
         status: 'enabled',
         priority: 100,
-        condition: deepClone(DEFAULT_CONDITION),
-        ...(defaultValues || {})
+        condition: DEFAULT_CONDITION,
     }
 
     // API钩子
@@ -95,30 +92,16 @@ export function MicroRuleForm({
         defaultValues: initialValues,
     })
 
-    // 当初始值变化时重置表单 (编辑时)
-    useEffect(() => {
-        if (defaultValues) {
-            form.reset({
-                ...initialValues,
-                ...defaultValues
-            })
-        }
-    }, [defaultValues, form, initialValues])
 
     // 表单提交处理
     const handleFormSubmit = useCallback((data: MicroRuleCreateRequest) => {
         // 清除之前的错误
         if (clearError) clearError()
 
-        // 格式化条件数据
-        const formattedData = {
-            ...data,
-            condition: formatConditionForApi(data.condition)
-        }
 
         // 根据模式执行创建或更新操作
         if (mode === 'create') {
-            createMicroRule(formattedData, {
+            createMicroRule(data, {
                 onSuccess: () => {
                     // 重置表单
                     form.reset({
@@ -126,14 +109,14 @@ export function MicroRuleForm({
                         type: 'blacklist',
                         status: 'enabled',
                         priority: 100,
-                        condition: deepClone(DEFAULT_CONDITION),
+                        condition: DEFAULT_CONDITION,
                     })
                     // 通知父组件成功
                     if (onSuccess) onSuccess()
                 }
             })
         } else if (mode === 'update' && ruleId) {
-            updateMicroRule({ id: ruleId, data: formattedData }, {
+            updateMicroRule({ id: ruleId, data }, {
                 onSuccess: () => {
                     // 通知父组件成功
                     if (onSuccess) onSuccess()

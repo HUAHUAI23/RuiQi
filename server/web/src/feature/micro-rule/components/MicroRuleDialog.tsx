@@ -15,7 +15,6 @@ import {
     dialogContentItemAnimation
 } from '@/components/ui/animation/dialog-animation'
 import { useTranslation } from 'react-i18next'
-import { deepClone, parseConditionFromApi } from '@/utils/deep-clone'
 
 interface MicroRuleDialogProps {
     open: boolean
@@ -40,13 +39,7 @@ export function MicroRuleDialog({
 
     // 根据模式准备表单默认值
     const defaultValues = mode === 'update' && rule
-        ? {
-            name: rule.name,
-            type: rule.type,
-            status: rule.status,
-            priority: rule.priority,
-            condition: parseConditionFromApi(rule.condition) // 确保正确解析条件
-        }
+        ? rule
         : undefined // 使用MicroRuleForm中的默认值
 
     return (

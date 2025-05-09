@@ -2,9 +2,11 @@
 package controller
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 
+	pkgmodel "github.com/HUAHUAI23/simple-waf/pkg/model"
 	"github.com/HUAHUAI23/simple-waf/server/config"
 	"github.com/HUAHUAI23/simple-waf/server/dto"
 	"github.com/HUAHUAI23/simple-waf/server/model"
@@ -39,6 +41,49 @@ func NewMicroRuleController(ruleService service.MicroRuleService) MicroRuleContr
 	}
 }
 
+// BSONToJSON 将BSON数据转换为JSON
+func BSONToJSON(bsonData bson.Raw) (json.RawMessage, error) {
+	if len(bsonData) == 0 {
+		return nil, nil
+	}
+
+	// 将BSON解析为interface{}
+	var anyValue interface{}
+	if err := bson.Unmarshal(bsonData, &anyValue); err != nil {
+		return nil, err
+	}
+
+	// 将interface{}转换为JSON
+	jsonData, err := json.Marshal(anyValue)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonData, nil
+}
+
+// ConvertToResponse 将模型转换为DTO响应对象
+func ConvertToResponse(rule *pkgmodel.MicroRule) (*dto.MicroRuleResponse, error) {
+	var jsonCondition json.RawMessage
+	var err error
+
+	if len(rule.Condition) > 0 {
+		jsonCondition, err = BSONToJSON(rule.Condition)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &dto.MicroRuleResponse{
+		ID:        rule.ID.Hex(),
+		Name:      rule.Name,
+		Type:      string(rule.Type),
+		Status:    string(rule.Status),
+		Priority:  &rule.Priority,
+		Condition: jsonCondition,
+	}, nil
+}
+
 // CreateMicroRule 创建微规则
 //
 //	@Summary		创建微规则
@@ -48,12 +93,12 @@ func NewMicroRuleController(ruleService service.MicroRuleService) MicroRuleContr
 //	@Produce		json
 //	@Param			rule	body	dto.MicroRuleCreateRequest	true	"微规则信息"
 //	@Security		BearerAuth
-//	@Success		200	{object}	model.SuccessResponse{data=model.MicroRule}	"微规则创建成功"
-//	@Failure		400	{object}	model.ErrResponse							"请求参数错误"
-//	@Failure		401	{object}	model.ErrResponseDontShowError				"未授权访问"
-//	@Failure		403	{object}	model.ErrResponseDontShowError				"禁止访问"
-//	@Failure		409	{object}	model.ErrResponseDontShowError				"微规则名称已存在"
-//	@Failure		500	{object}	model.ErrResponseDontShowError				"服务器内部错误"
+//	@Success		200	{object}	model.SuccessResponse{data=dto.MicroRuleResponse}	"微规则创建成功"
+//	@Failure		400	{object}	model.ErrResponse									"请求参数错误"
+//	@Failure		401	{object}	model.ErrResponseDontShowError						"未授权访问"
+//	@Failure		403	{object}	model.ErrResponseDontShowError						"禁止访问"
+//	@Failure		409	{object}	model.ErrResponseDontShowError						"微规则名称已存在"
+//	@Failure		500	{object}	model.ErrResponseDontShowError						"服务器内部错误"
 //	@Router			/api/v1/micro-rules [post]
 func (c *MicroRuleControllerImpl) CreateMicroRule(ctx *gin.Context) {
 	var req dto.MicroRuleCreateRequest
@@ -75,8 +120,16 @@ func (c *MicroRuleControllerImpl) CreateMicroRule(ctx *gin.Context) {
 		return
 	}
 
+	// 转换为响应DTO
+	resp, err := ConvertToResponse(rule)
+	if err != nil {
+		c.logger.Error().Err(err).Msg("转换响应对象失败")
+		response.InternalServerError(ctx, err, false)
+		return
+	}
+
 	c.logger.Info().Str("id", rule.ID.Hex()).Str("name", rule.Name).Msg("微规则创建成功")
-	response.Success(ctx, "微规则创建成功", rule)
+	response.Success(ctx, "微规则创建成功", resp)
 }
 
 // GetMicroRules 获取微规则列表
@@ -88,9 +141,9 @@ func (c *MicroRuleControllerImpl) CreateMicroRule(ctx *gin.Context) {
 //	@Param			page	query	int	false	"页码"	default(1)
 //	@Param			size	query	int	false	"每页数量"	default(10)
 //	@Security		BearerAuth
-//	@Success		200	{object}	model.SuccessResponse{data=model.MicroRule}	"获取微规则列表成功"
-//	@Failure		401	{object}	model.ErrResponseDontShowError				"未授权访问"
-//	@Failure		500	{object}	model.ErrResponseDontShowError				"服务器内部错误"
+//	@Success		200	{object}	model.SuccessResponse{data=dto.MicroRuleListResponse}	"获取微规则列表成功"
+//	@Failure		401	{object}	model.ErrResponseDontShowError							"未授权访问"
+//	@Failure		500	{object}	model.ErrResponseDontShowError							"服务器内部错误"
 //	@Router			/api/v1/micro-rules [get]
 func (c *MicroRuleControllerImpl) GetMicroRules(ctx *gin.Context) {
 	page := ctx.DefaultQuery("page", "1")
@@ -104,10 +157,22 @@ func (c *MicroRuleControllerImpl) GetMicroRules(ctx *gin.Context) {
 		return
 	}
 
+	// 转换响应对象
+	responses := make([]*dto.MicroRuleResponse, len(rules))
+	for i, rule := range rules {
+		resp, err := ConvertToResponse(&rule)
+		if err != nil {
+			c.logger.Error().Err(err).Msg("转换响应对象失败")
+			response.InternalServerError(ctx, err, false)
+			return
+		}
+		responses[i] = resp
+	}
+
 	c.logger.Info().Int64("total", total).Msg("获取微规则列表成功")
 	response.Success(ctx, "获取微规则列表成功", gin.H{
 		"total": total,
-		"items": rules,
+		"items": responses,
 	})
 }
 
@@ -119,11 +184,11 @@ func (c *MicroRuleControllerImpl) GetMicroRules(ctx *gin.Context) {
 //	@Produce		json
 //	@Param			id	path	string	true	"微规则ID"
 //	@Security		BearerAuth
-//	@Success		200	{object}	model.SuccessResponse{data=model.MicroRule}	"获取微规则详情成功"
-//	@Failure		400	{object}	model.ErrResponse							"无效的ID格式"
-//	@Failure		401	{object}	model.ErrResponseDontShowError				"未授权访问"
-//	@Failure		404	{object}	model.ErrResponseDontShowError				"微规则不存在"
-//	@Failure		500	{object}	model.ErrResponseDontShowError				"服务器内部错误"
+//	@Success		200	{object}	model.SuccessResponse{data=dto.MicroRuleResponse}	"获取微规则详情成功"
+//	@Failure		400	{object}	model.ErrResponse									"无效的ID格式"
+//	@Failure		401	{object}	model.ErrResponseDontShowError						"未授权访问"
+//	@Failure		404	{object}	model.ErrResponseDontShowError						"微规则不存在"
+//	@Failure		500	{object}	model.ErrResponseDontShowError						"服务器内部错误"
 //	@Router			/api/v1/micro-rules/{id} [get]
 func (c *MicroRuleControllerImpl) GetMicroRuleByID(ctx *gin.Context) {
 	id := ctx.Param("id")
@@ -147,8 +212,16 @@ func (c *MicroRuleControllerImpl) GetMicroRuleByID(ctx *gin.Context) {
 		return
 	}
 
+	// 转换为响应DTO
+	resp, err := ConvertToResponse(rule)
+	if err != nil {
+		c.logger.Error().Err(err).Msg("转换响应对象失败")
+		response.InternalServerError(ctx, err, false)
+		return
+	}
+
 	c.logger.Info().Str("id", id).Str("name", rule.Name).Msg("获取微规则详情成功")
-	response.Success(ctx, "获取微规则详情成功", rule)
+	response.Success(ctx, "获取微规则详情成功", resp)
 }
 
 // UpdateMicroRule 更新微规则
@@ -161,13 +234,13 @@ func (c *MicroRuleControllerImpl) GetMicroRuleByID(ctx *gin.Context) {
 //	@Param			id		path	string						true	"微规则ID"
 //	@Param			rule	body	dto.MicroRuleUpdateRequest	true	"微规则更新信息"
 //	@Security		BearerAuth
-//	@Success		200	{object}	model.SuccessResponse{data=model.MicroRule}	"微规则更新成功"
-//	@Failure		400	{object}	model.ErrResponse							"请求参数错误"
-//	@Failure		401	{object}	model.ErrResponseDontShowError				"未授权访问"
-//	@Failure		403	{object}	model.ErrResponseDontShowError				"禁止修改系统默认规则"
-//	@Failure		404	{object}	model.ErrResponseDontShowError				"微规则不存在"
-//	@Failure		409	{object}	model.ErrResponseDontShowError				"微规则名称已存在"
-//	@Failure		500	{object}	model.ErrResponseDontShowError				"服务器内部错误"
+//	@Success		200	{object}	model.SuccessResponse{data=dto.MicroRuleResponse}	"微规则更新成功"
+//	@Failure		400	{object}	model.ErrResponse									"请求参数错误"
+//	@Failure		401	{object}	model.ErrResponseDontShowError						"未授权访问"
+//	@Failure		403	{object}	model.ErrResponseDontShowError						"禁止修改系统默认规则"
+//	@Failure		404	{object}	model.ErrResponseDontShowError						"微规则不存在"
+//	@Failure		409	{object}	model.ErrResponseDontShowError						"微规则名称已存在"
+//	@Failure		500	{object}	model.ErrResponseDontShowError						"服务器内部错误"
 //	@Router			/api/v1/micro-rules/{id} [put]
 func (c *MicroRuleControllerImpl) UpdateMicroRule(ctx *gin.Context) {
 	id := ctx.Param("id")
@@ -202,8 +275,16 @@ func (c *MicroRuleControllerImpl) UpdateMicroRule(ctx *gin.Context) {
 		return
 	}
 
+	// 转换为响应DTO
+	resp, err := ConvertToResponse(rule)
+	if err != nil {
+		c.logger.Error().Err(err).Msg("转换响应对象失败")
+		response.InternalServerError(ctx, err, false)
+		return
+	}
+
 	c.logger.Info().Str("id", id).Str("name", rule.Name).Msg("微规则更新成功")
-	response.Success(ctx, "微规则更新成功", rule)
+	response.Success(ctx, "微规则更新成功", resp)
 }
 
 // DeleteMicroRule 删除微规则
