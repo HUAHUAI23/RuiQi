@@ -414,5 +414,97 @@
             "deleteFailed": "删除失败",
             "deleteError": "删除 IP 组时出现错误"
         }
+    },
+    "microRule": {
+        "title": "自定义规则管理",
+        "refresh": "刷新",
+        "add": "添加规则",
+        "table": {
+            "name": "规则名称",
+            "type": "规则类型",
+            "status": "状态",
+            "priority": "优先级",
+            "edit": "编辑",
+            "delete": "删除"
+        },
+        "form": {
+            "name": "规则名称",
+            "namePlaceholder": "请输入规则名称",
+            "type": "规则类型",
+            "selectType": "选择规则类型",
+            "whitelist": "白名单",
+            "blacklist": "黑名单",
+            "status": "状态",
+            "selectStatus": "选择状态",
+            "enabled": "启用",
+            "disabled": "禁用",
+            "priority": "优先级",
+            "priorityPlaceholder": "输入优先级 (0-9999)",
+            "condition": "规则条件"
+        },
+        "condition": {
+            "conditionType": "条件类型",
+            "selectConditionType": "选择条件类型",
+            "simpleCondition": "简单条件",
+            "compositeCondition": "复合条件",
+            "target": "匹配目标",
+            "selectTarget": "选择匹配目标",
+            "sourceIp": "源 IP",
+            "url": "URL",
+            "path": "路径",
+            "matchType": "匹配方式",
+            "selectMatchType": "选择匹配方式",
+            "matchValue": "匹配值",
+            "enterMatchValue": "输入匹配值",
+            "operator": "逻辑运算符",
+            "selectOperator": "选择逻辑运算符",
+            "and": "且(AND)",
+            "or": "或(OR)",
+            "conditionGroup": "条件组",
+            "addSimpleCondition": "添加条件",
+            "addCompositeCondition": "添加条件组",
+            "addNestedCondition": "添加嵌套条件"
+        },
+        "matchTypes": {
+            "equal": "等于",
+            "not_equal": "不等于",
+            "fuzzy": "模糊匹配",
+            "in_cidr": "在CIDR范围内",
+            "not_in_cidr": "不在CIDR范围内",
+            "in_ipgroup": "在IP组内",
+            "not_in_ipgroup": "不在IP组内",
+            "include": "包含",
+            "contains": "包含",
+            "not_contains": "不包含",
+            "prefix_keyword": "前缀匹配",
+            "regex": "正则表达式"
+        },
+        "dialog": {
+            "createTitle": "创建新规则",
+            "updateTitle": "更新规则",
+            "createDescription": "创建自定义WAF规则以保护您的站点",
+            "updateDescription": "编辑规则信息，修改后将自动保存"
+        },
+        "deleteDialog": {
+            "confirmTitle": "确认删除",
+            "confirmDescription": "您确定要删除此规则吗？此操作无法撤销，可能会影响您的安全设置。",
+            "cancel": "取消",
+            "deleting": "删除中...",
+            "delete": "删除"
+        },
+        "toast": {
+            "createSuccess": "创建成功",
+            "microRuleCreated": "规则已成功创建",
+            "createFailed": "创建失败",
+            "createError": "创建规则时出现错误",
+            "updateSuccess": "更新成功",
+            "microRuleUpdated": "规则已成功更新",
+            "updateFailed": "更新失败",
+            "updateError": "更新规则时出现错误",
+            "deleteSuccess": "删除成功",
+            "microRuleDeleted": "规则已成功删除",
+            "deleteFailed": "删除失败",
+            "deleteError": "删除规则时出现错误"
+        }
     }
 }

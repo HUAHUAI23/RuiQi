@@ -414,5 +414,96 @@
             "deleteFailed": "Deletion Failed",
             "deleteError": "An error occurred while deleting the IP group"
         }
+    },
+    "microRule": {
+        "title": "Custom Rules Management",
+        "refresh": "Refresh",
+        "add": "Add Rule",
+        "table": {
+            "name": "Rule Name",
+            "type": "Rule Type",
+            "status": "Status",
+            "priority": "Priority",
+            "edit": "Edit",
+            "delete": "Delete"
+        },
+        "form": {
+            "name": "Rule Name",
+            "namePlaceholder": "Enter rule name",
+            "type": "Rule Type",
+            "selectType": "Select rule type",
+            "whitelist": "Whitelist",
+            "blacklist": "Blacklist",
+            "status": "Status",
+            "selectStatus": "Select status",
+            "enabled": "Enabled",
+            "disabled": "Disabled",
+            "priority": "Priority",
+            "priorityPlaceholder": "Enter priority (0-9999)",
+            "condition": "Rule Condition"
+        },
+        "condition": {
+            "conditionType": "Condition Type",
+            "selectConditionType": "Select condition type",
+            "simpleCondition": "Simple Condition",
+            "compositeCondition": "Composite Condition",
+            "target": "Match Target",
+            "selectTarget": "Select match target",
+            "sourceIp": "Source IP",
+            "url": "URL",
+            "path": "Path",
+            "matchType": "Match Type",
+            "selectMatchType": "Select match type",
+            "matchValue": "Match Value",
+            "enterMatchValue": "Enter match value",
+            "operator": "Logical Operator",
+            "selectOperator": "Select logical operator",
+            "and": "AND",
+            "or": "OR",
+            "addSimpleCondition": "Add Condition",
+            "addCompositeCondition": "Add Condition Group",
+            "addNestedCondition": "Add Nested Condition"
+        },
+        "matchTypes": {
+            "equal": "Equal",
+            "not_equal": "Not Equal",
+            "fuzzy": "Fuzzy Match",
+            "in_cidr": "In CIDR Range",
+            "not_in_cidr": "Not In CIDR Range",
+            "in_ipgroup": "In IP Group",
+            "not_in_ipgroup": "Not In IP Group",
+            "include": "Include",
+            "contains": "Contains",
+            "not_contains": "Not Contains",
+            "prefix_keyword": "Starts With",
+            "regex": "Regular Expression"
+        },
+        "dialog": {
+            "createTitle": "Create New Rule",
+            "updateTitle": "Update Rule",
+            "createDescription": "Create a custom WAF rule to protect your site",
+            "updateDescription": "Edit rule information, changes will be automatically saved"
+        },
+        "deleteDialog": {
+            "confirmTitle": "Confirm Deletion",
+            "confirmDescription": "Are you sure you want to delete this rule? This action cannot be undone and may affect your security settings.",
+            "cancel": "Cancel",
+            "deleting": "Deleting...",
+            "delete": "Delete"
+        },
+        "toast": {
+            "createSuccess": "Created Successfully",
+            "microRuleCreated": "Rule has been created successfully",
+            "createFailed": "Creation Failed",
+            "createError": "An error occurred while creating the rule",
+            "updateSuccess": "Updated Successfully",
+            "microRuleUpdated": "Rule has been updated successfully",
+            "updateFailed": "Update Failed",
+            "updateError": "An error occurred while updating the rule",
+            "deleteSuccess": "Deleted Successfully",
+            "microRuleDeleted": "Rule has been deleted successfully",
+            "deleteFailed": "Deletion Failed",
+            "deleteError": "An error occurred while deleting the rule"
+        }
     }
 }
