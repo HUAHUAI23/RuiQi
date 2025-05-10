@@ -373,7 +373,10 @@ func (a *Application) HandleResponse(ctx context.Context, writer *encoding.Actio
 
 	cv, ok := a.cache.Get(res.ID)
 	if !ok {
-		return fmt.Errorf("transaction not found: %s", res.ID)
+		a.Logger.Error().Str("id", res.ID).Msg("transaction not found")
+		return nil
+		// TODO: 是否需要报错，还是仅记录
+		// return fmt.Errorf("transaction not found: %s", res.ID)
 	}
 	a.cache.Remove(res.ID)
 
