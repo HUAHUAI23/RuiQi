@@ -27,18 +27,18 @@ https://github.com/user-attachments/assets/f74000d7-d229-4d00-843b-1ba28caeb13d
   <table cellspacing="0" cellpadding="10" style="border-collapse: separate; border-spacing: 15px; background-color: #f8f9fa;">
     <tr>
       <td align="center" style="border-radius: 8px; border: 1px solid #ddd; padding: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-        <img width="767" alt="RuiQi WAF Dashboard" src="./doc/images/1.png" style="border-radius: 6px; max-width: 100%;">
+        <img width="767" alt="RuiQi WAF Dashboard" src="./doc/image/1.png" style="border-radius: 6px; max-width: 100%;">
       </td>
       <td align="center" style="border-radius: 8px; border: 1px solid #ddd; padding: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-        <img width="767" alt="RuiQi WAF Rule Management" src="./doc/images/2.png" style="border-radius: 6px; max-width: 100%;">
+        <img width="767" alt="RuiQi WAF Rule Management" src="./doc/image/2.png" style="border-radius: 6px; max-width: 100%;">
       </td>
     </tr>
     <tr>
       <td align="center" style="border-radius: 8px; border: 1px solid #ddd; padding: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-        <img width="767" alt="RuiQi WAF Analytics" src="./doc/images/3.png" style="border-radius: 6px; max-width: 100%;">
+        <img width="767" alt="RuiQi WAF Analytics" src="./doc/image/3.png" style="border-radius: 6px; max-width: 100%;">
       </td>
       <td align="center" style="border-radius: 8px; border: 1px solid #ddd; padding: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-        <img width="767" alt="RuiQi WAF Security Config" src="./doc/images/4.png" style="border-radius: 6px; max-width: 100%;">
+        <img width="767" alt="RuiQi WAF Security Config" src="./doc/image/4.png" style="border-radius: 6px; max-width: 100%;">
       </td>
     </tr>
   </table>
