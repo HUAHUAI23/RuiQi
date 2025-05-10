@@ -9,11 +9,11 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "http://swagger.io/terms/",
+        "termsOfService": "https://github.com/HUAHUAI23/RuiQi",
         "contact": {
             "name": "API Support",
-            "url": "https://github.com/HUAHUAI23/simple-waf",
-            "email": "support@swagger.io"
+            "url": "https://github.com/HUAHUAI23/RuiQi",
+            "email": "huahua1319873800@outlook.com"
         },
         "license": {
             "name": "Apache 2.0",

@@ -19,15 +19,41 @@ run the application in less than 30 seconds,default username: **admin**,default 
 
 ## 📺 Demo Video
 
-
-
 https://github.com/user-attachments/assets/f74000d7-d229-4d00-843b-1ba28caeb13d
 
+## 📸 RuiQi WAF Interface Showcase
 
+<div align="center">
+  <table cellspacing="0" cellpadding="10" style="border-collapse: separate; border-spacing: 15px; background-color: #f8f9fa;">
+    <tr>
+      <td align="center" style="border-radius: 8px; border: 1px solid #ddd; padding: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+        <img width="767" alt="RuiQi WAF Dashboard" src="./doc/images/1.png" style="border-radius: 6px; max-width: 100%;">
+      </td>
+      <td align="center" style="border-radius: 8px; border: 1px solid #ddd; padding: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+        <img width="767" alt="RuiQi WAF Rule Management" src="./doc/images/2.png" style="border-radius: 6px; max-width: 100%;">
+      </td>
+    </tr>
+    <tr>
+      <td align="center" style="border-radius: 8px; border: 1px solid #ddd; padding: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+        <img width="767" alt="RuiQi WAF Analytics" src="./doc/images/3.png" style="border-radius: 6px; max-width: 100%;">
+      </td>
+      <td align="center" style="border-radius: 8px; border: 1px solid #ddd; padding: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+        <img width="767" alt="RuiQi WAF Security Config" src="./doc/images/4.png" style="border-radius: 6px; max-width: 100%;">
+      </td>
+    </tr>
+  </table>
+</div>
 
 ## Core Architecture
 
-Simple WAF implements a modular architecture with HAProxy at the front handling traffic and Coraza WAF providing security inspection through SPOE (Stream Processing Offload Engine):
+Simple WAF implements a modular architecture with HAProxy at the front handling traffic and multiple security engines providing protection:
+
+1. **Coraza WAF Engine**: OWASP ModSecurity-compatible filtering
+2. **MicroEngine**: Rule-based matching engine for IP filtering, URL checking, and complex conditional logic
+3. **Geographic Analysis**: Location-based traffic filtering
+4. **Rate Limiting**: Traffic control and request throttling
+
+The system uses a plugin architecture that allows for continuous enhancement with new security modules.
 
 ```mermaid
 graph TD
@@ -97,18 +123,35 @@ graph TD
 
 ## Features
 
+- **Multi-Engine Protection**
+
+  - **Coraza WAF Engine**:
+
+    - OWASP Core Rule Set (CRS) support
+    - ModSecurity SecLang rule compatibility
+    - Custom rule management
+
+  - **MicroEngine**:
+
+    - Rule-based matching for IP, URL, and request path
+    - Complex condition combinations (AND/OR logic)
+    - IP blacklist/whitelist with CIDR support
+    - Efficient regex matching with caching
+
+  - **Geographic Analysis**:
+
+    - Country and region-based filtering
+    - Geographic attack visualization
+
+  - **Traffic Control**:
+    - Rate limiting and request throttling
+    - Connection control mechanisms
+
 - **HAProxy Integration**
 
   - Full HAProxy lifecycle management (start, stop, restart)
   - Dynamic configuration generation
   - Real-time status monitoring
-
-- **Coraza WAF Integration**
-
-  - OWASP Core Rule Set (CRS) support
-  - ModSecurity SecLang rule compatibility
-  - Custom rule management
-  - WAF engine lifecycle management
 
 - **Advanced Security**
 
@@ -141,7 +184,7 @@ graph TD
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/HUAHUAI23/simple-waf.git
+git clone https://github.com/HUAHUAI23/RuiQi.git
 cd simple-waf
 ```
 
@@ -183,7 +226,7 @@ The development server will start with:
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/HUAHUAI23/simple-waf.git
+git clone https://github.com/HUAHUAI23/RuiQi.git
 cd simple-waf
 ```
 
@@ -207,6 +250,42 @@ docker-compose up -d
 ```
 
 This will start both MongoDB and Simple WAF services with all required configurations.
+
+## Roadmap
+
+Our upcoming features include:
+
+1. **Monitoring Dashboard**
+
+   - Real-time attack visualization map
+   - Geographic attack origin analytics
+   - Comprehensive security metrics dashboard
+
+2. **Advanced Traffic Control**
+
+   - Fine-grained rate limiting
+   - Request frequency analysis
+   - Adaptive throttling based on traffic patterns
+
+3. **Alert Integration**
+
+   - Webhook alert system
+   - Integration with popular messaging platforms
+   - Customizable alert templates
+
+4. **AI Security Analysis**
+
+   - ML-based attack pattern detection
+   - AI-assisted rule generation
+   - Automated ModSecurity directive creation
+   - MCP (Model Control Plane) integration
+
+5. **Enhanced Rule Management**
+   - OWASP Top 10 specific rule templates
+   - Rule effectiveness scoring
+   - One-click protection profiles
+
+For detailed technical documentation on engine architecture and implementation, see the proposals in the `/doc/proposal` directory.
 
 ## License
 

@@ -1396,14 +1396,14 @@ definitions:
 host: localhost:2333
 info:
   contact:
-    email: support@swagger.io
+    email: huahua1319873800@outlook.com
     name: API Support
-    url: https://github.com/HUAHUAI23/simple-waf
+    url: https://github.com/HUAHUAI23/RuiQi
   description: RuiQi 应用防火墙管理系统 API
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-  termsOfService: http://swagger.io/terms/
+  termsOfService: https://github.com/HUAHUAI23/RuiQi
   title: RuiQi-WAF API
   version: "1.0"
 paths:

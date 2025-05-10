@@ -25,11 +25,11 @@ import (
 //	@title			RuiQi-WAF API
 //	@version		1.0
 //	@description	RuiQi 应用防火墙管理系统 API
-//	@termsOfService	http://swagger.io/terms/
+//	@termsOfService	https://github.com/HUAHUAI23/RuiQi
 
 //	@contact.name	API Support
-//	@contact.url	https://github.com/HUAHUAI23/simple-waf
-//	@contact.email	support@swagger.io
+//	@contact.url	https://github.com/HUAHUAI23/RuiQi
+//	@contact.email	huahua1319873800@outlook.com
 
 //	@license.name	Apache 2.0
 //	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html

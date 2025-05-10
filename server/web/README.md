@@ -70,14 +70,14 @@ A modern web application interface for RuiQi Web Application Firewall (WAF) syst
 
 ### Prerequisites
 
-- Node.js 16+ 
+- Node.js 22+ 
 - pnpm (recommended package manager)
 
 ### Installation
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/HUAHUAI23/simple-waf.git
+   git clone https://github.com/HUAHUAI23/RuiQi.git
    cd web
    ```
 
@@ -122,4 +122,4 @@ A modern web application interface for RuiQi Web Application Firewall (WAF) syst
 
 ## License
 
-Copyright © 2024 RuiQi WAF. All rights reserved.
+Copyright © 2025 RuiQi WAF. All rights reserved.
