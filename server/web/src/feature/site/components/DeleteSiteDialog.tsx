@@ -51,7 +51,7 @@ export function DeleteSiteDialog({
             <AnimatePresence mode="wait">
                 {open && (
                     <motion.div {...dialogEnterExitAnimation}>
-                        <AlertDialogContent className="p-0 overflow-hidden">
+                        <AlertDialogContent className="p-0 overflow-hidden dark:bg-accent/10 dark:border-slate-800 dark:card-neon">
                             <motion.div {...dialogContentAnimation}>
                                 <motion.div {...dialogHeaderAnimation}>
                                     <AlertDialogHeader className="p-6 pb-3">

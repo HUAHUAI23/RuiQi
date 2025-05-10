@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Trash2, Plus, AlertCircle } from "lucide-react"
+import { Trash2, Plus, AlertCircle, Search } from "lucide-react"
 import {
     Form,
     FormControl,
@@ -16,6 +16,9 @@ import { useTranslation } from "react-i18next"
 import { IPGroupFormValues, ipGroupFormSchema } from "@/validation/ip-group"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useCreateIPGroup, useUpdateIPGroup } from "../hooks"
+import { AnimatedContainer } from "@/components/ui/animation/components/animated-container"
+import { AnimatedButton } from "@/components/ui/animation/components/animated-button"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface IPGroupFormProps {
     mode?: 'create' | 'update'
@@ -24,19 +27,20 @@ interface IPGroupFormProps {
     onSuccess?: () => void
 }
 
-export function IPGroupForm({ 
-    mode = 'create', 
-    ipGroupId, 
+export function IPGroupForm({
+    mode = 'create',
+    ipGroupId,
     defaultValues = {
         name: '',
         items: []
-    }, 
-    onSuccess 
+    },
+    onSuccess
 }: IPGroupFormProps) {
     const { t } = useTranslation()
     const [newIpAddress, setNewIpAddress] = useState("")
     const [ipAddressError, setIpAddressError] = useState<string | null>(null)
-    
+    const [searchQuery, setSearchQuery] = useState("")
+
     // API hooks
     const {
         createIPGroup,
@@ -44,7 +48,7 @@ export function IPGroupForm({
         error: createError,
         clearError: clearCreateError
     } = useCreateIPGroup()
-    
+
     const {
         updateIPGroup,
         isLoading: isUpdating,
@@ -63,6 +67,9 @@ export function IPGroupForm({
     })
 
     const ipItems = form.watch("items")
+    const filteredIpItems = ipItems.filter(item =>
+        item.toLowerCase().includes(searchQuery.toLowerCase())
+    )
 
     const handleAddIpAddress = () => {
         // Validate IP address format
@@ -99,7 +106,7 @@ export function IPGroupForm({
             handleAddIpAddress()
         }
     }
-    
+
     const onSubmit = (data: IPGroupFormValues) => {
         // Clear previous errors
         if (clearError) clearError()
@@ -131,107 +138,132 @@ export function IPGroupForm({
     }
 
     return (
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                {error && (
-                    <Alert variant="destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                )}
-
-                <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>{t("ipGroup.form.name")}</FormLabel>
-                            <FormControl>
-                                <Input placeholder={t("ipGroup.form.namePlaceholder")} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
+        <AnimatedContainer>
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    {error && (
+                        <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
                     )}
-                />
-
-                <div className="space-y-4">
-                    <div>
-                        <FormLabel>{t("ipGroup.form.ipAddresses")}</FormLabel>
-                        <div className="flex mt-2">
-                            <Input
-                                placeholder={t("ipGroup.form.ipAddressPlaceholder")}
-                                value={newIpAddress}
-                                onChange={(e) => {
-                                    setNewIpAddress(e.target.value)
-                                    setIpAddressError(null)
-                                }}
-                                onKeyDown={handleKeyDown}
-                                className="mr-2"
-                            />
-                            <Button
-                                type="button"
-                                onClick={handleAddIpAddress}
-                                size="icon"
-                                className="dark:text-shadow-glow-white dark:button-neon"
-                            >
-                                <Plus className="h-4 w-4 dark:icon-neon" />
-                            </Button>
-                        </div>
-                        {ipAddressError && (
-                            <p className="text-sm font-medium text-destructive mt-2">{ipAddressError}</p>
-                        )}
-                    </div>
 
                     <FormField
                         control={form.control}
-                        name="items"
-                        render={() => (
+                        name="name"
+                        render={({ field }) => (
                             <FormItem>
-                                <div className="rounded-md border dark:border-slate-700">
-                                    {ipItems.length === 0 ? (
-                                        <div className="py-6 text-center text-muted-foreground dark:text-slate-400 dark:text-shadow-glow-white">
-                                            {t("ipGroup.form.noIpAddresses")}
-                                        </div>
-                                    ) : (
-                                        <ul className="divide-y dark:divide-slate-700">
-                                            {ipItems.map((item, index) => (
-                                                <li
-                                                    key={index}
-                                                    className="flex items-center justify-between py-2 px-4"
-                                                >
-                                                    <span className="font-mono dark:text-shadow-glow-white">{item}</span>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        type="button"
-                                                        onClick={() => handleRemoveIpAddress(index)}
-                                                        className="h-8 w-8 text-destructive hover:text-destructive dark:text-red-500 dark:hover:text-red-400 dark:button-neon"
-                                                    >
-                                                        <Trash2 className="h-4 w-4 dark:icon-neon" />
-                                                    </Button>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </div>
+                                <FormLabel className="dark:text-shadow-glow-white">{t("ipGroup.form.name")}</FormLabel>
+                                <FormControl>
+                                    <Input className="dark:text-shadow-glow-white" placeholder={t("ipGroup.form.namePlaceholder")} {...field} />
+                                </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
-                </div>
 
-                <Button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full dark:text-shadow-glow-white dark:button-neon"
-                >
-                    {isLoading
-                        ? t("common.submitting")
-                        : mode === 'update'
-                            ? t("common.save")
-                            : t("common.create")}
-                </Button>
-            </form>
-        </Form>
+                    <div className="space-y-4">
+                        <div>
+                            <FormLabel className="dark:text-shadow-glow-white">{t("ipGroup.form.ipAddresses")}</FormLabel>
+                            <div className="flex mt-2">
+                                <Input
+                                    placeholder={t("ipGroup.form.ipAddressPlaceholder")}
+                                    value={newIpAddress}
+                                    onChange={(e) => {
+                                        setNewIpAddress(e.target.value)
+                                        setIpAddressError(null)
+                                    }}
+                                    onKeyDown={handleKeyDown}
+                                    className="mr-2 dark:text-shadow-glow-white"
+                                />
+                                <AnimatedButton>
+                                    <Button
+                                        type="button"
+                                        onClick={handleAddIpAddress}
+                                        size="icon"
+                                        className="dark:text-shadow-glow-white dark:button-neon"
+                                    >
+                                        <Plus className="h-4 w-4 dark:icon-neon" />
+                                    </Button>
+                                </AnimatedButton>
+                            </div>
+                            {ipAddressError && (
+                                <p className="text-sm font-medium text-destructive mt-2 dark:text-shadow-glow-white">{ipAddressError}</p>
+                            )}
+                        </div>
+
+                        <FormField
+                            control={form.control}
+                            name="items"
+                            render={() => (
+                                <FormItem>
+                                    <div className="rounded-md border dark:border-slate-700">
+                                        {ipItems.length === 0 ? (
+                                            <div className="py-6 text-center text-muted-foreground dark:text-slate-400 dark:text-shadow-glow-white">
+                                                {t("ipGroup.form.noIpAddresses")}
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-3 p-3">
+                                                <div className="relative">
+                                                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-slate-400" />
+                                                    <Input
+                                                        placeholder="Search IP addresses..."
+                                                        value={searchQuery}
+                                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                                        className="pl-8 dark:bg-slate-700/50 dark:border-slate-600 dark:text-shadow-glow-white"
+                                                    />
+                                                </div>
+                                                <ScrollArea scrollbarVariant="neon" className="h-[200px] pr-4">
+                                                    <ul className="divide-y dark:divide-slate-700">
+                                                        {filteredIpItems.map((item) => {
+                                                            // 找出原始数组中的真实索引
+                                                            const originalIndex = ipItems.indexOf(item)
+                                                            return (
+                                                                <li
+                                                                    key={originalIndex}
+                                                                    className="flex items-center justify-between py-2 px-4"
+                                                                >
+                                                                    <span className="font-mono dark:text-shadow-glow-white">{item}</span>
+                                                                    <AnimatedButton>
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            type="button"
+                                                                            onClick={() => handleRemoveIpAddress(originalIndex)}
+                                                                            className="h-8 w-8 text-destructive hover:text-destructive dark:text-red-500 dark:hover:text-red-400 dark:button-neon"
+                                                                        >
+                                                                            <Trash2 className="h-4 w-4 dark:icon-neon" />
+                                                                        </Button>
+                                                                    </AnimatedButton>
+                                                                </li>
+                                                            )
+                                                        })}
+                                                    </ul>
+                                                </ScrollArea>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+
+                    <AnimatedButton>
+                        <Button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full dark:text-shadow-glow-white dark:button-neon"
+                        >
+                            {isLoading
+                                ? t("common.submitting")
+                                : mode === 'update'
+                                    ? t("common.save")
+                                    : t("common.create")}
+                        </Button>
+                    </AnimatedButton>
+                </form>
+            </Form>
+        </AnimatedContainer>
     )
 }

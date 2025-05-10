@@ -26,9 +26,40 @@ export interface AttackLogQuery {
     pageSize?: number       // 每页记录数，最大100条
 }
 
+// IP地址地理位置信息接口
+export interface IPInfo {
+    city: {
+        nameZh: string       // 城市中文名称
+        nameEn: string       // 城市英文名称
+    }
+    subdivision: {
+        nameZh: string       // 省/州中文名称
+        nameEn: string       // 省/州英文名称
+        isoCode: string      // 省/州代码
+    }
+    country: {
+        nameZh: string       // 国家中文名称
+        nameEn: string       // 国家英文名称
+        isoCode: string      // 国家ISO代码
+    }
+    continent: {
+        nameZh: string       // 大洲中文名称
+        nameEn: string       // 大洲英文名称
+    }
+    location: {
+        longitude: number    // 经度
+        latitude: number     // 纬度
+        timeZone: string     // 时区
+    }
+    asn: {
+        number: number       // ASN号码
+        organization: string // 组织名称
+    }
+}
 // 攻击事件聚合结果
 export interface AttackEventAggregateResult {
     srcIp: string            // 来源IP地址，攻击者地址
+    srcIpInfo: IPInfo        // 来源IP地理位置信息
     count: number            // 攻击总次数，同一来源的攻击计数
     domain: string           // 域名，被攻击的站点
     dstPort: number          // 目标端口号，被攻击的服务端口
@@ -63,27 +94,29 @@ export interface Log {
 // WAF安全事件日志记录
 export interface WAFLog {
     id: string                // 日志唯一标识符
+    requestId: string         // 请求唯一标识
+    ruleId: number            // 触发的规则ID
+    secLangRaw: string        // 安全规则原始定义
+    severity: number          // 事件严重级别(0-5)
+    phase: number             // 请求处理阶段
+    secMark: string           // 安全标记
     accuracy: number          // 规则匹配准确度(0-10)
+    payload: string           // 攻击载荷
+    uri: string               // 请求URI路径
     srcIp: string             // 来源IP地址
-    srcPort: number           // 来源端口
+    srcIpInfo?: IPInfo        // 来源IP地理位置信息
     dstIp: string             // 目标IP地址
+    clientIp: string          // 客户端IP地址
+    serverIp: string          // 服务器IP地址
+    srcPort: number           // 来源端口
     dstPort: number           // 目标端口
-    createdAt: string         // 事件发生时间戳
     domain: string            // 目标域名
     logs: Log[]               // 关联的日志条目
     message: string           // 事件描述消息
-    payload: string           // 攻击载荷
-    phase: number             // 请求处理阶段
     request: string           // 原始HTTP请求
-    requestId: string         // 请求唯一标识
     response: string          // 原始HTTP响应
-    ruleId: number            // 触发的规则ID
-    secLangRaw: string        // 安全规则原始定义
-    secMark: string           // 安全标记
-    severity: number          // 事件严重级别(0-5)
-    uri: string               // 请求URI路径
+    createdAt: string         // 事件发生时间戳
 }
-
 // 攻击日志分页结果
 export interface AttackLogResponse {
     currentPage: number
@@ -97,6 +130,7 @@ export interface AttackLogResponse {
 export interface AttackDetailData {
     target: string           // 目标 (domain + dstPort + url)
     srcIp: string            // 来源IP地址
+    srcIpInfo?: IPInfo       // 来源IP地理位置信息
     srcPort: number          // 来源端口
     dstIp: string            // 目标IP地址 
     dstPort: number          // 目标端口

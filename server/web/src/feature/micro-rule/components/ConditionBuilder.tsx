@@ -6,13 +6,14 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Trash2, ChevronDown, ChevronRight } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import type { LogicalOperator, TargetType, MicroRuleCreateRequest, CompositeCondition, SimpleCondition } from "@/types/rule"
+import type { LogicalOperator, TargetType, MicroRuleCreateRequest, CompositeCondition, SimpleCondition, MatchType } from "@/types/rule"
 import { cn } from "@/lib/utils"
 import { TARGET_MATCH_TYPES } from "@/types/rule"
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import type { FieldPath, UseFormReturn } from "react-hook-form"
 import { Badge } from "@/components/ui/badge"
 import { TFunction } from "i18next"
+import { AnimatedButton } from "@/components/ui/animation/components/animated-button"
 
 interface ConditionBuilderProps {
     form: UseFormReturn<MicroRuleCreateRequest>
@@ -87,7 +88,7 @@ export function ConditionBuilder({
 
     // If composite condition, get operator and child conditions
     const operator = form.watch(`${path}.operator` as FieldPath<MicroRuleCreateRequest>) as LogicalOperator
-    const conditions = form.watch(`${path}.conditions` as FieldPath<MicroRuleCreateRequest>) || []
+    const conditions = (form.watch(`${path}.conditions` as FieldPath<MicroRuleCreateRequest>) || []) as (SimpleCondition | CompositeCondition)[]
 
     // If simple condition, get target and match type
     const target = form.watch(`${path}.target` as FieldPath<MicroRuleCreateRequest>) as TargetType
@@ -179,7 +180,7 @@ export function ConditionBuilder({
                     <div>
                         <FormField
                             control={form.control}
-                            name={`${path}.target`}
+                            name={`${path}.target` as FieldPath<MicroRuleCreateRequest>}
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className={shadowTextStyles + " text-xs"}>{t("microRule.condition.target")}</FormLabel>
@@ -187,10 +188,10 @@ export function ConditionBuilder({
                                         onValueChange={(value: TargetType) => {
                                             field.onChange(value)
                                             // Reset match type
-                                            form.setValue(`${path}.match_type`, TARGET_MATCH_TYPES[value][0])
+                                            form.setValue(`${path}.match_type` as FieldPath<MicroRuleCreateRequest>, TARGET_MATCH_TYPES[value][0])
                                         }}
-                                        defaultValue={field.value}
-                                        value={field.value}
+                                        defaultValue={field.value as TargetType}
+                                        value={field.value as TargetType}
                                     >
                                         <FormControl>
                                             <SelectTrigger className={shadowTextStyles}>
@@ -213,13 +214,13 @@ export function ConditionBuilder({
                     <div>
                         <FormField
                             control={form.control}
-                            name={`${path}.match_type`}
+                            name={`${path}.match_type` as FieldPath<MicroRuleCreateRequest>}
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className={shadowTextStyles + " text-xs"}>
                                         {t("microRule.condition.matchType")} <span className="text-red-500">*</span>
                                     </FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value as MatchType} value={field.value as MatchType}>
                                         <FormControl>
                                             <SelectTrigger className={shadowTextStyles}>
                                                 <SelectValue placeholder={t("microRule.condition.selectMatchType")} />
@@ -244,7 +245,7 @@ export function ConditionBuilder({
                         <div className="flex-1">
                             <FormField
                                 control={form.control}
-                                name={`${path}.match_value`}
+                                name={`${path}.match_value` as FieldPath<MicroRuleCreateRequest>}
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className={shadowTextStyles + " text-xs"}>
@@ -257,6 +258,8 @@ export function ConditionBuilder({
                                                     target === "source_ip" ? "e.g: 192.168.10.10" : t("microRule.condition.enterMatchValue")
                                                 }
                                                 {...field}
+                                                // 确保 match_value 是字符串类型
+                                                value={typeof field.value === 'string' ? field.value : ''}
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -265,9 +268,11 @@ export function ConditionBuilder({
                             />
                         </div>
                         {!isRoot && (
-                            <Button type="button" variant="ghost" size="icon" onClick={onRemove} className="h-8 w-8 p-0 mt-6">
-                                <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
+                            <AnimatedButton>
+                                <Button type="button" variant="ghost" size="icon" onClick={onRemove} className="h-8 w-8 p-0 mt-6">
+                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                </Button>
+                            </AnimatedButton>
                         )}
                     </div>
                 </div>
@@ -312,9 +317,11 @@ export function ConditionBuilder({
                     </div>
 
                     {!isRoot && (
-                        <Button variant="ghost" size="sm" onClick={onRemove} className="h-8 w-8 p-0">
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
+                        <AnimatedButton>
+                            <Button variant="ghost" size="sm" onClick={onRemove} className="h-8 w-8 p-0">
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                        </AnimatedButton>
                     )}
                 </div>
 

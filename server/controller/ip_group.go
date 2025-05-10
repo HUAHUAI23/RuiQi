@@ -22,6 +22,7 @@ type IPGroupController interface {
 	GetIPGroupByID(ctx *gin.Context)
 	UpdateIPGroup(ctx *gin.Context)
 	DeleteIPGroup(ctx *gin.Context)
+	AddIPToBlacklist(ctx *gin.Context)
 }
 
 // IPGroupControllerImpl IP组控制器实现
@@ -247,4 +248,43 @@ func (c *IPGroupControllerImpl) DeleteIPGroup(ctx *gin.Context) {
 
 	c.logger.Info().Str("id", id).Msg("IP组删除成功")
 	response.Success(ctx, "IP组删除成功", nil)
+}
+
+// AddIPToBlacklist 添加IP到系统默认黑名单
+//
+//	@Summary		添加IP到黑名单
+//	@Description	将指定的IP地址或CIDR添加到系统默认黑名单组中
+//	@Tags			IP组管理
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body	dto.AddIPToBlacklistRequest	true	"IP地址或CIDR"
+//	@Security		BearerAuth
+//	@Success		200	{object}	model.SuccessResponseNoData		"IP添加成功"
+//	@Failure		400	{object}	model.ErrResponse				"请求参数错误"
+//	@Failure		401	{object}	model.ErrResponseDontShowError	"未授权访问"
+//	@Failure		404	{object}	model.ErrResponseDontShowError	"系统默认黑名单不存在"
+//	@Failure		500	{object}	model.ErrResponseDontShowError	"服务器内部错误"
+//	@Router			/api/v1/ip-groups/blacklist/add [post]
+func (c *IPGroupControllerImpl) AddIPToBlacklist(ctx *gin.Context) {
+	var req dto.AddIPToBlacklistRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		c.logger.Warn().Err(err).Msg("请求参数绑定失败")
+		response.BadRequest(ctx, err, true)
+		return
+	}
+
+	c.logger.Info().Str("ip", req.IP).Msg("添加IP到黑名单请求")
+	err := c.ipGroupService.AddIPToBlacklist(ctx, req.IP)
+	if err != nil {
+		if errors.Is(err, service.ErrIPGroupNotFound) {
+			response.NotFound(ctx, err)
+			return
+		}
+		c.logger.Error().Err(err).Str("ip", req.IP).Msg("添加IP到黑名单失败")
+		response.InternalServerError(ctx, err, false)
+		return
+	}
+
+	c.logger.Info().Str("ip", req.IP).Msg("IP添加到黑名单成功")
+	response.Success(ctx, "IP添加到黑名单成功", nil)
 }

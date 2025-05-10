@@ -1,5 +1,15 @@
 basePath: /api/v1
 definitions:
+  dto.AddIPToBlacklistRequest:
+    description: 添加IP地址或CIDR到系统默认黑名单的请求
+    properties:
+      ip:
+        description: IP地址或CIDR
+        example: 192.168.1.1
+        type: string
+    required:
+    - ip
+    type: object
   dto.AppConfigDTO:
     properties:
       directives:
@@ -83,6 +93,10 @@ definitions:
         description: 来源IP地址，攻击者地址
         example: 192.168.1.100
         type: string
+      srcIpInfo:
+        allOf:
+        - $ref: '#/definitions/model.IPInfo'
+        description: 来源IP地址，攻击者地址
     type: object
   dto.AttackEventResponse:
     description: 攻击事件查询的分页响应结构体，包含聚合结果列表及分页元数据，用于前端展示和翻页控制
@@ -1980,6 +1994,46 @@ paths:
       security:
       - BearerAuth: []
       summary: 更新IP组
+      tags:
+      - IP组管理
+  /api/v1/ip-groups/blacklist/add:
+    post:
+      consumes:
+      - application/json
+      description: 将指定的IP地址或CIDR添加到系统默认黑名单组中
+      parameters:
+      - description: IP地址或CIDR
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AddIPToBlacklistRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: IP添加成功
+          schema:
+            $ref: '#/definitions/model.SuccessResponseNoData'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/model.ErrResponse'
+        "401":
+          description: 未授权访问
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+        "404":
+          description: 系统默认黑名单不存在
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+      security:
+      - BearerAuth: []
+      summary: 添加IP到黑名单
       tags:
       - IP组管理
   /api/v1/micro-rules:

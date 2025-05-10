@@ -162,7 +162,6 @@ export function MicroRuleForm({
                                     <FormControl>
                                         <Input
                                             className="dark:text-shadow-glow-white"
-                                            type="number"
                                             placeholder={t("microRule.form.priorityPlaceholder")}
                                             {...field}
                                             onChange={(e) => field.onChange(Number(e.target.value))}

@@ -14,9 +14,76 @@ import { IPGroup } from "@/types/ip-group"
 import { useIPGroups } from "@/feature/ip-group/hooks"
 import { IPGroupDialog } from "@/feature/ip-group/components/IPGroupDialog"
 import { DeleteIPGroupDialog } from "@/feature/ip-group/components/DeleteIPGroupDialog"
-import { Plus, Pencil, Trash2 } from "lucide-react"
+import { Plus, Pencil, Trash2, Search } from "lucide-react"
 import { AdvancedErrorDisplay } from "@/components/common/error/errorDisplay"
 import { Badge } from "@/components/ui/badge"
+import { AnimatedButton } from "@/components/ui/animation/components/animated-button"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+
+interface IPAddressesCellProps {
+    items: string[]
+}
+
+const IPAddressesCell = ({ items }: IPAddressesCellProps) => {
+    const [searchQuery, setSearchQuery] = useState("")
+    const filteredItems = items.filter(item =>
+        item.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+
+    return (
+        <Popover>
+            <PopoverTrigger asChild>
+                <div className="flex flex-wrap gap-1 cursor-pointer">
+                    {items.length > 3 ? (
+                        <>
+                            {items.slice(0, 3).map((item, index) => (
+                                <Badge key={index} variant="outline" className="font-mono dark:border-slate-700 dark:bg-slate-800/70 dark:text-shadow-glow-white">
+                                    {item}
+                                </Badge>
+                            ))}
+                            <Badge variant="outline" className="dark:border-slate-700 dark:bg-slate-800/70 dark:text-shadow-glow-white">
+                                +{items.length - 3}
+                            </Badge>
+                        </>
+                    ) : (
+                        items.map((item, index) => (
+                            <Badge key={index} variant="outline" className="font-mono dark:border-slate-700 dark:bg-slate-800/70 dark:text-shadow-glow-white">
+                                {item}
+                            </Badge>
+                        ))
+                    )}
+                </div>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-4 dark:bg-slate-800/95 dark:border-slate-700">
+                <div className="space-y-4">
+                    <div className="relative">
+                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-slate-400" />
+                        <Input
+                            placeholder="Search IP addresses..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-8 dark:bg-slate-700/50 dark:border-slate-600 dark:text-shadow-glow-white"
+                        />
+                    </div>
+                    <ScrollArea scrollbarVariant="neon" className="h-[300px] pr-4">
+                        <div className="space-y-2">
+                            {filteredItems.map((item, index) => (
+                                <div
+                                    key={index}
+                                    className="px-2 py-1.5 text-sm font-mono rounded-md hover:bg-slate-700/50 dark:text-shadow-glow-white cursor-pointer"
+                                >
+                                    {item}
+                                </div>
+                            ))}
+                        </div>
+                    </ScrollArea>
+                </div>
+            </PopoverContent>
+        </Popover>
+    )
+}
 
 export default function IPGroupPage() {
     const { t } = useTranslation()
@@ -63,28 +130,7 @@ export default function IPGroupPage() {
             header: () => <div className="whitespace-nowrap dark:text-shadow-glow-white dark:text-white">{t('ipGroup.table.ipAddresses')}</div>,
             cell: ({ row }) => {
                 const items = row.getValue("items") as string[]
-                return (
-                    <div className="flex flex-wrap gap-1">
-                        {items.length > 3 ? (
-                            <>
-                                {items.slice(0, 3).map((item, index) => (
-                                    <Badge key={index} variant="outline" className="font-mono dark:border-slate-700 dark:bg-slate-800/70 dark:text-shadow-glow-white">
-                                        {item}
-                                    </Badge>
-                                ))}
-                                <Badge variant="outline" className="dark:border-slate-700 dark:bg-slate-800/70 dark:text-shadow-glow-white">
-                                    +{items.length - 3}
-                                </Badge>
-                            </>
-                        ) : (
-                            items.map((item, index) => (
-                                <Badge key={index} variant="outline" className="font-mono dark:border-slate-700 dark:bg-slate-800/70 dark:text-shadow-glow-white">
-                                    {item}
-                                </Badge>
-                            ))
-                        )}
-                    </div>
-                )
+                return <IPAddressesCell items={items} />
             }
         },
         {
@@ -94,22 +140,26 @@ export default function IPGroupPage() {
                 const ipGroup = row.original
                 return (
                     <div className="flex items-center gap-2">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenEditDialog(ipGroup)}
-                            className="h-8 w-8 dark:text-shadow-glow-white dark:button-neon"
-                        >
-                            <Pencil className="h-4 w-4 dark:icon-neon" />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenDeleteDialog(ipGroup)}
-                            className="h-8 w-8 text-destructive hover:text-destructive dark:text-red-500 dark:hover:text-red-400 dark:button-neon"
-                        >
-                            <Trash2 className="h-4 w-4 dark:icon-neon" />
-                        </Button>
+                        <AnimatedButton>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleOpenEditDialog(ipGroup)}
+                                className="h-8 w-8 dark:text-shadow-glow-white dark:button-neon"
+                            >
+                                <Pencil className="h-4 w-4 dark:icon-neon" />
+                            </Button>
+                        </AnimatedButton>
+                        <AnimatedButton>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleOpenDeleteDialog(ipGroup)}
+                                className="h-8 w-8 text-destructive hover:text-destructive dark:text-red-500 dark:hover:text-red-400 dark:button-neon"
+                            >
+                                <Trash2 className="h-4 w-4 dark:icon-neon" />
+                            </Button>
+                        </AnimatedButton>
                     </div>
                 )
             }
@@ -152,19 +202,22 @@ export default function IPGroupPage() {
     })
 
     return (
-        <Card className="flex flex-col h-full p-6 border-none shadow-none dark:bg-accent/10 dark:card-neon">
+        <Card className="flex flex-col h-full p-6 border-none shadow-none">
             {/* 头部操作栏 */}
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold dark:text-shadow-glow-white dark:text-white">
+                <h2 className="text-xl font-semibold text-primary dark:text-white">
                     {t('ipGroup.title')}
                 </h2>
-                <Button
-                    onClick={handleOpenCreateDialog}
-                    className="dark:text-shadow-glow-white dark:button-neon"
-                >
-                    <Plus className="h-4 w-4 mr-2 dark:icon-neon" />
-                    {t('ipGroup.createButton')}
-                </Button>
+                <AnimatedButton>
+                    <Button
+                        size="sm"
+                        onClick={handleOpenCreateDialog}
+                        className="flex items-center gap-1 dark:text-shadow-glow-white dark:button-neon"
+                    >
+                        <Plus className="h-4 w-4 dark:icon-neon dark:text-shadow-glow-white" />
+                        {t('ipGroup.createButton')}
+                    </Button>
+                </AnimatedButton>
             </div>
 
             {/* 表格区域 */}

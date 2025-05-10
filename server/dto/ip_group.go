@@ -25,3 +25,9 @@ type IPGroupListResponse struct {
 	Total int64           `json:"total"` // 总数
 	Items []model.IPGroup `json:"items"` // IP组列表
 }
+
+// AddIPToBlacklistRequest 添加IP到黑名单请求
+// @Description 添加IP地址或CIDR到系统默认黑名单的请求
+type AddIPToBlacklistRequest struct {
+	IP string `json:"ip" binding:"required" example:"192.168.1.1"` // IP地址或CIDR
+}

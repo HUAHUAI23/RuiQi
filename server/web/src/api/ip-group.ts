@@ -60,5 +60,14 @@ export const ipGroupApi = {
      */
     deleteIPGroup: (id: string): Promise<void> => {
         return del<void>(`${BASE_URL}/${id}`)
+    },
+
+    /**
+     * 将IP添加到系统黑名单
+     * @param ip IP地址或CIDR
+     * @returns void
+     */
+    blockIP: (ip: string): Promise<void> => {
+        return post<void>(`${BASE_URL}/blacklist/add`, { ip })
     }
 }

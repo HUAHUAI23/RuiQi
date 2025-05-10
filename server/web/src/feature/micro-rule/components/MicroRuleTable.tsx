@@ -189,6 +189,7 @@ export function MicroRuleTable() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuItem
+                            className="dark:text-shadow-glow-white"
                             onClick={() => openUpdateDialog(row.original)}
                         >
                             <Pencil className="mr-2 h-4 w-4 dark:text-shadow-glow-white" />

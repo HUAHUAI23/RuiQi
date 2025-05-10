@@ -148,6 +148,8 @@
         "detectedPayload": "检测到的载荷",
         "attackSource": "攻击来源",
         "blockThisIp": "拦截此 IP",
+        "location": "地理位置",
+        "noLocationInfo": "无地理位置信息",
         "targetInfo": "目标信息",
         "technicalDetails": "详情",
         "copyCurl": "复制 cURL",
@@ -412,7 +414,11 @@
             "deleteSuccess": "删除成功",
             "ipGroupDeleted": "IP 组已成功删除",
             "deleteFailed": "删除失败",
-            "deleteError": "删除 IP 组时出现错误"
+            "deleteError": "删除 IP 组时出现错误",
+            "blockSuccess": "IP 已拦截",
+            "ipBlocked": "IP 地址 {{ip}} 已添加到黑名单",
+            "blockFailed": "拦截失败",
+            "blockError": "拦截 IP 地址时出现错误"
         }
     },
     "microRule": {

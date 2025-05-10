@@ -20,10 +20,10 @@ export function IPGroupDialog({ open, onOpenChange, mode = 'create', ipGroup = n
     const { t } = useTranslation()
 
     // Define title and description based on mode
-    const title = mode === 'create' 
-        ? t("ipGroup.dialog.createTitle") 
+    const title = mode === 'create'
+        ? t("ipGroup.dialog.createTitle")
         : t("ipGroup.dialog.editTitle")
-    
+
     const description = mode === 'create'
         ? t("ipGroup.dialog.createDescription")
         : t("ipGroup.dialog.editDescription")
@@ -48,7 +48,7 @@ export function IPGroupDialog({ open, onOpenChange, mode = 'create', ipGroup = n
             <AnimatePresence>
                 {open && (
                     <motion.div {...dialogEnterExitAnimation}>
-                        <DialogContent className="sm:max-w-md dark:bg-accent/10 dark:border-slate-800 dark:card-neon">
+                        <DialogContent className="sm:max-w-md">
                             <motion.div {...dialogContentAnimation}>
                                 <DialogHeader className="px-2">
                                     <motion.div {...dialogContentItemAnimation}>

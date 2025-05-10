@@ -52,6 +52,7 @@ func (s *WAFLogServiceImpl) GetAttackEvents(
 			{Key: "firstAttackTime", Value: bson.D{{Key: "$min", Value: "$createdAt"}}},
 			{Key: "lastAttackTime", Value: bson.D{{Key: "$max", Value: "$createdAt"}}},
 			{Key: "allTimes", Value: bson.D{{Key: "$push", Value: "$createdAt"}}},
+			{Key: "srcIpInfo", Value: bson.D{{Key: "$first", Value: "$srcIpInfo"}}},
 		}},
 	}
 
@@ -59,6 +60,7 @@ func (s *WAFLogServiceImpl) GetAttackEvents(
 	projectStage := bson.D{
 		{Key: "$project", Value: bson.D{
 			{Key: "srcIp", Value: "$_id.srcIp"},
+			{Key: "srcIpInfo", Value: "$srcIpInfo"},
 			{Key: "dstPort", Value: "$_id.dstPort"},
 			{Key: "domain", Value: "$_id.domain"},
 			{Key: "count", Value: 1},

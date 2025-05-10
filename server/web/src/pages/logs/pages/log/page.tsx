@@ -70,6 +70,7 @@ export default function LogsPage() {
         setSelectedLog({
             target: `${log.domain}:${log.dstPort}${log.uri}`,
             srcIp: log.srcIp,
+            srcIpInfo: log.srcIpInfo,
             srcPort: log.srcPort,
             dstIp: log.dstIp,
             dstPort: log.dstPort,

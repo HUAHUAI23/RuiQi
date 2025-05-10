@@ -58,13 +58,14 @@ func (r *MongoWAFLogRepository) AggregateAttackEvents(
 
 	for dataCursor.Next(ctx) {
 		var result struct {
-			SrcIP           string      `bson:"srcIp"`
-			DstPort         int         `bson:"dstPort"`
-			Domain          string      `bson:"domain"`
-			Count           int         `bson:"count"`
-			FirstAttackTime time.Time   `bson:"firstAttackTime"`
-			LastAttackTime  time.Time   `bson:"lastAttackTime"`
-			AllTimes        []time.Time `bson:"allTimes"`
+			SrcIP           string        `bson:"srcIp"`
+			SrcIPInfo       *model.IPInfo `bson:"srcIpInfo"`
+			DstPort         int           `bson:"dstPort"`
+			Domain          string        `bson:"domain"`
+			Count           int           `bson:"count"`
+			FirstAttackTime time.Time     `bson:"firstAttackTime"`
+			LastAttackTime  time.Time     `bson:"lastAttackTime"`
+			AllTimes        []time.Time   `bson:"allTimes"`
 		}
 
 		if err := dataCursor.Decode(&result); err != nil {
@@ -75,6 +76,7 @@ func (r *MongoWAFLogRepository) AggregateAttackEvents(
 
 		aggregateResult := dto.AttackEventAggregateResult{
 			SrcIP:           result.SrcIP,
+			SrcIPInfo:       result.SrcIPInfo,
 			DstPort:         result.DstPort,
 			Domain:          result.Domain,
 			Count:           result.Count,

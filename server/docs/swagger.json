@@ -764,6 +764,69 @@
                 }
             }
         },
+        "/api/v1/ip-groups/blacklist/add": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "将指定的IP地址或CIDR添加到系统默认黑名单组中",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "IP组管理"
+                ],
+                "summary": "添加IP到黑名单",
+                "parameters": [
+                    {
+                        "description": "IP地址或CIDR",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.AddIPToBlacklistRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "IP添加成功",
+                        "schema": {
+                            "$ref": "#/definitions/model.SuccessResponseNoData"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "404": {
+                        "description": "系统默认黑名单不存在",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/ip-groups/{id}": {
             "get": {
                 "security": [
@@ -2353,6 +2416,20 @@
         }
     },
     "definitions": {
+        "dto.AddIPToBlacklistRequest": {
+            "description": "添加IP地址或CIDR到系统默认黑名单的请求",
+            "type": "object",
+            "required": [
+                "ip"
+            ],
+            "properties": {
+                "ip": {
+                    "description": "IP地址或CIDR",
+                    "type": "string",
+                    "example": "192.168.1.1"
+                }
+            }
+        },
         "dto.AppConfigDTO": {
             "type": "object",
             "properties": {
@@ -2460,6 +2537,14 @@
                     "description": "来源IP地址，攻击者地址",
                     "type": "string",
                     "example": "192.168.1.100"
+                },
+                "srcIpInfo": {
+                    "description": "来源IP地址，攻击者地址",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.IPInfo"
+                        }
+                    ]
                 }
             }
         },

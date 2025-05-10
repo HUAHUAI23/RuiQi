@@ -148,6 +148,8 @@
         "detectedPayload": "Detected Payload",
         "attackSource": "Attack Source",
         "blockThisIp": "Block This IP",
+        "location": "Location",
+        "noLocationInfo": "No location information",
         "targetInfo": "Target Information",
         "technicalDetails": "Details",
         "copyCurl": "Copy cURL",
@@ -412,7 +414,11 @@
             "deleteSuccess": "IP Group Deleted",
             "ipGroupDeleted": "IP Group has been deleted successfully",
             "deleteFailed": "Deletion Failed",
-            "deleteError": "An error occurred while deleting the IP group"
+            "deleteError": "An error occurred while deleting the IP group",
+            "blockSuccess": "IP Blocked",
+            "ipBlocked": "IP address {{ip}} has been added to blacklist",
+            "blockFailed": "Block Failed",
+            "blockError": "An error occurred while blocking the IP address"
         }
     },
     "microRule": {
@@ -460,6 +466,7 @@
             "selectOperator": "Select logical operator",
             "and": "AND",
             "or": "OR",
+            "conditionGroup": "Condition Group",
             "addSimpleCondition": "Add Condition",
             "addCompositeCondition": "Add Condition Group",
             "addNestedCondition": "Add Nested Condition"

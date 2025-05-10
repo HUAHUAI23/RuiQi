@@ -39,14 +39,15 @@ type AttackLogRequest struct {
 // AttackEventAggregateResult 攻击事件聚合结果
 // @Description 攻击事件的聚合统计结果，提供IP、域名、端口维度的攻击信息汇总，包含攻击次数、首次和最近攻击时间、持续时间等关键指标
 type AttackEventAggregateResult struct {
-	SrcIP             string    `bson:"srcIp" json:"srcIp" example:"192.168.1.100"`                                    // 来源IP地址，攻击者地址
-	DstPort           int       `bson:"dstPort" json:"dstPort" example:"443"`                                          // 目标端口号，被攻击的服务端口
-	Domain            string    `bson:"domain" json:"domain" example:"example.com"`                                    // 域名，被攻击的站点
-	Count             int       `bson:"count" json:"count" example:"15"`                                               // 攻击总次数，同一来源的攻击计数
-	FirstAttackTime   time.Time `bson:"firstAttackTime" json:"firstAttackTime" example:"2024-03-18T08:12:33Z"`         // 首次攻击时间，该IP首次发起攻击的时间点
-	LastAttackTime    time.Time `bson:"lastAttackTime" json:"lastAttackTime" example:"2024-03-18T08:30:45Z"`           // 最近攻击时间，该IP最后一次攻击的时间点
-	DurationInMinutes float64   `bson:"durationInMinutes,omitempty" json:"durationInMinutes,omitempty" example:"18.2"` // 攻击持续时间(分钟)，从首次到最近攻击的时间跨度
-	IsOngoing         bool      `bson:"isOngoing" json:"isOngoing" example:"true"`                                     // 是否正在进行中，标识攻击是否仍在持续
+	SrcIP             string        `bson:"srcIp" json:"srcIp" example:"192.168.1.100"`                                    // 来源IP地址，攻击者地址
+	SrcIPInfo         *model.IPInfo `bson:"srcIpInfo" json:"srcIpInfo"`                                                    // 来源IP地址，攻击者地址
+	DstPort           int           `bson:"dstPort" json:"dstPort" example:"443"`                                          // 目标端口号，被攻击的服务端口
+	Domain            string        `bson:"domain" json:"domain" example:"example.com"`                                    // 域名，被攻击的站点
+	Count             int           `bson:"count" json:"count" example:"15"`                                               // 攻击总次数，同一来源的攻击计数
+	FirstAttackTime   time.Time     `bson:"firstAttackTime" json:"firstAttackTime" example:"2024-03-18T08:12:33Z"`         // 首次攻击时间，该IP首次发起攻击的时间点
+	LastAttackTime    time.Time     `bson:"lastAttackTime" json:"lastAttackTime" example:"2024-03-18T08:30:45Z"`           // 最近攻击时间，该IP最后一次攻击的时间点
+	DurationInMinutes float64       `bson:"durationInMinutes,omitempty" json:"durationInMinutes,omitempty" example:"18.2"` // 攻击持续时间(分钟)，从首次到最近攻击的时间跨度
+	IsOngoing         bool          `bson:"isOngoing" json:"isOngoing" example:"true"`                                     // 是否正在进行中，标识攻击是否仍在持续
 }
 
 // AttackEventResponse 攻击事件响应

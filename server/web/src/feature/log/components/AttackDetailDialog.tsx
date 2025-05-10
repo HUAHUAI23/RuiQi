@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Copy, Check, AlertTriangle, Shield } from "lucide-react"
+import { Copy, Check, AlertTriangle, Shield, Loader2 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { AttackDetailData } from "@/types/log"
 import { format } from "date-fns"
@@ -17,8 +17,10 @@ import {
 } from "@/components/ui/animation/dialog-animation"
 import { useTranslation } from "react-i18next"
 import { CopyableText } from "@/components/common/copyable-text"
+import { useBlockIP } from "@/feature/ip-group/hooks"
 
 import { TabsAnimationProvider } from "@/components/ui/animation/components/tab-animation"
+import { AnimatedButton } from "@/components/ui/animation/components/animated-button"
 
 interface AttackDetailDialogProps {
     open: boolean
@@ -30,7 +32,9 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
     const [copyState, setCopyState] = useState<{ [key: string]: boolean }>({})
     const [encoding, setEncoding] = useState("UTF-8")
     const [activeTab, setActiveTab] = useState("request")
-    const { t } = useTranslation()
+    const { t, i18n } = useTranslation()
+    const [isBlockingIP, setIsBlockingIP] = useState(false)
+    const { blockIP, clearError } = useBlockIP()
 
     // Define the gradients for reuse
     const purpleGradient = `linear-gradient(135deg, 
@@ -47,6 +51,16 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
         navigator.clipboard.writeText(text).then(() => {
             setCopyState((prev) => ({ ...prev, [key]: true }))
             setTimeout(() => setCopyState((prev) => ({ ...prev, [key]: false })), 2000)
+        })
+    }
+
+    const handleBlockIP = (ip: string) => {
+        setIsBlockingIP(true)
+        clearError()
+        blockIP(ip, {
+            onSettled: () => {
+                setIsBlockingIP(false)
+            }
         })
     }
 
@@ -195,19 +209,54 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                                             <span className="text-muted-foreground text-sm block mb-1 dark:text-shadow-glow-white">{t("srcIp")}</span>
                                                             <div className="font-medium flex items-center justify-between text-card-foreground dark:text-slate-200 dark:text-shadow-glow-white">
                                                                 <span className="break-all font-mono">{data.srcIp}</span>
-                                                                {/* <Button
-                                                                    variant="destructive"
-                                                                    size="sm"
-                                                                    className="h-7 text-xs bg-destructive text-destructive-foreground hover:bg-destructive/90 dark:bg-red-900/90 dark:hover:bg-red-800"
-                                                                >
-                                                                    {t("attackDetail.blockThisIp")}
-                                                                </Button> */}
+                                                                <AnimatedButton>
+                                                                    <Button
+                                                                        variant="destructive"
+                                                                        size="sm"
+                                                                        className="h-7 text-xs bg-destructive text-destructive-foreground hover:bg-destructive/90 dark:bg-red-900/90 dark:hover:bg-red-800"
+                                                                        onClick={() => handleBlockIP(data.srcIp)}
+                                                                        disabled={isBlockingIP}
+                                                                    >
+                                                                        {isBlockingIP ? (
+                                                                            <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                                                        ) : null}
+                                                                        {t("attackDetail.blockThisIp")}
+                                                                    </Button>
+                                                                </AnimatedButton>
                                                             </div>
                                                         </div>
                                                         <div>
                                                             <span className="text-muted-foreground text-sm block mb-1 dark:text-shadow-glow-white">{t("srcPort")}</span>
                                                             <div className="font-medium font-mono text-card-foreground dark:text-slate-200 dark:text-shadow-glow-white">{data.srcPort}</div>
                                                         </div>
+                                                        {data.srcIpInfo && (
+                                                            <div>
+                                                                <span className="text-muted-foreground text-sm block mb-1 dark:text-shadow-glow-white">{t("attackDetail.location")}</span>
+                                                                <div className="font-medium text-card-foreground dark:text-slate-200 dark:text-shadow-glow-white">
+                                                                    {data.srcIpInfo.country ? (
+                                                                        <div>
+                                                                            {i18n.language === 'zh'
+                                                                                ? data.srcIpInfo.country.nameZh
+                                                                                : data.srcIpInfo.country.nameEn}
+                                                                            {data.srcIpInfo.subdivision &&
+                                                                                <span> - {i18n.language === 'zh'
+                                                                                    ? data.srcIpInfo.subdivision.nameZh
+                                                                                    : data.srcIpInfo.subdivision.nameEn}
+                                                                                </span>
+                                                                            }
+                                                                            {data.srcIpInfo.city &&
+                                                                                <span> - {i18n.language === 'zh'
+                                                                                    ? data.srcIpInfo.city.nameZh
+                                                                                    : data.srcIpInfo.city.nameEn}
+                                                                                </span>
+                                                                            }
+                                                                        </div>
+                                                                    ) : (
+                                                                        t("attackDetail.noLocationInfo")
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </Card>
 

@@ -31,6 +31,7 @@ type IPGroupService interface {
 	GetIPGroupByID(ctx context.Context, id bson.ObjectID) (*model.IPGroup, error)
 	UpdateIPGroup(ctx context.Context, id bson.ObjectID, req *dto.IPGroupUpdateRequest) (*model.IPGroup, error)
 	DeleteIPGroup(ctx context.Context, id bson.ObjectID) error
+	AddIPToBlacklist(ctx context.Context, ip string) error
 }
 
 // IPGroupServiceImpl IP组服务实现
@@ -186,5 +187,40 @@ func (s *IPGroupServiceImpl) DeleteIPGroup(ctx context.Context, id bson.ObjectID
 	}
 
 	s.logger.Info().Str("id", id.Hex()).Msg("IP组删除成功")
+	return nil
+}
+
+// AddIPToBlacklist 添加IP到系统默认黑名单
+func (s *IPGroupServiceImpl) AddIPToBlacklist(ctx context.Context, ip string) error {
+	// 查找系统默认黑名单组
+	ipGroup, err := s.ipGroupRepo.GetIPGroupByName(ctx, SystemDefaultBlacklistName)
+	if err != nil {
+		if errors.Is(err, repository.ErrIPGroupNotFound) {
+			s.logger.Error().Msg("系统默认黑名单组不存在")
+			return ErrIPGroupNotFound
+		}
+		s.logger.Error().Err(err).Msg("获取系统默认黑名单组失败")
+		return err
+	}
+
+	// 检查IP是否已存在
+	for _, existingIP := range ipGroup.Items {
+		if existingIP == ip {
+			s.logger.Info().Str("ip", ip).Msg("IP已存在于黑名单中")
+			return nil // 如果已存在，直接返回成功
+		}
+	}
+
+	// 添加IP到黑名单
+	ipGroup.Items = append(ipGroup.Items, ip)
+
+	// 更新IP组
+	err = s.ipGroupRepo.UpdateIPGroup(ctx, ipGroup)
+	if err != nil {
+		s.logger.Error().Err(err).Str("ip", ip).Msg("添加IP到黑名单失败")
+		return err
+	}
+
+	s.logger.Info().Str("ip", ip).Msg("IP成功添加到黑名单")
 	return nil
 }

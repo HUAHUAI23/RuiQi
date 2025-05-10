@@ -121,4 +121,42 @@ export const useUpdateIPGroup = () => {
         error,
         clearError: () => setError(null),
     }
+}
+
+export const useBlockIP = () => {
+    const queryClient = useQueryClient()
+    const { toast } = useToast()
+    const { t } = useTranslation()
+    const [error, setError] = useState<string | null>(null)
+
+    const mutation = useMutation({
+        mutationFn: (ip: string) => ipGroupApi.blockIP(ip),
+        onSuccess: (_, ip) => {
+            toast({
+                title: t('ipGroup.toast.blockSuccess'),
+                description: t('ipGroup.toast.ipBlocked', { ip }),
+            })
+            queryClient.invalidateQueries({ queryKey: ['ipGroups'] })
+        },
+        onError: (error: ApiError) => {
+            console.error(t('ipGroup.toast.blockFailed'), error)
+            setError(error.message || t('ipGroup.toast.blockError'))
+            toast({
+                title: t('ipGroup.toast.blockFailed'),
+                description: error.message || t('ipGroup.toast.blockError'),
+                variant: "destructive",
+            })
+        }
+    })
+
+    return {
+        blockIP: (ip: string, options?: { onSettled?: () => void }) => {
+            mutation.mutate(ip, {
+                onSettled: options?.onSettled
+            })
+        },
+        isLoading: mutation.isPending,
+        error,
+        clearError: () => setError(null),
+    }
 } 
