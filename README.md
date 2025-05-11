@@ -1,10 +1,11 @@
 # RuiQi WAF
 
 <div align="center">
-  <img src="https://img.shields.io/badge/Go-1.24.1-00ADD8?style=flat&logo=go" alt="Go Version">
-  <img src="https://img.shields.io/badge/HAProxy-3.0-green?style=flat&logo=haproxy" alt="HAProxy">
-  <img src="https://img.shields.io/badge/OWASP-Coraza-blue?style=flat" alt="Coraza WAF">
-  <img src="https://img.shields.io/badge/License-MIT-yellow?style=flat" alt="License">
+<a href="https://deepwiki.com/HUAHUAI23/RuiQi"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki" width="160" height="30"></a>
+  <img src="https://img.shields.io/badge/Go-1.24.1-00ADD8?style=flat&logo=go" alt="Go Version" width="140" height="30">
+  <img src="https://img.shields.io/badge/HAProxy-3.0-green?style=flat&logo=haproxy" alt="HAProxy" width="140" height="30">
+  <img src="https://img.shields.io/badge/OWASP-Coraza-blue?style=flat" alt="Coraza WAF" width="140" height="30">
+  <img src="https://img.shields.io/badge/License-MIT-yellow?style=flat" alt="License" width="140" height="30">
 </div>
 
 <br>
