@@ -4,7 +4,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-        <link rel="icon" type="image/png" sizes="32x32" href="/logo32.png" />
+        <link rel="icon" type="image/svg+xml" href="/logo.svg" />
 
         <!-- 主题色定义 -->
         <meta name="theme-color" content="#8a64d0" />
@@ -81,7 +81,8 @@
                 height: 80%;
                 top: 10%;
                 left: 10%;
-                background-color: rgba(255, 255, 255, 0.1); /* white/10 */
+                background-color: rgba(255, 255, 255, 0.1);
+                /* white/10 */
                 border-radius: 9999px;
                 filter: blur(24px);
                 animation: preload-float 8s ease-in-out infinite;
@@ -93,7 +94,8 @@
                 height: 40%;
                 top: 5%;
                 right: 15%;
-                background-color: rgba(233, 213, 255, 0.2); /* purple-200/20 */
+                background-color: rgba(233, 213, 255, 0.2);
+                /* purple-200/20 */
                 border-radius: 9999px;
                 filter: blur(24px);
                 animation: preload-float-reverse 9s ease-in-out infinite;
@@ -105,7 +107,8 @@
                 height: 50%;
                 bottom: 5%;
                 left: 15%;
-                background-color: rgba(243, 232, 255, 0.2); /* purple-100/20 */
+                background-color: rgba(243, 232, 255, 0.2);
+                /* purple-100/20 */
                 border-radius: 9999px;
                 filter: blur(24px);
                 animation: preload-pulse-glow 4s ease-in-out infinite;
@@ -118,7 +121,8 @@
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                gap: 32px; /* Changed from 24px to 32px (space-y-8) */
+                gap: 32px;
+                /* Changed from 24px to 32px (space-y-8) */
             }
 
             .app-loading-text {
@@ -157,6 +161,7 @@
                 100% {
                     transform: translateY(0) scale(1);
                 }
+
                 50% {
                     transform: translateY(-20px) scale(1.05);
                 }
@@ -167,6 +172,7 @@
                 100% {
                     transform: translateY(0) scale(1);
                 }
+
                 50% {
                     transform: translateY(20px) scale(1.05);
                 }
@@ -178,6 +184,7 @@
                     opacity: 0.6;
                     transform: scale(1);
                 }
+
                 50% {
                     opacity: 0.8;
                     transform: scale(1.1);
@@ -189,6 +196,7 @@
                 100% {
                     opacity: 0.5;
                 }
+
                 50% {
                     opacity: 1;
                 }
@@ -199,6 +207,7 @@
                     opacity: 0;
                     transform: translateY(-20px);
                 }
+
                 to {
                     opacity: 1;
                     transform: translateY(0);
@@ -208,6 +217,7 @@
 
         <title>RuiQi WAF</title>
     </head>
+
     <body>
         <div id="root">
             <!-- 应用加载前显示的加载指示器 -->

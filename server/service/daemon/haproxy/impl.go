@@ -1630,6 +1630,13 @@ func (s *HAProxyServiceImpl) createBackendServer(name, address string, port int,
 
 }
 
+// get haproxy stats
+func (s *HAProxyServiceImpl) getHAProxyStats() (string, error) {
+	stats := s.runtimeClient.GetStats()
+	fmt.Println(stats)
+	return "ok", nil
+}
+
 // Int64P 返回指向int64的指针
 func Int64P(v int64) *int64 {
 	return &v
