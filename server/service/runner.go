@@ -7,6 +7,7 @@ import (
 
 	"github.com/HUAHUAI23/simple-waf/server/config"
 	"github.com/HUAHUAI23/simple-waf/server/service/daemon"
+	"github.com/haproxytech/client-native/v6/models"
 	"github.com/rs/zerolog"
 )
 
@@ -27,6 +28,8 @@ type RunnerService interface {
 	Restart(ctx context.Context) error
 	ForceStop(ctx context.Context) error
 	Reload(ctx context.Context) error
+	// get haproxy stats
+	GetStats() (models.NativeStats, error)
 }
 
 // RunnerServiceImpl 运行器服务实现
@@ -125,4 +128,8 @@ func (s *RunnerServiceImpl) Reload(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (s *RunnerServiceImpl) GetStats() (models.NativeStats, error) {
+	return s.runner.GetStats()
 }

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	mongodb "github.com/HUAHUAI23/simple-waf/pkg/database/mongo"
+	"github.com/haproxytech/client-native/v6/models"
 
 	"github.com/HUAHUAI23/simple-waf/server/config"
 	"github.com/HUAHUAI23/simple-waf/server/model"
@@ -31,6 +32,7 @@ type ServiceRunner interface {
 	Restart() error
 	HotReload() error
 	GetState() ServiceState
+	GetStats() (models.NativeStats, error)
 }
 
 // ServiceRunner 负责管理和协调所有后台服务
@@ -441,4 +443,9 @@ func (r *ServiceRunnerImpl) HotReload() error {
 // GetState 获取当前服务状态
 func (r *ServiceRunnerImpl) GetState() ServiceState {
 	return r.state
+}
+
+// GetStats 获取HAProxy的统计信息
+func (r *ServiceRunnerImpl) GetStats() (models.NativeStats, error) {
+	return r.haproxyService.GetStats()
 }

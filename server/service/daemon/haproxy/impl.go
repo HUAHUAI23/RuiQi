@@ -820,6 +820,14 @@ func (s *HAProxyServiceImpl) Reset() error {
 	return nil
 }
 
+func (s *HAProxyServiceImpl) GetStats() (models.NativeStats, error) {
+	stats, err := s.getHAProxyStats()
+	if err != nil {
+		return models.NativeStats{}, err
+	}
+	return stats, nil
+}
+
 // ========================== internal method ==========================
 func (s *HAProxyServiceImpl) initConfClient() error {
 	confClient, err := configuration.New(s.ctx,
@@ -1631,10 +1639,12 @@ func (s *HAProxyServiceImpl) createBackendServer(name, address string, port int,
 }
 
 // get haproxy stats
-func (s *HAProxyServiceImpl) getHAProxyStats() (string, error) {
+func (s *HAProxyServiceImpl) getHAProxyStats() (models.NativeStats, error) {
 	stats := s.runtimeClient.GetStats()
-	fmt.Println(stats)
-	return "ok", nil
+	if stats.Error != "" {
+		return models.NativeStats{}, fmt.Errorf("获取HAProxy状态失败: %s", stats.Error)
+	}
+	return stats, nil
 }
 
 // Int64P 返回指向int64的指针

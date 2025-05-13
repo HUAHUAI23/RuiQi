@@ -18,6 +18,7 @@ import (
 	"github.com/HUAHUAI23/simple-waf/server/config"
 	_ "github.com/HUAHUAI23/simple-waf/server/docs" // 导入 swagger 文档
 	"github.com/HUAHUAI23/simple-waf/server/router"
+	haproxyStats "github.com/HUAHUAI23/simple-waf/server/service/cornjob/haproxy"
 	"github.com/HUAHUAI23/simple-waf/server/service/daemon"
 	"github.com/HUAHUAI23/simple-waf/server/validator"
 )
@@ -77,6 +78,16 @@ func main() {
 		config.Logger.Error().Err(err).Msg("Failed to start daemon services")
 		return
 	}
+
+	// time.Sleep(10 * time.Second)
+	// Start HAProxy stats aggregation service
+	haproxyStatsCleanup, err := haproxyStats.Start(context.Background(), runner, config.GlobalLogger)
+	if err != nil {
+		config.Logger.Error().Err(err).Msg("Failed to start HAProxy stats service")
+		return
+	}
+	// Register cleanup function to be called during shutdown
+	defer haproxyStatsCleanup()
 
 	// Set Gin mode based on configuration
 	if config.Global.IsProduction {

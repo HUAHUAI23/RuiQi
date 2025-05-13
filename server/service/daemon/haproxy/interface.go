@@ -7,6 +7,7 @@ import (
 
 	"github.com/HUAHUAI23/simple-waf/server/config"
 	"github.com/HUAHUAI23/simple-waf/server/model"
+	"github.com/haproxytech/client-native/v6/models"
 )
 
 type HAProxyService interface {
@@ -21,6 +22,7 @@ type HAProxyService interface {
 	Reload() error
 	Stop() error
 	GetStatus() HAProxyStatus
+	GetStats() (models.NativeStats, error)
 	Reset() error
 }
 

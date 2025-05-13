@@ -51,6 +51,7 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 	configController := controller.NewConfigController(configService)
 	ipGroupController := controller.NewIPGroupController(ipGroupService)
 	ruleController := controller.NewMicroRuleController(ruleService)
+	statsController := controller.NewStatsController(runnerService)
 	// 将仓库添加到上下文中，供中间件使用
 	route.Use(func(c *gin.Context) {
 		c.Set("userRepo", userRepo)
@@ -62,6 +63,9 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 	route.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
+
+	// 获取HAProxy的统计信息 测试
+	route.GET("/stats", statsController.GetStats)
 
 	// API v1 路由
 	api := route.Group("/api/v1")
