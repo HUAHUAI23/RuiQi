@@ -17,7 +17,7 @@ type CronJobService struct {
 }
 
 // NewCronJobService 创建定时任务服务
-func NewCronJobService(runner daemon.ServiceRunner, backendList []string) (*CronJobService, error) {
+func NewCronJobService(runner daemon.ServiceRunner, targetList []string) (*CronJobService, error) {
 	// 初始化logger
 	logger := zerolog.New(os.Stdout).
 		With().
@@ -27,7 +27,7 @@ func NewCronJobService(runner daemon.ServiceRunner, backendList []string) (*Cron
 		Level(zerolog.InfoLevel)
 
 	// 创建统计定时任务
-	statsJob, err := NewStatsJob(runner, backendList, logger)
+	statsJob, err := NewStatsJob(runner, targetList, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -42,10 +42,10 @@ func NewCronJobService(runner daemon.ServiceRunner, backendList []string) (*Cron
 	}, nil
 }
 
-// UpdateBackendList 更新监控的后端列表
-func (s *CronJobService) UpdateBackendList(backendList []string) {
-	s.statsJob.UpdateBackendList(backendList)
-	s.logger.Info().Msg("Updated HAProxy monitoring backend list")
+// UpdateTargetList 更新监控的目标列表
+func (s *CronJobService) UpdateTargetList(targetList []string) {
+	s.statsJob.UpdateTargetList(targetList)
+	s.logger.Info().Msg("Updated HAProxy monitoring target list")
 }
 
 // Start 启动所有定时任务

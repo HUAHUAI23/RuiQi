@@ -9,8 +9,8 @@ import (
 
 // Start initializes and starts the HAProxy stats aggregation service
 func Start(ctx context.Context, runner daemon.ServiceRunner, logger zerolog.Logger) (func(), error) {
-	backendList := []string{"fe_8080_http", "fe_8080_https"}
-	cronJobService, err := NewCronJobService(runner, backendList)
+	targetList := []string{"fe_9090_http", "fe_9090_https"}
+	cronJobService, err := NewCronJobService(runner, targetList)
 	if err != nil {
 		return nil, err
 	}

@@ -18,10 +18,10 @@ import (
 
 // HAProxyStatsData 结构用于记录最后一次的统计数据，用于计算差值
 type HAProxyStatsData struct {
-	BackendName string
-	LastStats   *models.NativeStatStats
-	LastTime    time.Time
-	ResetCount  int // 用于跟踪重启次数
+	TargetName string
+	LastStats  *models.NativeStatStats
+	LastTime   time.Time
+	ResetCount int // 用于跟踪重启次数
 }
 
 // StatsAggregator HAProxy统计数据聚合器
@@ -30,18 +30,18 @@ type StatsAggregator struct {
 	dbName          string
 	lastStats       map[string]*HAProxyStatsData // 用backend名称做key
 	lastStatsLoaded bool                         // 标记是否已从数据库加载基准数据
-	backendFilter   map[string]bool              // 过滤的backend列表
+	TargetFilter    map[string]bool              // 过滤的backend列表
 	mu              sync.RWMutex
 	log             zerolog.Logger
 	stopCh          chan struct{}
 }
 
 // NewStatsAggregator 创建新的数据聚合器
-func NewStatsAggregator(runner daemon.ServiceRunner, dbName string, backendList []string, logger zerolog.Logger) (*StatsAggregator, error) {
-	// 初始化backendFilter
-	backendFilter := make(map[string]bool)
-	for _, backend := range backendList {
-		backendFilter[backend] = true
+func NewStatsAggregator(runner daemon.ServiceRunner, dbName string, TargetList []string, logger zerolog.Logger) (*StatsAggregator, error) {
+	// 初始化TargetFilter
+	TargetFilter := make(map[string]bool)
+	for _, target := range TargetList {
+		TargetFilter[target] = true
 	}
 
 	agg := &StatsAggregator{
@@ -49,7 +49,7 @@ func NewStatsAggregator(runner daemon.ServiceRunner, dbName string, backendList 
 		dbName:          dbName,
 		lastStats:       make(map[string]*HAProxyStatsData),
 		lastStatsLoaded: false,
-		backendFilter:   backendFilter,
+		TargetFilter:    TargetFilter,
 		log:             logger.With().Str("component", "haproxy_stats_aggregator").Logger(),
 		stopCh:          make(chan struct{}),
 	}
@@ -63,36 +63,36 @@ func NewStatsAggregator(runner daemon.ServiceRunner, dbName string, backendList 
 	return agg, nil
 }
 
-// UpdateBackendList 更新监控的后端列表
-func (a *StatsAggregator) UpdateBackendList(backendList []string) {
+// UpdateTargetList 更新监控的后端列表
+func (a *StatsAggregator) UpdateTargetList(targetList []string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
 	// 创建新的过滤器
 	newFilter := make(map[string]bool)
-	for _, backend := range backendList {
-		newFilter[backend] = true
+	for _, target := range targetList {
+		newFilter[target] = true
 	}
 
-	// 查找不再监控的后端
-	for backend := range a.backendFilter {
-		if !newFilter[backend] {
-			a.log.Info().Str("backend", backend).Msg("Removing backend from monitoring")
+	// 查找不再监控的目标
+	for target := range a.TargetFilter {
+		if !newFilter[target] {
+			a.log.Info().Str("target", target).Msg("Removing target from monitoring")
 			// 从内存中移除，但保留数据库中的基准线(以防后续重新添加)
-			delete(a.lastStats, backend)
+			delete(a.lastStats, target)
 		}
 	}
 
-	// 记录新增的后端
-	for backend := range newFilter {
-		if !a.backendFilter[backend] {
-			a.log.Info().Str("backend", backend).Msg("Adding new backend to monitoring")
-			// 新增的后端会在下次数据采集时自动初始化
+	// 记录新增的目标
+	for target := range newFilter {
+		if !a.TargetFilter[target] {
+			a.log.Info().Str("target", target).Msg("Adding new target to monitoring")
+			// 新增的目标会在下次数据采集时自动初始化
 		}
 	}
 
 	// 更新过滤器
-	a.backendFilter = newFilter
+	a.TargetFilter = newFilter
 }
 
 // ensureCollections 确保必要的集合和索引存在
@@ -108,7 +108,7 @@ func (a *StatsAggregator) ensureCollections() error {
 	// 确保基准数据集合索引
 	baselineColl := db.Collection(haproxyStatsBaseline.GetCollectionName())
 	_, err = baselineColl.Indexes().CreateOne(ctx, mongo.IndexModel{
-		Keys:    bson.D{{Key: "backend_name", Value: 1}},
+		Keys:    bson.D{{Key: "target_name", Value: 1}},
 		Options: options.Index().SetUnique(true),
 	})
 	if err != nil {
@@ -121,7 +121,7 @@ func (a *StatsAggregator) ensureCollections() error {
 	_, err = minuteStatsColl.Indexes().CreateMany(ctx, []mongo.IndexModel{
 		{
 			Keys: bson.D{
-				{Key: "backend_name", Value: 1},
+				{Key: "target_name", Value: 1},
 				{Key: "date", Value: 1},
 				{Key: "hour", Value: 1},
 				{Key: "minute", Value: 1},
@@ -220,20 +220,20 @@ func (a *StatsAggregator) loadLastStats(ctx context.Context) error {
 
 	loadCount := 0
 	for _, doc := range baselines {
-		backendName, ok := doc["backend_name"].(string)
+		targetName, ok := doc["target_name"].(string)
 		if !ok {
-			a.log.Warn().Interface("doc", doc).Msg("Invalid backend_name in baseline document")
+			a.log.Warn().Interface("doc", doc).Msg("Invalid target_name in baseline document")
 			continue
 		}
 
-		// 加载所有后端的数据，即使当前不在监控列表中
-		// 这样如果后端列表变化，我们已经有数据了
+		// 加载所有目标的数据，即使当前不在监控列表中
+		// 这样如果目标列表变化，我们已经有数据了
 
 		// 重建NativeStatStats结构
 		stats := &models.NativeStatStats{}
 		statsMap, ok := doc["stats"].(map[string]interface{})
 		if !ok {
-			a.log.Warn().Str("backend", backendName).Msg("Invalid stats map for backend")
+			a.log.Warn().Str("target", targetName).Msg("Invalid stats map for target")
 			continue
 		}
 
@@ -324,18 +324,18 @@ func (a *StatsAggregator) loadLastStats(ctx context.Context) error {
 
 		// 加载到内存中
 		a.mu.Lock()
-		a.lastStats[backendName] = &HAProxyStatsData{
-			BackendName: backendName,
-			LastStats:   stats,
-			LastTime:    timestamp,
-			ResetCount:  resetCount,
+		a.lastStats[targetName] = &HAProxyStatsData{
+			TargetName: targetName,
+			LastStats:  stats,
+			LastTime:   timestamp,
+			ResetCount: resetCount,
 		}
 		a.mu.Unlock()
 
 		loadCount++
 	}
 
-	a.log.Info().Int("count", loadCount).Msg("Loaded backend baselines from database")
+	a.log.Info().Int("count", loadCount).Msg("Loaded target baselines from database")
 	return nil
 }
 
@@ -352,7 +352,7 @@ func (a *StatsAggregator) saveLastStats(ctx context.Context) error {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 
-	for backendName, stats := range a.lastStats {
+	for targetName, stats := range a.lastStats {
 		if stats.LastStats == nil {
 			continue // 跳过无效数据
 		}
@@ -438,14 +438,14 @@ func (a *StatsAggregator) saveLastStats(ctx context.Context) error {
 
 		// 创建更新文档
 		doc := bson.M{
-			"backend_name": backendName,
-			"stats":        statsMap,
-			"timestamp":    stats.LastTime,
-			"reset_count":  stats.ResetCount,
+			"target_name": targetName,
+			"stats":       statsMap,
+			"timestamp":   stats.LastTime,
+			"reset_count": stats.ResetCount,
 		}
 
 		// 使用upsert操作保存 - 采用v2驱动的builder模式
-		filter := bson.M{"backend_name": backendName}
+		filter := bson.M{"target_name": targetName}
 		update := bson.M{"$set": doc}
 
 		// 在v2版本中，使用options.UpdateOne()方法构建选项
@@ -453,7 +453,7 @@ func (a *StatsAggregator) saveLastStats(ctx context.Context) error {
 		_, err := collection.UpdateOne(ctx, filter, update, opts)
 
 		if err != nil {
-			return fmt.Errorf("failed to save lastStats for %s: %v", backendName, err)
+			return fmt.Errorf("failed to save lastStats for %s: %v", targetName, err)
 		}
 	}
 
@@ -469,21 +469,21 @@ func (a *StatsAggregator) checkHAProxyResetOnStartup(ctx context.Context) {
 	}
 
 	resetDetected := false
-	newBackends := make(map[string]bool)
+	newTargets := make(map[string]bool)
 
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
 	// 找出所有当前活跃的后端
 	for _, stat := range stats.Stats {
-		if stat.Type == "backend" {
-			newBackends[stat.Name] = true
+		if stat.Type == "frontend" {
+			newTargets[stat.Name] = true
 		}
 	}
 
 	// 检查当前监控的后端
 	for _, stat := range stats.Stats {
-		if stat.Type != "backend" || !a.backendFilter[stat.Name] || stat.Stats == nil {
+		if stat.Type != "frontend" || !a.TargetFilter[stat.Name] || stat.Stats == nil {
 			continue
 		}
 
@@ -491,21 +491,21 @@ func (a *StatsAggregator) checkHAProxyResetOnStartup(ctx context.Context) {
 		if !exists {
 			// 新的后端，初始化
 			a.lastStats[stat.Name] = &HAProxyStatsData{
-				BackendName: stat.Name,
-				LastStats:   stat.Stats,
-				LastTime:    time.Now(),
-				ResetCount:  0,
+				TargetName: stat.Name,
+				LastStats:  stat.Stats,
+				LastTime:   time.Now(),
+				ResetCount: 0,
 			}
-			a.log.Info().Str("backend", stat.Name).Msg("New backend detected during startup")
+			a.log.Info().Str("target", stat.Name).Msg("New target detected during startup")
 			continue
 		}
 
 		// 检测是否重启
 		if a.detectReset(lastStat.LastStats, stat.Stats) {
 			a.log.Warn().
-				Str("backend", stat.Name).
+				Str("target", stat.Name).
 				Int("reset_count", lastStat.ResetCount+1).
-				Msg("Detected HAProxy reset for backend during startup")
+				Msg("Detected HAProxy reset for target during startup")
 
 			resetDetected = true
 
@@ -517,8 +517,8 @@ func (a *StatsAggregator) checkHAProxyResetOnStartup(ctx context.Context) {
 			if err != nil {
 				a.log.Error().
 					Err(err).
-					Str("backend", stat.Name).
-					Msg("Failed to save zero metrics for backend after reset")
+					Str("target", stat.Name).
+					Msg("Failed to save zero metrics for target after reset")
 			}
 
 			// 更新重启计数和基准
@@ -529,11 +529,11 @@ func (a *StatsAggregator) checkHAProxyResetOnStartup(ctx context.Context) {
 	}
 
 	// 检查不再存在的后端
-	for backendName := range a.lastStats {
-		if a.backendFilter[backendName] && !newBackends[backendName] {
+	for targetName := range a.lastStats {
+		if a.TargetFilter[targetName] && !newTargets[targetName] {
 			a.log.Warn().
-				Str("backend", backendName).
-				Msg("Backend is in monitoring list but not found in HAProxy stats")
+				Str("target", targetName).
+				Msg("Target is in monitoring list but not found in HAProxy stats")
 		}
 	}
 
@@ -565,12 +565,12 @@ func (a *StatsAggregator) initializeStats(ctx context.Context) {
 	a.lastStats = make(map[string]*HAProxyStatsData) // 清除现有数据
 
 	for _, stat := range stats.Stats {
-		if stat.Type == "backend" && a.backendFilter[stat.Name] && stat.Stats != nil {
+		if stat.Type == "frontend" && a.TargetFilter[stat.Name] && stat.Stats != nil {
 			a.lastStats[stat.Name] = &HAProxyStatsData{
-				BackendName: stat.Name,
-				LastStats:   stat.Stats,
-				LastTime:    now,
-				ResetCount:  0,
+				TargetName: stat.Name,
+				LastStats:  stat.Stats,
+				LastTime:   now,
+				ResetCount: 0,
 			}
 		}
 	}
@@ -604,9 +604,9 @@ func (a *StatsAggregator) processRealtimeMetrics(ctx context.Context, stats mode
 
 	// 获取当前过滤器的副本以避免并发访问
 	a.mu.RLock()
-	backendFilter := make(map[string]bool)
-	for k, v := range a.backendFilter {
-		backendFilter[k] = v
+	targetFilter := make(map[string]bool)
+	for k, v := range a.TargetFilter {
+		targetFilter[k] = v
 	}
 	a.mu.RUnlock()
 
@@ -623,7 +623,7 @@ func (a *StatsAggregator) processRealtimeMetrics(ctx context.Context, stats mode
 	}
 
 	for _, stat := range stats.Stats {
-		if stat.Type != "backend" || !backendFilter[stat.Name] || stat.Stats == nil {
+		if stat.Type != "frontend" || !targetFilter[stat.Name] || stat.Stats == nil {
 			continue
 		}
 
@@ -634,7 +634,7 @@ func (a *StatsAggregator) processRealtimeMetrics(ctx context.Context, stats mode
 			documents["conn_rate"] = append(documents["conn_rate"], bson.M{
 				"timestamp": t,
 				"value":     *stat.Stats.ConnRate,
-				"metadata":  bson.M{"backend": stat.Name},
+				"metadata":  bson.M{"target": stat.Name},
 			})
 		}
 
@@ -643,7 +643,7 @@ func (a *StatsAggregator) processRealtimeMetrics(ctx context.Context, stats mode
 			documents["scur"] = append(documents["scur"], bson.M{
 				"timestamp": t,
 				"value":     *stat.Stats.Scur,
-				"metadata":  bson.M{"backend": stat.Name},
+				"metadata":  bson.M{"target": stat.Name},
 			})
 		}
 
@@ -652,7 +652,7 @@ func (a *StatsAggregator) processRealtimeMetrics(ctx context.Context, stats mode
 			documents["rate"] = append(documents["rate"], bson.M{
 				"timestamp": t,
 				"value":     *stat.Stats.Rate,
-				"metadata":  bson.M{"backend": stat.Name},
+				"metadata":  bson.M{"target": stat.Name},
 			})
 		}
 
@@ -661,7 +661,7 @@ func (a *StatsAggregator) processRealtimeMetrics(ctx context.Context, stats mode
 			documents["req_rate"] = append(documents["req_rate"], bson.M{
 				"timestamp": t,
 				"value":     *stat.Stats.ReqRate,
-				"metadata":  bson.M{"backend": stat.Name},
+				"metadata":  bson.M{"target": stat.Name},
 			})
 		}
 	}
@@ -670,25 +670,25 @@ func (a *StatsAggregator) processRealtimeMetrics(ctx context.Context, stats mode
 	documents["conn_rate"] = append(documents["conn_rate"], bson.M{
 		"timestamp": t,
 		"value":     totalConnRate,
-		"metadata":  bson.M{"backend": "all"},
+		"metadata":  bson.M{"target": "all"},
 	})
 
 	documents["scur"] = append(documents["scur"], bson.M{
 		"timestamp": t,
 		"value":     totalScur,
-		"metadata":  bson.M{"backend": "all"},
+		"metadata":  bson.M{"target": "all"},
 	})
 
 	documents["rate"] = append(documents["rate"], bson.M{
 		"timestamp": t,
 		"value":     totalRate,
-		"metadata":  bson.M{"backend": "all"},
+		"metadata":  bson.M{"target": "all"},
 	})
 
 	documents["req_rate"] = append(documents["req_rate"], bson.M{
 		"timestamp": t,
 		"value":     totalReqRate,
-		"metadata":  bson.M{"backend": "all"},
+		"metadata":  bson.M{"target": "all"},
 	})
 
 	// 保存到MongoDB时间序列集合
@@ -735,23 +735,23 @@ func (a *StatsAggregator) processMinuteMetrics(ctx context.Context, stats models
 	aggregateStats := make(map[string]int64)
 
 	// 创建当前活跃后端Map
-	activeBackends := make(map[string]bool)
+	activeTargets := make(map[string]bool)
 	for _, stat := range stats.Stats {
-		if stat.Type == "backend" {
-			activeBackends[stat.Name] = true
+		if stat.Type == "frontend" {
+			activeTargets[stat.Name] = true
 		}
 	}
 
 	// 检测并记录监控列表中但不再活跃的后端
-	for backend := range a.backendFilter {
-		if !activeBackends[backend] {
-			a.log.Warn().Str("backend", backend).Msg("Backend is in monitoring list but not active")
+	for target := range a.TargetFilter {
+		if !activeTargets[target] {
+			a.log.Warn().Str("target", target).Msg("Target is in monitoring list but not active")
 		}
 	}
 
 	// 按每个backend处理
 	for _, stat := range stats.Stats {
-		if stat.Type != "backend" || !a.backendFilter[stat.Name] || stat.Stats == nil {
+		if stat.Type != "frontend" || !a.TargetFilter[stat.Name] || stat.Stats == nil {
 			continue
 		}
 
@@ -759,21 +759,21 @@ func (a *StatsAggregator) processMinuteMetrics(ctx context.Context, stats models
 		if !exists {
 			// 新的backend，初始化
 			a.lastStats[stat.Name] = &HAProxyStatsData{
-				BackendName: stat.Name,
-				LastStats:   stat.Stats,
-				LastTime:    t,
-				ResetCount:  0,
+				TargetName: stat.Name,
+				LastStats:  stat.Stats,
+				LastTime:   t,
+				ResetCount: 0,
 			}
-			a.log.Info().Str("backend", stat.Name).Msg("New backend detected during metrics collection")
+			a.log.Info().Str("target", stat.Name).Msg("New target detected during metrics collection")
 			continue // 跳过计算差值，因为这是首次见到该backend
 		}
 
 		// 检测重启
 		if a.detectReset(lastStat.LastStats, stat.Stats) {
 			a.log.Warn().
-				Str("backend", stat.Name).
+				Str("target", stat.Name).
 				Int("reset_count", lastStat.ResetCount+1).
-				Msg("Detected HAProxy reset for backend")
+				Msg("Detected HAProxy reset for target")
 
 			// 记录零增量而非跳过
 			zeroMetrics := a.createZeroMetrics()
@@ -786,8 +786,8 @@ func (a *StatsAggregator) processMinuteMetrics(ctx context.Context, stats models
 			if err != nil {
 				a.log.Error().
 					Err(err).
-					Str("backend", stat.Name).
-					Msg("Failed to save zero metrics for backend after reset")
+					Str("target", stat.Name).
+					Msg("Failed to save zero metrics for target after reset")
 			}
 
 			// 更新重启计数和基准
@@ -814,8 +814,8 @@ func (a *StatsAggregator) processMinuteMetrics(ctx context.Context, stats models
 		if err != nil {
 			a.log.Error().
 				Err(err).
-				Str("backend", stat.Name).
-				Msg("Failed to save minute metrics for backend")
+				Str("target", stat.Name).
+				Msg("Failed to save minute metrics for target")
 		}
 
 		// 累加到聚合统计中
@@ -1007,7 +1007,7 @@ func (a *StatsAggregator) safeSubtract(current, last int64) int64 {
 }
 
 // saveMinuteMetrics 保存分钟级指标到MongoDB
-func (a *StatsAggregator) saveMinuteMetrics(ctx context.Context, backendName string, metrics map[string]int64, timestamp time.Time) error {
+func (a *StatsAggregator) saveMinuteMetrics(ctx context.Context, targetName string, metrics map[string]int64, timestamp time.Time) error {
 	db, err := mongodb.GetDatabase(a.dbName)
 	if err != nil {
 		return err
@@ -1015,16 +1015,17 @@ func (a *StatsAggregator) saveMinuteMetrics(ctx context.Context, backendName str
 
 	// 创建文档
 	doc := bson.M{
-		"backend_name": backendName,
-		"timestamp":    timestamp,
-		"date":         timestamp.Format("2006-01-02"),
-		"hour":         timestamp.Hour(),
-		"minute":       timestamp.Minute(),
-		"stats":        metrics,
+		"target_name": targetName,
+		"timestamp":   timestamp,
+		"date":        timestamp.Format("2006-01-02"),
+		"hour":        timestamp.Hour(),
+		"minute":      timestamp.Minute(),
+		"stats":       metrics,
 	}
 
+	var haproxyMinuteStats model.HAProxyMinuteStats
 	// 插入到数据库集合
-	collection := db.Collection("haproxy_minute_stats")
+	collection := db.Collection(haproxyMinuteStats.GetCollectionName())
 	_, err = collection.InsertOne(ctx, doc)
 	return err
 }

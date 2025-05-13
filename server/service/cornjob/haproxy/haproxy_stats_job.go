@@ -17,14 +17,14 @@ type StatsJob struct {
 	logger        zerolog.Logger
 	minuteJobID   string
 	realtimeJobID string
-	backendList   []string
+	targetList    []string
 }
 
 // NewStatsJob 创建新的统计数据定时任务
-func NewStatsJob(runner daemon.ServiceRunner, backendList []string, logger zerolog.Logger) (*StatsJob, error) {
+func NewStatsJob(runner daemon.ServiceRunner, targetList []string, logger zerolog.Logger) (*StatsJob, error) {
 	dbName := config.Global.DBConfig.Database
 	// 创建数据聚合器
-	aggregator, err := NewStatsAggregator(runner, dbName, backendList, logger)
+	aggregator, err := NewStatsAggregator(runner, dbName, targetList, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -36,18 +36,18 @@ func NewStatsJob(runner daemon.ServiceRunner, backendList []string, logger zerol
 		return nil, err
 	}
 	return &StatsJob{
-		scheduler:   scheduler,
-		aggregator:  aggregator,
-		logger:      logger.With().Str("component", "haproxy_stats_job").Logger(),
-		backendList: backendList,
+		scheduler:  scheduler,
+		aggregator: aggregator,
+		logger:     logger.With().Str("component", "haproxy_stats_job").Logger(),
+		targetList: targetList,
 	}, nil
 }
 
-// UpdateBackendList 更新监控的后端列表
-func (j *StatsJob) UpdateBackendList(backendList []string) {
-	j.backendList = backendList
-	j.aggregator.UpdateBackendList(backendList)
-	j.logger.Info().Strs("backends", backendList).Msg("Updated monitoring backend list")
+// UpdateTargetList 更新监控的目标列表
+func (j *StatsJob) UpdateTargetList(targetList []string) {
+	j.targetList = targetList
+	j.aggregator.UpdateTargetList(targetList)
+	j.logger.Info().Strs("targets", targetList).Msg("Updated monitoring target list")
 }
 
 // Start 启动定时任务
@@ -79,17 +79,13 @@ func (j *StatsJob) Start(ctx context.Context) error {
 	// 创建分钟统计任务
 	minuteJob, err := j.scheduler.NewJob(
 		gocron.CronJob(
-			"0 * * * *", // 每分钟的0秒，修复Cron表达式
+			"* * * * *", // 每分钟的0秒，修复Cron表达式
 			true,        // 添加第二个参数，根据错误信息这是必需的
 		),
 		gocron.NewTask(
 			func(ctx context.Context) {
 				if err := j.aggregator.CollectMinuteMetrics(ctx); err != nil {
 					j.logger.Error().Err(err).Msg("Failed to collect minute metrics")
-				}
-				// 每分钟执行一次保存基准数据
-				if err := j.aggregator.saveLastStats(ctx); err != nil {
-					j.logger.Error().Err(err).Msg("Failed to save lastStats")
 				}
 			},
 			ctx,
