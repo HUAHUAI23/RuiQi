@@ -193,9 +193,10 @@ func (s *AgentServerImpl) Start() error {
 			s.state = ServerError
 			s.lastError = err
 			s.mu.Unlock()
-			s.logger.Error().Err(err).Msg("监听器出错")
+			s.logger.Error().Err(err).Msg("监听器出错，非预期错误")
 		} else if err != nil {
-			s.logger.Info().Msg("监听器已正常关闭")
+			// 预期错误 接受到 上下文取消时，s.agent.Serve(l) 会抛出前缀为 'accepting conn:' 的错误
+			s.logger.Info().Msg("监听器已正常关闭, 预期错误: " + err.Error())
 		}
 	}()
 

@@ -79,9 +79,8 @@ func main() {
 		return
 	}
 
-	// time.Sleep(10 * time.Second)
-	// Start HAProxy stats aggregation service
-	haproxyStatsCleanup, err := haproxyStats.Start(context.Background(), runner, config.GlobalLogger)
+	// Start HAProxy stats aggregation cornjob service
+	haproxyStatsCleanup, err := haproxyStats.Start(runner, config.Logger)
 	if err != nil {
 		config.Logger.Error().Err(err).Msg("Failed to start HAProxy stats service")
 		return
@@ -118,7 +117,8 @@ func main() {
 	route.GET("/scalar", func(c *gin.Context) {
 		c.Header("Content-Type", "text/html")
 		scheme := "http://"
-		if c.Request.TLS != nil {
+
+		if c.GetHeader("X-Forwarded-Proto") == "https" || c.Request.TLS != nil {
 			scheme = "https://"
 		}
 

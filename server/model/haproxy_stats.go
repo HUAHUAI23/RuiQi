@@ -8,6 +8,7 @@ import (
 )
 
 // HAProxyStats 统计数据的具体字段定义
+// 这个结构仅用于转换和差值计算，不再用于存储
 type HAProxyStats struct {
 	// 流量相关统计
 	Bin  int64 `bson:"bin" json:"bin"`
@@ -46,9 +47,32 @@ type HAProxyStats struct {
 type HAProxyStatsBaseline struct {
 	ID         bson.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	TargetName string        `bson:"target_name" json:"target_name"`
-	Stats      HAProxyStats  `bson:"stats" json:"stats"`
 	Timestamp  time.Time     `bson:"timestamp" json:"timestamp"`
 	ResetCount int32         `bson:"reset_count" json:"reset_count"`
+
+	// 直接将统计字段扁平化在结构中
+	Bin         int64 `bson:"bin" json:"bin"`
+	Bout        int64 `bson:"bout" json:"bout"`
+	Hrsp1xx     int64 `bson:"hrsp_1xx" json:"hrsp_1xx"`
+	Hrsp2xx     int64 `bson:"hrsp_2xx" json:"hrsp_2xx"`
+	Hrsp3xx     int64 `bson:"hrsp_3xx" json:"hrsp_3xx"`
+	Hrsp4xx     int64 `bson:"hrsp_4xx" json:"hrsp_4xx"`
+	Hrsp5xx     int64 `bson:"hrsp_5xx" json:"hrsp_5xx"`
+	HrspOther   int64 `bson:"hrsp_other" json:"hrsp_other"`
+	Dreq        int64 `bson:"dreq" json:"dreq"`
+	Dresp       int64 `bson:"dresp" json:"dresp"`
+	Ereq        int64 `bson:"ereq" json:"ereq"`
+	Dcon        int64 `bson:"dcon" json:"dcon"`
+	Dses        int64 `bson:"dses" json:"dses"`
+	Econ        int64 `bson:"econ" json:"econ"`
+	Eresp       int64 `bson:"eresp" json:"eresp"`
+	ReqRateMax  int64 `bson:"req_rate_max" json:"req_rate_max"`
+	ConnRateMax int64 `bson:"conn_rate_max" json:"conn_rate_max"`
+	RateMax     int64 `bson:"rate_max" json:"rate_max"`
+	Smax        int64 `bson:"smax" json:"smax"`
+	ConnTot     int64 `bson:"conn_tot" json:"conn_tot"`
+	Stot        int64 `bson:"stot" json:"stot"`
+	ReqTot      int64 `bson:"req_tot" json:"req_tot"`
 }
 
 // GetCollectionName 返回集合名称
@@ -56,7 +80,61 @@ func (h *HAProxyStatsBaseline) GetCollectionName() string {
 	return "haproxy_baseline"
 }
 
-// HAProxyMinuteStats 存储HAProxy分钟统计数据
+// GetStats 从扁平结构获取HAProxyStats
+func (h *HAProxyStatsBaseline) GetStats() HAProxyStats {
+	return HAProxyStats{
+		Bin:         h.Bin,
+		Bout:        h.Bout,
+		Hrsp1xx:     h.Hrsp1xx,
+		Hrsp2xx:     h.Hrsp2xx,
+		Hrsp3xx:     h.Hrsp3xx,
+		Hrsp4xx:     h.Hrsp4xx,
+		Hrsp5xx:     h.Hrsp5xx,
+		HrspOther:   h.HrspOther,
+		Dreq:        h.Dreq,
+		Dresp:       h.Dresp,
+		Ereq:        h.Ereq,
+		Dcon:        h.Dcon,
+		Dses:        h.Dses,
+		Econ:        h.Econ,
+		Eresp:       h.Eresp,
+		ReqRateMax:  h.ReqRateMax,
+		ConnRateMax: h.ConnRateMax,
+		RateMax:     h.RateMax,
+		Smax:        h.Smax,
+		ConnTot:     h.ConnTot,
+		Stot:        h.Stot,
+		ReqTot:      h.ReqTot,
+	}
+}
+
+// SetStats 将HAProxyStats应用到扁平结构
+func (h *HAProxyStatsBaseline) SetStats(stats HAProxyStats) {
+	h.Bin = stats.Bin
+	h.Bout = stats.Bout
+	h.Hrsp1xx = stats.Hrsp1xx
+	h.Hrsp2xx = stats.Hrsp2xx
+	h.Hrsp3xx = stats.Hrsp3xx
+	h.Hrsp4xx = stats.Hrsp4xx
+	h.Hrsp5xx = stats.Hrsp5xx
+	h.HrspOther = stats.HrspOther
+	h.Dreq = stats.Dreq
+	h.Dresp = stats.Dresp
+	h.Ereq = stats.Ereq
+	h.Dcon = stats.Dcon
+	h.Dses = stats.Dses
+	h.Econ = stats.Econ
+	h.Eresp = stats.Eresp
+	h.ReqRateMax = stats.ReqRateMax
+	h.ConnRateMax = stats.ConnRateMax
+	h.RateMax = stats.RateMax
+	h.Smax = stats.Smax
+	h.ConnTot = stats.ConnTot
+	h.Stot = stats.Stot
+	h.ReqTot = stats.ReqTot
+}
+
+// HAProxyMinuteStats 存储HAProxy分钟统计数据 - 完全扁平化结构
 type HAProxyMinuteStats struct {
 	ID         bson.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	TargetName string        `bson:"target_name" json:"target_name"`
@@ -64,12 +142,89 @@ type HAProxyMinuteStats struct {
 	Hour       int           `bson:"hour" json:"hour"`
 	Minute     int           `bson:"minute" json:"minute"`
 	Timestamp  time.Time     `bson:"timestamp" json:"timestamp"`
-	Stats      HAProxyStats  `bson:"stats" json:"stats"`
+
+	// 直接将所有指标字段放在第一级别
+	Bin         int64 `bson:"bin" json:"bin"`
+	Bout        int64 `bson:"bout" json:"bout"`
+	Hrsp1xx     int64 `bson:"hrsp_1xx" json:"hrsp_1xx"`
+	Hrsp2xx     int64 `bson:"hrsp_2xx" json:"hrsp_2xx"`
+	Hrsp3xx     int64 `bson:"hrsp_3xx" json:"hrsp_3xx"`
+	Hrsp4xx     int64 `bson:"hrsp_4xx" json:"hrsp_4xx"`
+	Hrsp5xx     int64 `bson:"hrsp_5xx" json:"hrsp_5xx"`
+	HrspOther   int64 `bson:"hrsp_other" json:"hrsp_other"`
+	Dreq        int64 `bson:"dreq" json:"dreq"`
+	Dresp       int64 `bson:"dresp" json:"dresp"`
+	Ereq        int64 `bson:"ereq" json:"ereq"`
+	Dcon        int64 `bson:"dcon" json:"dcon"`
+	Dses        int64 `bson:"dses" json:"dses"`
+	Econ        int64 `bson:"econ" json:"econ"`
+	Eresp       int64 `bson:"eresp" json:"eresp"`
+	ReqRateMax  int64 `bson:"req_rate_max" json:"req_rate_max"`
+	ConnRateMax int64 `bson:"conn_rate_max" json:"conn_rate_max"`
+	RateMax     int64 `bson:"rate_max" json:"rate_max"`
+	Smax        int64 `bson:"smax" json:"smax"`
+	ConnTot     int64 `bson:"conn_tot" json:"conn_tot"`
+	Stot        int64 `bson:"stot" json:"stot"`
+	ReqTot      int64 `bson:"req_tot" json:"req_tot"`
 }
 
 // GetCollectionName 返回集合名称
 func (h *HAProxyMinuteStats) GetCollectionName() string {
 	return "haproxy_minute_stats"
+}
+
+// GetStats 从扁平结构获取HAProxyStats
+func (h *HAProxyMinuteStats) GetStats() HAProxyStats {
+	return HAProxyStats{
+		Bin:         h.Bin,
+		Bout:        h.Bout,
+		Hrsp1xx:     h.Hrsp1xx,
+		Hrsp2xx:     h.Hrsp2xx,
+		Hrsp3xx:     h.Hrsp3xx,
+		Hrsp4xx:     h.Hrsp4xx,
+		Hrsp5xx:     h.Hrsp5xx,
+		HrspOther:   h.HrspOther,
+		Dreq:        h.Dreq,
+		Dresp:       h.Dresp,
+		Ereq:        h.Ereq,
+		Dcon:        h.Dcon,
+		Dses:        h.Dses,
+		Econ:        h.Econ,
+		Eresp:       h.Eresp,
+		ReqRateMax:  h.ReqRateMax,
+		ConnRateMax: h.ConnRateMax,
+		RateMax:     h.RateMax,
+		Smax:        h.Smax,
+		ConnTot:     h.ConnTot,
+		Stot:        h.Stot,
+		ReqTot:      h.ReqTot,
+	}
+}
+
+// SetStats 将HAProxyStats应用到扁平结构
+func (h *HAProxyMinuteStats) SetStats(stats HAProxyStats) {
+	h.Bin = stats.Bin
+	h.Bout = stats.Bout
+	h.Hrsp1xx = stats.Hrsp1xx
+	h.Hrsp2xx = stats.Hrsp2xx
+	h.Hrsp3xx = stats.Hrsp3xx
+	h.Hrsp4xx = stats.Hrsp4xx
+	h.Hrsp5xx = stats.Hrsp5xx
+	h.HrspOther = stats.HrspOther
+	h.Dreq = stats.Dreq
+	h.Dresp = stats.Dresp
+	h.Ereq = stats.Ereq
+	h.Dcon = stats.Dcon
+	h.Dses = stats.Dses
+	h.Econ = stats.Econ
+	h.Eresp = stats.Eresp
+	h.ReqRateMax = stats.ReqRateMax
+	h.ConnRateMax = stats.ConnRateMax
+	h.RateMax = stats.RateMax
+	h.Smax = stats.Smax
+	h.ConnTot = stats.ConnTot
+	h.Stot = stats.Stot
+	h.ReqTot = stats.ReqTot
 }
 
 // HAProxyRealTimeStats 存储HAProxy实时统计数据

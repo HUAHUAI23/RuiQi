@@ -447,5 +447,8 @@ func (r *ServiceRunnerImpl) GetState() ServiceState {
 
 // GetStats 获取HAProxy的统计信息
 func (r *ServiceRunnerImpl) GetStats() (models.NativeStats, error) {
+	if r.haproxyService == nil {
+		return models.NativeStats{}, fmt.Errorf("haproxy service not initialized")
+	}
 	return r.haproxyService.GetStats()
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/HUAHUAI23/simple-waf/server/config"
+	cornjob "github.com/HUAHUAI23/simple-waf/server/service/cornjob/haproxy"
 	"github.com/HUAHUAI23/simple-waf/server/service/daemon"
 	"github.com/haproxytech/client-native/v6/models"
 	"github.com/rs/zerolog"
@@ -67,8 +68,20 @@ func (s *RunnerServiceImpl) Start(ctx context.Context) error {
 		return ErrRunnerAlreadyRunning
 	}
 
+	// 更新 haproxy 服务打点数据列表
+	targetList, err := cornjob.GetLatestTargetList()
+	if err != nil {
+		return fmt.Errorf("failed to get target list: %w", err)
+	}
+
+	cronJobService, err := cornjob.GetInstance(s.runner, targetList)
+	if err != nil {
+		return fmt.Errorf("failed to create cron job service: %w", err)
+	}
+	cronJobService.UpdateTargetList(targetList)
+
 	// 启动服务
-	err := s.runner.StartServices()
+	err = s.runner.StartServices()
 	if err != nil {
 		s.logger.Error().Err(err).Msg("启动运行器失败")
 		return fmt.Errorf("启动运行器失败: %w", err)
@@ -96,8 +109,20 @@ func (s *RunnerServiceImpl) Stop(ctx context.Context) error {
 
 // Restart 重启运行器
 func (s *RunnerServiceImpl) Restart(ctx context.Context) error {
+	// 更新 haproxy 服务打点数据列表
+	targetList, err := cornjob.GetLatestTargetList()
+	if err != nil {
+		return fmt.Errorf("failed to get target list: %w", err)
+	}
+
+	cronJobService, err := cornjob.GetInstance(s.runner, targetList)
+	if err != nil {
+		return fmt.Errorf("failed to create cron job service: %w", err)
+	}
+	cronJobService.UpdateTargetList(targetList)
+
 	// 重启服务
-	err := s.runner.Restart()
+	err = s.runner.Restart()
 	if err != nil {
 		s.logger.Error().Err(err).Msg("重启运行器失败")
 		return fmt.Errorf("重启运行器失败: %w", err)
@@ -120,8 +145,20 @@ func (s *RunnerServiceImpl) Reload(ctx context.Context) error {
 		return ErrRunnerNotRunning
 	}
 
+	// 更新 haproxy 服务打点数据列表
+	targetList, err := cornjob.GetLatestTargetList()
+	if err != nil {
+		return fmt.Errorf("failed to get target list: %w", err)
+	}
+
+	cronJobService, err := cornjob.GetInstance(s.runner, targetList)
+	if err != nil {
+		return fmt.Errorf("failed to create cron job service: %w", err)
+	}
+	cronJobService.UpdateTargetList(targetList)
+
 	// 热重载服务
-	err := s.runner.HotReload()
+	err = s.runner.HotReload()
 	if err != nil {
 		s.logger.Error().Err(err).Msg("热重载运行器失败")
 		return fmt.Errorf("热重载运行器失败: %w", err)

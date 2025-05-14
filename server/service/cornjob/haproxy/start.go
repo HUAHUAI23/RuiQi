@@ -5,16 +5,24 @@ import (
 	"fmt"
 	"time"
 
+	mongodb "github.com/HUAHUAI23/simple-waf/pkg/database/mongo"
+	"github.com/HUAHUAI23/simple-waf/server/config"
+	"github.com/HUAHUAI23/simple-waf/server/model"
+	"github.com/HUAHUAI23/simple-waf/server/repository"
 	"github.com/HUAHUAI23/simple-waf/server/service/daemon"
 	"github.com/rs/zerolog"
 )
 
 // Start initializes and starts the HAProxy stats aggregation service
-func Start(ctx context.Context, runner daemon.ServiceRunner, logger zerolog.Logger) (func(), error) {
-	targetList := []string{"fe_9090_http", "fe_9090_https"}
+func Start(runner daemon.ServiceRunner, logger zerolog.Logger) (func(), error) {
+
+	targetList, err := GetLatestTargetList()
+	if err != nil {
+		return nil, fmt.Errorf("cornjob start failed:  failed to get target list: %w", err)
+	}
 
 	// 创建定时任务服务
-	cronJobService, err := NewCronJobService(runner, targetList)
+	cronJobService, err := GetInstance(runner, targetList)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create cron job service: %w", err)
 	}
@@ -32,11 +40,10 @@ func Start(ctx context.Context, runner daemon.ServiceRunner, logger zerolog.Logg
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
-		// 使用独立的上下文停止服务
+		// 停止服务
 		if err := cronJobService.Stop(); err != nil {
 			logger.Error().Err(err).Msg("Error when stopping HAProxy stats cron jobs")
-
-			// 强制终止（如果超时）
+			// 如果超时，记录强制终止
 			select {
 			case <-shutdownCtx.Done():
 				logger.Warn().Msg("Forced shutdown of HAProxy stats service due to timeout")
@@ -50,4 +57,43 @@ func Start(ctx context.Context, runner daemon.ServiceRunner, logger zerolog.Logg
 
 	logger.Info().Msg("HAProxy stats service started successfully")
 	return cleanup, nil
+}
+
+func GetLatestTargetList() ([]string, error) {
+	// 连接数据库
+	client, err := mongodb.Connect(config.Global.DBConfig.URI)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to database: %w", err)
+	}
+
+	// 获取数据库
+	db := client.Database(config.Global.DBConfig.Database)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var site model.Site
+	siteList, err := repository.GetAllSites(ctx, db.Collection(site.GetCollectionName()))
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get site list: %w", err)
+	}
+
+	// 使用 map 来确保唯一性
+	targetMap := make(map[string]struct{})
+	// 遍历站点列表，获取目标列表
+	for _, site := range siteList {
+		if !site.ActiveStatus {
+			continue
+		}
+		targetMap[fmt.Sprintf("fe_%d_http", site.ListenPort)] = struct{}{}
+		targetMap[fmt.Sprintf("fe_%d_https", site.ListenPort)] = struct{}{}
+	}
+
+	// 将 map 转换回 slice
+	var targetList []string
+	for target := range targetMap {
+		targetList = append(targetList, target)
+	}
+
+	return targetList, nil
 }

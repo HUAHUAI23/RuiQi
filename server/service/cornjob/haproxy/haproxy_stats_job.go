@@ -17,17 +17,18 @@ type StatsJob struct {
 	scheduler   gocron.Scheduler
 	aggregator  *StatsAggregator
 	logger      zerolog.Logger
-	realtimeJob gocron.Job // 修改：保存Job对象而非ID字符串
-	minuteJob   gocron.Job // 修改：保存Job对象而非ID字符串
-	targetList  []string
-	isRunning   bool
+	realtimeJob gocron.Job // 实时统计任务
+	minuteJob   gocron.Job // 分钟统计任务
+	targetList  []string   // 监控的目标列表
+	isRunning   bool       // 是否正在运行
 }
 
 // NewStatsJob 创建新的统计数据定时任务
-func NewStatsJob(runner daemon.ServiceRunner, targetList []string, logger zerolog.Logger) (*StatsJob, error) {
+func NewStatsJob(runner daemon.ServiceRunner, targetList []string) (*StatsJob, error) {
+	logger := config.GetLogger().With().Str("component", "cronjob-haproxy-stats-job").Logger()
 	dbName := config.Global.DBConfig.Database
 	// 创建数据聚合器
-	aggregator, err := NewStatsAggregator(runner, dbName, targetList, logger)
+	aggregator, err := NewStatsAggregator(runner, dbName, targetList)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create stats aggregator: %w", err)
 	}
@@ -43,7 +44,7 @@ func NewStatsJob(runner daemon.ServiceRunner, targetList []string, logger zerolo
 	return &StatsJob{
 		scheduler:  scheduler,
 		aggregator: aggregator,
-		logger:     logger.With().Str("component", "haproxy_stats_job").Logger(),
+		logger:     logger,
 		targetList: targetList,
 		isRunning:  false,
 	}, nil
@@ -89,12 +90,12 @@ func (j *StatsJob) Start(ctx context.Context) error {
 
 		return fmt.Errorf("failed to create realtime job: %w", err)
 	}
-	j.realtimeJob = realtimeJob // 修改：直接保存Job对象
+	j.realtimeJob = realtimeJob
 
 	// 创建分钟统计任务
 	minuteJob, err := j.scheduler.NewJob(
 		gocron.CronJob(
-			"0 * * * * *", // 每分钟的0秒执行 - 修复Cron表达式
+			"0 * * * * *", // 每分钟的0秒执行
 			true,          // withSeconds 设置为 true
 		),
 		gocron.NewTask(
@@ -108,7 +109,7 @@ func (j *StatsJob) Start(ctx context.Context) error {
 	)
 	if err != nil {
 		// 如果创建Job失败，需要停止已经启动的聚合器和调度器
-		if err := j.scheduler.RemoveJob(realtimeJob.ID()); err != nil { // 修改：使用正确的RemoveJob方法
+		if err := j.scheduler.RemoveJob(realtimeJob.ID()); err != nil {
 			j.logger.Error().Err(err).Msg("Failed to remove realtime job")
 		}
 
@@ -118,7 +119,7 @@ func (j *StatsJob) Start(ctx context.Context) error {
 
 		return fmt.Errorf("failed to create minute job: %w", err)
 	}
-	j.minuteJob = minuteJob // 修改：直接保存Job对象
+	j.minuteJob = minuteJob
 
 	// 启动调度器
 	j.scheduler.Start()

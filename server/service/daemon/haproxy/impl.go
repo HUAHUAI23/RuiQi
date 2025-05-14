@@ -995,7 +995,7 @@ func (s *HAProxyServiceImpl) stopHAProxy() error {
 	}
 
 	// 重置客户端
-	s.runtimeClient = nil
+	s.resetClients()
 
 	// 删除套接字文件
 	if _, err := os.Stat(s.SocketFile); err == nil {
@@ -1640,6 +1640,9 @@ func (s *HAProxyServiceImpl) createBackendServer(name, address string, port int,
 
 // get haproxy stats
 func (s *HAProxyServiceImpl) getHAProxyStats() (models.NativeStats, error) {
+	if s.runtimeClient == nil {
+		return models.NativeStats{}, fmt.Errorf("runtime client not initialized")
+	}
 	stats := s.runtimeClient.GetStats()
 	if stats.Error != "" {
 		return models.NativeStats{}, fmt.Errorf("获取HAProxy状态失败: %s", stats.Error)
