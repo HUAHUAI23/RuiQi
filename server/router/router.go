@@ -42,6 +42,7 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 	configService := service.NewConfigService(configRepo)
 	ipGroupService := service.NewIPGroupService(ipGroupRepo)
 	ruleService := service.NewMicroRuleService(ruleRepo)
+	statsService := service.NewStatsService(wafLogRepo)
 	// 创建控制器
 	authController := controller.NewAuthController(authService)
 	siteController := controller.NewSiteController(siteService)
@@ -51,7 +52,7 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 	configController := controller.NewConfigController(configService)
 	ipGroupController := controller.NewIPGroupController(ipGroupService)
 	ruleController := controller.NewMicroRuleController(ruleService)
-	statsController := controller.NewStatsController(runnerService)
+	statsController := controller.NewStatsController(runnerService, statsService)
 	// 将仓库添加到上下文中，供中间件使用
 	route.Use(func(c *gin.Context) {
 		c.Set("userRepo", userRepo)
@@ -164,6 +165,17 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 		wafLogRoutes.GET("/event", middleware.HasPermission(model.PermWAFLogRead), wafLogController.GetAttackEvents)
 		// 获取攻击日志 - 需要logs:read权限
 		wafLogRoutes.GET("", middleware.HasPermission(model.PermWAFLogRead), wafLogController.GetAttackLogs)
+	}
+
+	// 统计信息路由
+	statsRoutes := authenticated.Group("/stats")
+	{
+		// 获取概览统计 - 需要config:read权限
+		statsRoutes.GET("/overview", middleware.HasPermission(model.PermWAFLogRead), statsController.GetOverviewStats)
+		// 获取实时QPS - 需要config:read权限
+		statsRoutes.GET("/realtime-qps", middleware.HasPermission(model.PermWAFLogRead), statsController.GetRealtimeQPS)
+		// 获取时间序列数据 - 需要config:read权限
+		statsRoutes.GET("/time-series", middleware.HasPermission(model.PermWAFLogRead), statsController.GetTimeSeriesData)
 	}
 
 	// 配置管理模块
