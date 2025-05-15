@@ -175,6 +175,8 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 		statsRoutes.GET("/time-series", middleware.HasPermission(model.PermWAFLogRead), statsController.GetTimeSeriesData)
 		// 获取组合时间序列数据 - 需要config:read权限
 		statsRoutes.GET("/combined-time-series", middleware.HasPermission(model.PermWAFLogRead), statsController.GetCombinedTimeSeriesData)
+		// 获取流量时间序列数据 - 需要config:read权限
+		statsRoutes.GET("/traffic-time-series", middleware.HasPermission(model.PermWAFLogRead), statsController.GetTrafficTimeSeriesData)
 	}
 
 	// 配置管理模块

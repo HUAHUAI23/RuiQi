@@ -18,6 +18,7 @@ type StatsController interface {
 	GetRealtimeQPS(ctx *gin.Context)
 	GetTimeSeriesData(ctx *gin.Context)
 	GetCombinedTimeSeriesData(ctx *gin.Context)
+	GetTrafficTimeSeriesData(ctx *gin.Context)
 }
 
 type StatsControllerImpl struct {
@@ -36,6 +37,7 @@ func NewStatsController(runnerService service.RunnerService, statsService servic
 }
 
 // GetStats 获取原始统计数据
+//
 //	@Summary		获取HAProxy原始统计数据
 //	@Description	获取HAProxy原始的统计信息
 //	@Tags			统计信息
@@ -56,6 +58,7 @@ func (c *StatsControllerImpl) GetStats(ctx *gin.Context) {
 }
 
 // GetOverviewStats 获取统计概览数据
+//
 //	@Summary		获取统计概览数据
 //	@Description	获取指定时间范围内的统计概览数据，包括请求数、流量、错误率等
 //	@Tags			统计信息
@@ -88,6 +91,7 @@ func (c *StatsControllerImpl) GetOverviewStats(ctx *gin.Context) {
 }
 
 // GetRealtimeQPS 获取实时QPS数据
+//
 //	@Summary		获取实时QPS数据
 //	@Description	获取最近的实时QPS数据点
 //	@Tags			统计信息
@@ -122,6 +126,7 @@ func (c *StatsControllerImpl) GetRealtimeQPS(ctx *gin.Context) {
 }
 
 // GetTimeSeriesData 获取时间序列数据
+//
 //	@Summary		获取时间序列数据
 //	@Description	获取指定时间范围和指标类型的时间序列数据，用于图表展示
 //	@Tags			统计信息
@@ -167,6 +172,7 @@ func (c *StatsControllerImpl) GetTimeSeriesData(ctx *gin.Context) {
 }
 
 // GetCombinedTimeSeriesData 获取组合时间序列数据
+//
 //	@Summary		获取组合时间序列数据
 //	@Description	同时获取请求数和拦截数的时间序列数据，用于图表展示
 //	@Tags			统计信息
@@ -199,4 +205,44 @@ func (c *StatsControllerImpl) GetCombinedTimeSeriesData(ctx *gin.Context) {
 	}
 
 	response.Success(ctx, "获取组合时间序列数据成功", data)
+}
+
+// GetTrafficTimeSeriesData 获取流量时间序列数据
+//
+//	@Summary		获取流量时间序列数据
+//	@Description	获取指定时间范围的入站和出站流量时间序列数据，用于图表展示
+//	@Tags			统计信息
+//	@Produce		json
+//	@Param			timeRange	query	string	true	"时间范围：24h(24小时)、7d(7天)、30d(30天)"	Enums(24h, 7d, 30d)	default(24h)
+//	@Security		BearerAuth
+//	@Success		200	{object}	model.SuccessResponse{data=dto.TrafficTimeSeriesResponse}	"获取流量时间序列数据成功"
+//	@Failure		400	{object}	model.ErrResponse										"请求参数错误"
+//	@Failure		401	{object}	model.ErrResponseDontShowError							"未授权访问"
+//	@Failure		500	{object}	model.ErrResponseDontShowError							"服务器内部错误"
+//	@Router			/api/v1/stats/traffic-time-series [get]
+func (c *StatsControllerImpl) GetTrafficTimeSeriesData(ctx *gin.Context) {
+	// 解析请求参数
+	var req dto.TrafficTimeSeriesRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		c.logger.Warn().Err(err).Msg("绑定流量时间序列请求参数失败")
+		response.BadRequest(ctx, err, true)
+		return
+	}
+
+	// 检查请求参数
+	if req.TimeRange == "" {
+		req.TimeRange = dto.TimeRange24Hours // 默认24小时
+	}
+
+	// 调用服务
+	data, err := c.statsService.GetTrafficTimeSeriesData(ctx, req.TimeRange)
+	if err != nil {
+		c.logger.Error().Err(err).
+			Str("timeRange", req.TimeRange).
+			Msg("获取流量时间序列数据失败")
+		response.InternalServerError(ctx, err, false)
+		return
+	}
+
+	response.Success(ctx, "获取流量时间序列数据成功", data)
 }

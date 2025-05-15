@@ -20,6 +20,7 @@ type StatsService interface {
 	GetRealtimeQPS(ctx context.Context, limit int) (*dto.RealtimeQPSResponse, error)
 	GetTimeSeriesData(ctx context.Context, timeRange string, metric string) (*dto.TimeSeriesResponse, error)
 	GetCombinedTimeSeriesData(ctx context.Context, timeRange string) (*dto.CombinedTimeSeriesResponse, error)
+	GetTrafficTimeSeriesData(ctx context.Context, timeRange string) (*dto.TrafficTimeSeriesResponse, error)
 }
 
 type StatsServiceImpl struct {
@@ -288,6 +289,118 @@ func (s *StatsServiceImpl) GetCombinedTimeSeriesData(ctx context.Context, timeRa
 			TimeRange: timeRange,
 			Data:      blockResult.data,
 		},
+	}, nil
+}
+
+// GetTrafficTimeSeriesData 获取流量时间序列数据
+func (s *StatsServiceImpl) GetTrafficTimeSeriesData(ctx context.Context, timeRange string) (*dto.TrafficTimeSeriesResponse, error) {
+	// 确定时间范围
+	startTime, err := s.getTimeRangeStart(timeRange)
+	if err != nil {
+		return nil, err
+	}
+
+	// 根据时间范围决定数据聚合粒度
+	var interval string
+	var groupByFields []string
+
+	switch timeRange {
+	case dto.TimeRange24Hours:
+		// 24小时内按小时聚合
+		interval = "hour"
+		groupByFields = []string{"date", "hour"}
+	case dto.TimeRange7Days:
+		// 7天内按6小时聚合，提供更多数据点
+		interval = "6hour"
+		groupByFields = []string{"date", "hourGroupSix"}
+	case dto.TimeRange30Days:
+		// 30天内按天聚合
+		interval = "day"
+		groupByFields = []string{"date"}
+	default:
+		return nil, fmt.Errorf("无效的时间范围: %s", timeRange)
+	}
+
+	// 获取MongoDB数据库连接
+	db, err := mongodb.GetDatabase(s.dbName)
+	if err != nil {
+		return nil, fmt.Errorf("获取数据库连接失败: %w", err)
+	}
+
+	collection := db.Collection("haproxy_minute_stats")
+
+	// 构建时间过滤条件
+	matchStage := bson.D{{Key: "$match", Value: bson.D{
+		{Key: "target_name", Value: "all"},
+		{Key: "timestamp", Value: bson.D{{Key: "$gte", Value: startTime}}},
+	}}}
+
+	// 构建分组条件
+	var groupStage bson.D
+
+	if interval == "6hour" {
+		// 使用预计算的HourGroupSix字段进行分组
+		groupStage = bson.D{{Key: "$group", Value: bson.D{
+			{Key: "_id", Value: bson.D{
+				{Key: "date", Value: "$date"},
+				{Key: "hourGroup", Value: "$hourGroupSix"},
+			}},
+			{Key: "inboundTraffic", Value: bson.D{{Key: "$sum", Value: "$bin"}}},
+			{Key: "outboundTraffic", Value: bson.D{{Key: "$sum", Value: "$bout"}}},
+			{Key: "timestamp", Value: bson.D{{Key: "$min", Value: "$timestamp"}}},
+		}}}
+	} else {
+		// 构建常规分组ID
+		groupID := bson.D{}
+		for _, field := range groupByFields {
+			groupID = append(groupID, bson.E{Key: field, Value: fmt.Sprintf("$%s", field)})
+		}
+
+		groupStage = bson.D{{Key: "$group", Value: bson.D{
+			{Key: "_id", Value: groupID},
+			{Key: "inboundTraffic", Value: bson.D{{Key: "$sum", Value: "$bin"}}},
+			{Key: "outboundTraffic", Value: bson.D{{Key: "$sum", Value: "$bout"}}},
+			{Key: "timestamp", Value: bson.D{{Key: "$min", Value: "$timestamp"}}},
+		}}}
+	}
+
+	sortStage := bson.D{{Key: "$sort", Value: bson.D{
+		{Key: "timestamp", Value: 1}, // 按时间升序排序
+	}}}
+
+	pipeline := mongo.Pipeline{matchStage, groupStage, sortStage}
+
+	// 执行聚合查询
+	cursor, err := collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, fmt.Errorf("执行流量时间序列聚合查询失败: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	// 解析结果
+	var results []struct {
+		ID              bson.D    `bson:"_id"`
+		InboundTraffic  int64     `bson:"inboundTraffic"`
+		OutboundTraffic int64     `bson:"outboundTraffic"`
+		Timestamp       time.Time `bson:"timestamp"`
+	}
+	if err = cursor.All(ctx, &results); err != nil {
+		return nil, fmt.Errorf("解析流量时间序列结果失败: %w", err)
+	}
+
+	// 构建数据点
+	dataPoints := make([]dto.TrafficDataPoint, 0, len(results))
+	for _, result := range results {
+		dataPoints = append(dataPoints, dto.TrafficDataPoint{
+			Timestamp:       result.Timestamp,
+			InboundTraffic:  result.InboundTraffic,
+			OutboundTraffic: result.OutboundTraffic,
+		})
+	}
+
+	return &dto.TrafficTimeSeriesResponse{
+		TimeRange: timeRange,
+		Data:      dataPoints,
 	}, nil
 }
 

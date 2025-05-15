@@ -28,6 +28,12 @@ type TimeSeriesDataRequest struct {
 	Metric    string `json:"metric" form:"metric" binding:"required,oneof=requests blocks" example:"requests"` // 指标类型: requests(请求数), blocks(拦截数)
 }
 
+// TrafficTimeSeriesRequest 流量时间序列数据请求
+// @Description 流量时间序列数据请求参数
+type TrafficTimeSeriesRequest struct {
+	TimeRange string `json:"timeRange" form:"timeRange" binding:"required,oneof=24h 7d 30d" example:"24h"` // 时间范围: 24h, 7d, 30d
+}
+
 // OverviewStats 概览统计数据
 // @Description 概览统计数据，包含各项关键指标
 type OverviewStats struct {
@@ -71,12 +77,27 @@ type TimeSeriesDataPoint struct {
 	Value     int64     `json:"value" example:"128"`                      // 数值，表示该时间点的指标值
 }
 
+// TrafficDataPoint 流量数据点
+// @Description 流量时间序列图表数据点
+type TrafficDataPoint struct {
+	Timestamp       time.Time `json:"timestamp" example:"2024-01-01T12:00:00Z"` // 时间戳，表示数据点的时间
+	InboundTraffic  int64     `json:"inboundTraffic" example:"1024000"`         // 入站流量(字节)
+	OutboundTraffic int64     `json:"outboundTraffic" example:"2048000"`        // 出站流量(字节)
+}
+
 // TimeSeriesResponse 时间序列响应
 // @Description 时间序列图表数据响应
 type TimeSeriesResponse struct {
 	Metric    string                `json:"metric" example:"requests"` // 指标名称
 	TimeRange string                `json:"timeRange" example:"24h"`   // 时间范围
 	Data      []TimeSeriesDataPoint `json:"data"`                      // 数据点列表
+}
+
+// TrafficTimeSeriesResponse 流量时间序列响应
+// @Description 流量时间序列图表数据响应
+type TrafficTimeSeriesResponse struct {
+	TimeRange string             `json:"timeRange" example:"24h"` // 时间范围
+	Data      []TrafficDataPoint `json:"data"`                    // 流量数据点列表
 }
 
 // CombinedTimeSeriesResponse 组合时间序列响应
