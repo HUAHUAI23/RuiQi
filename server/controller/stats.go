@@ -216,9 +216,9 @@ func (c *StatsControllerImpl) GetCombinedTimeSeriesData(ctx *gin.Context) {
 //	@Param			timeRange	query	string	true	"时间范围：24h(24小时)、7d(7天)、30d(30天)"	Enums(24h, 7d, 30d)	default(24h)
 //	@Security		BearerAuth
 //	@Success		200	{object}	model.SuccessResponse{data=dto.TrafficTimeSeriesResponse}	"获取流量时间序列数据成功"
-//	@Failure		400	{object}	model.ErrResponse										"请求参数错误"
-//	@Failure		401	{object}	model.ErrResponseDontShowError							"未授权访问"
-//	@Failure		500	{object}	model.ErrResponseDontShowError							"服务器内部错误"
+//	@Failure		400	{object}	model.ErrResponse											"请求参数错误"
+//	@Failure		401	{object}	model.ErrResponseDontShowError								"未授权访问"
+//	@Failure		500	{object}	model.ErrResponseDontShowError								"服务器内部错误"
 //	@Router			/api/v1/stats/traffic-time-series [get]
 func (c *StatsControllerImpl) GetTrafficTimeSeriesData(ctx *gin.Context) {
 	// 解析请求参数

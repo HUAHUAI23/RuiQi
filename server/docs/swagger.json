@@ -2063,6 +2063,76 @@
                 }
             }
         },
+        "/api/v1/stats/traffic-time-series": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取指定时间范围的入站和出站流量时间序列数据，用于图表展示",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "统计信息"
+                ],
+                "summary": "获取流量时间序列数据",
+                "parameters": [
+                    {
+                        "enum": [
+                            "24h",
+                            "7d",
+                            "30d"
+                        ],
+                        "type": "string",
+                        "default": "24h",
+                        "description": "时间范围：24h(24小时)、7d(7天)、30d(30天)",
+                        "name": "timeRange",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取流量时间序列数据成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TrafficTimeSeriesResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/waf/logs": {
             "get": {
                 "description": "查询详细的WAF攻击日志记录，提供多条件筛选和分页功能，支持按规则ID、IP、域名、端口和时间范围过滤",
@@ -3959,6 +4029,45 @@
                     "description": "指标名称",
                     "type": "string",
                     "example": "requests"
+                },
+                "timeRange": {
+                    "description": "时间范围",
+                    "type": "string",
+                    "example": "24h"
+                }
+            }
+        },
+        "dto.TrafficDataPoint": {
+            "description": "流量时间序列图表数据点",
+            "type": "object",
+            "properties": {
+                "inboundTraffic": {
+                    "description": "入站流量(字节)",
+                    "type": "integer",
+                    "example": 1024000
+                },
+                "outboundTraffic": {
+                    "description": "出站流量(字节)",
+                    "type": "integer",
+                    "example": 2048000
+                },
+                "timestamp": {
+                    "description": "时间戳，表示数据点的时间",
+                    "type": "string",
+                    "example": "2024-01-01T12:00:00Z"
+                }
+            }
+        },
+        "dto.TrafficTimeSeriesResponse": {
+            "description": "流量时间序列图表数据响应",
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "流量数据点列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TrafficDataPoint"
+                    }
                 },
                 "timeRange": {
                     "description": "时间范围",
