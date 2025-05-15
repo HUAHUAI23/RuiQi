@@ -512,5 +512,27 @@
             "deleteFailed": "删除失败",
             "deleteError": "删除规则时出现错误"
         }
+    },
+    "stats": {
+        "title": "监控统计",
+        "overview": "核心指标",
+        "timeRange": {
+            "24h": "24小时",
+            "7d": "7天",
+            "30d": "30天"
+        },
+        "totalRequests": "总请求数",
+        "inboundTraffic": "入站流量",
+        "outboundTraffic": "出站流量",
+        "maxQPS": "最大QPS",
+        "4xxErrors": "4xx错误",
+        "5xxErrors": "5xx错误",
+        "blockCount": "拦截次数",
+        "attackIPCount": "攻击IP数",
+        "realtimeQPS": "实时QPS",
+        "trafficTrend": "流量趋势",
+        "requestsAndBlocks": "请求与拦截趋势",
+        "requests": "请求数",
+        "blocks": "拦截数"
     }
 }

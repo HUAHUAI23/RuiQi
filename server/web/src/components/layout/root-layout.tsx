@@ -7,7 +7,7 @@ export function RootLayout() {
         <div className="flex h-screen">
             <Sidebar
                 displayConfig={{
-                    monitor: false,
+                    monitor: true,
                     logs: true,
                     rules: true,
                     settings: true,

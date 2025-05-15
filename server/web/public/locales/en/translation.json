@@ -512,5 +512,27 @@
             "deleteFailed": "Deletion Failed",
             "deleteError": "An error occurred while deleting the rule"
         }
+    },
+    "stats": {
+        "title": "Statistics",
+        "overview": "Core Metrics",
+        "timeRange": {
+            "24h": "24 Hours",
+            "7d": "7 Days",
+            "30d": "30 Days"
+        },
+        "totalRequests": "Total Requests",
+        "inboundTraffic": "Inbound Traffic",
+        "outboundTraffic": "Outbound Traffic",
+        "maxQPS": "Max QPS",
+        "4xxErrors": "4xx Errors",
+        "5xxErrors": "5xx Errors",
+        "blockCount": "Block Count",
+        "attackIPCount": "Attack IP Count",
+        "realtimeQPS": "Realtime QPS",
+        "trafficTrend": "Traffic Trend",
+        "requestsAndBlocks": "Requests & Blocks Trend",
+        "requests": "Requests",
+        "blocks": "Blocks"
     }
 }

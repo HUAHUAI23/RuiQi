@@ -19,9 +19,9 @@ import CertificatesPage from "@/pages/setting/pages/certificate/page"
 import EventsPage from "@/pages/logs/pages/event/page"
 import LogsPage from "@/pages/logs/pages/log/page"
 import SiteManagerPage from "@/pages/setting/pages/site/page"
-import { columns, MonitorOverview, payments } from "@/pages/monitor/components"
 import IPGroupPage from "@/pages/rule/pages/ip-group/page"
 import MicroRulePage from "@/pages/rule/pages/micro-rule/page"
+import StatsPage from "@/pages/monitor/pages/stats/page"
 import { LoadingFallback } from "@/components/common/loading-fallback"
 
 // 懒加载认证页面
@@ -60,7 +60,7 @@ export function createBreadcrumbConfig(t: TFunction): Record<RoutePath, Breadcru
         [ROUTES.MONITOR]: {
             defaultPath: "overview",
             items: [
-                { title: t('breadcrumb.monitor.overview'), path: "overview", component: <MonitorOverview columns={columns} data={payments} /> }
+                { title: t('breadcrumb.monitor.overview'), path: "overview", component: <StatsPage /> }
             ]
         },
         [ROUTES.RULES]: {
@@ -120,7 +120,7 @@ export function useRoutes(): RouteObject[] {
             children: [
                 {
                     path: "/",
-                    element: <Navigate to={`${ROUTES.LOGS}/attack`} replace />
+                    element: <Navigate to={`${ROUTES.MONITOR}/overview`} replace />
                 },
                 {
                     path: ROUTES.LOGS,
