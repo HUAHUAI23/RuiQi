@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/HUAHUAI23/simple-waf/server/config"
@@ -16,6 +17,7 @@ type StatsController interface {
 	GetOverviewStats(ctx *gin.Context)
 	GetRealtimeQPS(ctx *gin.Context)
 	GetTimeSeriesData(ctx *gin.Context)
+	GetCombinedTimeSeriesData(ctx *gin.Context)
 }
 
 type StatsControllerImpl struct {
@@ -34,15 +36,15 @@ func NewStatsController(runnerService service.RunnerService, statsService servic
 }
 
 // GetStats 获取原始统计数据
-// @Summary 获取HAProxy原始统计数据
-// @Description 获取HAProxy原始的统计信息
-// @Tags 统计信息
-// @Produce json
-// @Security BearerAuth
-// @Success 200 {object} model.SuccessResponse "获取统计数据成功"
-// @Failure 401 {object} model.ErrResponseDontShowError "未授权访问"
-// @Failure 500 {object} model.ErrResponseDontShowError "服务器内部错误"
-// @Router /stats [get]
+//	@Summary		获取HAProxy原始统计数据
+//	@Description	获取HAProxy原始的统计信息
+//	@Tags			统计信息
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	model.SuccessResponse			"获取统计数据成功"
+//	@Failure		401	{object}	model.ErrResponseDontShowError	"未授权访问"
+//	@Failure		500	{object}	model.ErrResponseDontShowError	"服务器内部错误"
+//	@Router			/stats [get]
 func (c *StatsControllerImpl) GetStats(ctx *gin.Context) {
 	stats, err := c.runnerService.GetStats()
 	if err != nil {
@@ -54,17 +56,17 @@ func (c *StatsControllerImpl) GetStats(ctx *gin.Context) {
 }
 
 // GetOverviewStats 获取统计概览数据
-// @Summary 获取统计概览数据
-// @Description 获取指定时间范围内的统计概览数据，包括请求数、流量、错误率等
-// @Tags 统计信息
-// @Produce json
-// @Param timeRange query string true "时间范围：24h(24小时)、7d(7天)、30d(30天)" Enums(24h, 7d, 30d) default(24h)
-// @Security BearerAuth
-// @Success 200 {object} model.SuccessResponse{data=dto.OverviewStats} "获取统计概览成功"
-// @Failure 400 {object} model.ErrResponse "请求参数错误"
-// @Failure 401 {object} model.ErrResponseDontShowError "未授权访问"
-// @Failure 500 {object} model.ErrResponseDontShowError "服务器内部错误"
-// @Router /api/v1/stats/overview [get]
+//	@Summary		获取统计概览数据
+//	@Description	获取指定时间范围内的统计概览数据，包括请求数、流量、错误率等
+//	@Tags			统计信息
+//	@Produce		json
+//	@Param			timeRange	query	string	true	"时间范围：24h(24小时)、7d(7天)、30d(30天)"	Enums(24h, 7d, 30d)	default(24h)
+//	@Security		BearerAuth
+//	@Success		200	{object}	model.SuccessResponse{data=dto.OverviewStats}	"获取统计概览成功"
+//	@Failure		400	{object}	model.ErrResponse								"请求参数错误"
+//	@Failure		401	{object}	model.ErrResponseDontShowError					"未授权访问"
+//	@Failure		500	{object}	model.ErrResponseDontShowError					"服务器内部错误"
+//	@Router			/api/v1/stats/overview [get]
 func (c *StatsControllerImpl) GetOverviewStats(ctx *gin.Context) {
 	// 解析请求参数
 	var req dto.StatsRequest
@@ -86,17 +88,17 @@ func (c *StatsControllerImpl) GetOverviewStats(ctx *gin.Context) {
 }
 
 // GetRealtimeQPS 获取实时QPS数据
-// @Summary 获取实时QPS数据
-// @Description 获取最近的实时QPS数据点
-// @Tags 统计信息
-// @Produce json
-// @Param limit query int false "返回的数据点数量，默认30个点，最大60个点" default(30) minimum(1) maximum(60)
-// @Security BearerAuth
-// @Success 200 {object} model.SuccessResponse{data=dto.RealtimeQPSResponse} "获取实时QPS数据成功"
-// @Failure 400 {object} model.ErrResponse "请求参数错误"
-// @Failure 401 {object} model.ErrResponseDontShowError "未授权访问"
-// @Failure 500 {object} model.ErrResponseDontShowError "服务器内部错误"
-// @Router /api/v1/stats/realtime-qps [get]
+//	@Summary		获取实时QPS数据
+//	@Description	获取最近的实时QPS数据点
+//	@Tags			统计信息
+//	@Produce		json
+//	@Param			limit	query	int	false	"返回的数据点数量，默认30个点，最大60个点"	default(30)	minimum(1)	maximum(60)
+//	@Security		BearerAuth
+//	@Success		200	{object}	model.SuccessResponse{data=dto.RealtimeQPSResponse}	"获取实时QPS数据成功"
+//	@Failure		400	{object}	model.ErrResponse									"请求参数错误"
+//	@Failure		401	{object}	model.ErrResponseDontShowError						"未授权访问"
+//	@Failure		500	{object}	model.ErrResponseDontShowError						"服务器内部错误"
+//	@Router			/api/v1/stats/realtime-qps [get]
 func (c *StatsControllerImpl) GetRealtimeQPS(ctx *gin.Context) {
 	// 解析请求参数
 	limitStr := ctx.DefaultQuery("limit", "30")
@@ -120,18 +122,18 @@ func (c *StatsControllerImpl) GetRealtimeQPS(ctx *gin.Context) {
 }
 
 // GetTimeSeriesData 获取时间序列数据
-// @Summary 获取时间序列数据
-// @Description 获取指定时间范围和指标类型的时间序列数据，用于图表展示
-// @Tags 统计信息
-// @Produce json
-// @Param timeRange query string true "时间范围：24h(24小时)、7d(7天)、30d(30天)" Enums(24h, 7d, 30d) default(24h)
-// @Param metric query string true "指标类型：requests(请求数)、blocks(拦截数)" Enums(requests, blocks) default(requests)
-// @Security BearerAuth
-// @Success 200 {object} model.SuccessResponse{data=dto.TimeSeriesResponse} "获取时间序列数据成功"
-// @Failure 400 {object} model.ErrResponse "请求参数错误"
-// @Failure 401 {object} model.ErrResponseDontShowError "未授权访问"
-// @Failure 500 {object} model.ErrResponseDontShowError "服务器内部错误"
-// @Router /api/v1/stats/time-series [get]
+//	@Summary		获取时间序列数据
+//	@Description	获取指定时间范围和指标类型的时间序列数据，用于图表展示
+//	@Tags			统计信息
+//	@Produce		json
+//	@Param			timeRange	query	string	true	"时间范围：24h(24小时)、7d(7天)、30d(30天)"	Enums(24h, 7d, 30d)		default(24h)
+//	@Param			metric		query	string	true	"指标类型：requests(请求数)、blocks(拦截数)"	Enums(requests, blocks)	default(requests)
+//	@Security		BearerAuth
+//	@Success		200	{object}	model.SuccessResponse{data=dto.TimeSeriesResponse}	"获取时间序列数据成功"
+//	@Failure		400	{object}	model.ErrResponse									"请求参数错误"
+//	@Failure		401	{object}	model.ErrResponseDontShowError						"未授权访问"
+//	@Failure		500	{object}	model.ErrResponseDontShowError						"服务器内部错误"
+//	@Router			/api/v1/stats/time-series [get]
 func (c *StatsControllerImpl) GetTimeSeriesData(ctx *gin.Context) {
 	// 解析请求参数
 	var req dto.TimeSeriesDataRequest
@@ -162,4 +164,39 @@ func (c *StatsControllerImpl) GetTimeSeriesData(ctx *gin.Context) {
 	}
 
 	response.Success(ctx, "获取时间序列数据成功", data)
+}
+
+// GetCombinedTimeSeriesData 获取组合时间序列数据
+//	@Summary		获取组合时间序列数据
+//	@Description	同时获取请求数和拦截数的时间序列数据，用于图表展示
+//	@Tags			统计信息
+//	@Produce		json
+//	@Param			timeRange	query	string	true	"时间范围：24h(24小时)、7d(7天)、30d(30天)"	Enums(24h, 7d, 30d)	default(24h)
+//	@Security		BearerAuth
+//	@Success		200	{object}	model.SuccessResponse{data=dto.CombinedTimeSeriesResponse}	"获取组合时间序列数据成功"
+//	@Failure		400	{object}	model.ErrResponse											"请求参数错误"
+//	@Failure		401	{object}	model.ErrResponseDontShowError								"未授权访问"
+//	@Failure		500	{object}	model.ErrResponseDontShowError								"服务器内部错误"
+//	@Router			/api/v1/stats/combined-time-series [get]
+func (c *StatsControllerImpl) GetCombinedTimeSeriesData(ctx *gin.Context) {
+	// 解析请求参数
+	timeRange := ctx.DefaultQuery("timeRange", dto.TimeRange24Hours)
+
+	// 验证时间范围参数
+	if timeRange != dto.TimeRange24Hours && timeRange != dto.TimeRange7Days && timeRange != dto.TimeRange30Days {
+		response.BadRequest(ctx, fmt.Errorf("无效的时间范围: %s", timeRange), true)
+		return
+	}
+
+	// 调用服务
+	data, err := c.statsService.GetCombinedTimeSeriesData(ctx, timeRange)
+	if err != nil {
+		c.logger.Error().Err(err).
+			Str("timeRange", timeRange).
+			Msg("获取组合时间序列数据失败")
+		response.InternalServerError(ctx, err, false)
+		return
+	}
+
+	response.Success(ctx, "获取组合时间序列数据成功", data)
 }

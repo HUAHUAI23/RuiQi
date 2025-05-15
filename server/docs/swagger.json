@@ -1775,6 +1775,294 @@
                 }
             }
         },
+        "/api/v1/stats/combined-time-series": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "同时获取请求数和拦截数的时间序列数据，用于图表展示",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "统计信息"
+                ],
+                "summary": "获取组合时间序列数据",
+                "parameters": [
+                    {
+                        "enum": [
+                            "24h",
+                            "7d",
+                            "30d"
+                        ],
+                        "type": "string",
+                        "default": "24h",
+                        "description": "时间范围：24h(24小时)、7d(7天)、30d(30天)",
+                        "name": "timeRange",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取组合时间序列数据成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CombinedTimeSeriesResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/stats/overview": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取指定时间范围内的统计概览数据，包括请求数、流量、错误率等",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "统计信息"
+                ],
+                "summary": "获取统计概览数据",
+                "parameters": [
+                    {
+                        "enum": [
+                            "24h",
+                            "7d",
+                            "30d"
+                        ],
+                        "type": "string",
+                        "default": "24h",
+                        "description": "时间范围：24h(24小时)、7d(7天)、30d(30天)",
+                        "name": "timeRange",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取统计概览成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.OverviewStats"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/stats/realtime-qps": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取最近的实时QPS数据点",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "统计信息"
+                ],
+                "summary": "获取实时QPS数据",
+                "parameters": [
+                    {
+                        "maximum": 60,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 30,
+                        "description": "返回的数据点数量，默认30个点，最大60个点",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取实时QPS数据成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.RealtimeQPSResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/stats/time-series": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取指定时间范围和指标类型的时间序列数据，用于图表展示",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "统计信息"
+                ],
+                "summary": "获取时间序列数据",
+                "parameters": [
+                    {
+                        "enum": [
+                            "24h",
+                            "7d",
+                            "30d"
+                        ],
+                        "type": "string",
+                        "default": "24h",
+                        "description": "时间范围：24h(24小时)、7d(7天)、30d(30天)",
+                        "name": "timeRange",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "requests",
+                            "blocks"
+                        ],
+                        "type": "string",
+                        "default": "requests",
+                        "description": "指标类型：requests(请求数)、blocks(拦截数)",
+                        "name": "metric",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取时间序列数据成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TimeSeriesResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/waf/logs": {
             "get": {
                 "description": "查询详细的WAF攻击日志记录，提供多条件筛选和分页功能，支持按规则ID、IP、域名、端口和时间范围过滤",
@@ -2140,6 +2428,43 @@
                         "description": "请求参数错误或原密码错误",
                         "schema": {
                             "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            }
+        },
+        "/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取HAProxy原始的统计信息",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "统计信息"
+                ],
+                "summary": "获取HAProxy原始统计数据",
+                "responses": {
+                    "200": {
+                        "description": "获取统计数据成功",
+                        "schema": {
+                            "$ref": "#/definitions/model.SuccessResponse"
                         }
                     },
                     "401": {
@@ -2788,6 +3113,33 @@
                 }
             }
         },
+        "dto.CombinedTimeSeriesResponse": {
+            "description": "同时包含请求数和拦截数的时间序列数据",
+            "type": "object",
+            "properties": {
+                "blocks": {
+                    "description": "拦截数时间序列",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.TimeSeriesResponse"
+                        }
+                    ]
+                },
+                "requests": {
+                    "description": "请求数时间序列",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.TimeSeriesResponse"
+                        }
+                    ]
+                },
+                "timeRange": {
+                    "description": "时间范围",
+                    "type": "string",
+                    "example": "24h"
+                }
+            }
+        },
         "dto.ConfigPatchRequest": {
             "description": "用于部分更新配置的请求参数",
             "type": "object",
@@ -3292,6 +3644,96 @@
                 }
             }
         },
+        "dto.OverviewStats": {
+            "description": "概览统计数据，包含各项关键指标",
+            "type": "object",
+            "properties": {
+                "attackIPCount": {
+                    "description": "攻击IP数量",
+                    "type": "integer",
+                    "example": 45
+                },
+                "blockCount": {
+                    "description": "安全统计",
+                    "type": "integer",
+                    "example": 123
+                },
+                "error4xx": {
+                    "description": "错误统计",
+                    "type": "integer",
+                    "example": 234
+                },
+                "error4xxRate": {
+                    "description": "4xx错误率(百分比)",
+                    "type": "number",
+                    "example": 0.23
+                },
+                "error5xx": {
+                    "description": "5xx错误数量",
+                    "type": "integer",
+                    "example": 45
+                },
+                "error5xxRate": {
+                    "description": "5xx错误率(百分比)",
+                    "type": "number",
+                    "example": 0.05
+                },
+                "inboundTraffic": {
+                    "description": "入站流量(字节)",
+                    "type": "integer",
+                    "example": 67890123
+                },
+                "maxQPS": {
+                    "description": "最大QPS",
+                    "type": "integer",
+                    "example": 150
+                },
+                "outboundTraffic": {
+                    "description": "出站流量(字节)",
+                    "type": "integer",
+                    "example": 12345678
+                },
+                "timeRange": {
+                    "description": "时间范围",
+                    "type": "string",
+                    "example": "24h"
+                },
+                "totalRequests": {
+                    "description": "流量统计",
+                    "type": "integer",
+                    "example": 123456
+                }
+            }
+        },
+        "dto.RealtimeQPSData": {
+            "description": "实时QPS数据点，包含时间戳和值",
+            "type": "object",
+            "properties": {
+                "timestamp": {
+                    "description": "时间戳",
+                    "type": "string",
+                    "example": "2024-01-01T12:30:45Z"
+                },
+                "value": {
+                    "description": "QPS值",
+                    "type": "integer",
+                    "example": 120
+                }
+            }
+        },
+        "dto.RealtimeQPSResponse": {
+            "description": "实时QPS数据响应",
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "QPS数据点列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.RealtimeQPSData"
+                    }
+                }
+            }
+        },
         "dto.ResetPasswordResponseData": {
             "type": "object",
             "properties": {
@@ -3483,6 +3925,45 @@
                             "$ref": "#/definitions/model.WAFMode"
                         }
                     ]
+                }
+            }
+        },
+        "dto.TimeSeriesDataPoint": {
+            "description": "时间序列图表数据点",
+            "type": "object",
+            "properties": {
+                "timestamp": {
+                    "description": "时间戳，表示数据点的时间",
+                    "type": "string",
+                    "example": "2024-01-01T12:00:00Z"
+                },
+                "value": {
+                    "description": "数值，表示该时间点的指标值",
+                    "type": "integer",
+                    "example": 128
+                }
+            }
+        },
+        "dto.TimeSeriesResponse": {
+            "description": "时间序列图表数据响应",
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "数据点列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TimeSeriesDataPoint"
+                    }
+                },
+                "metric": {
+                    "description": "指标名称",
+                    "type": "string",
+                    "example": "requests"
+                },
+                "timeRange": {
+                    "description": "时间范围",
+                    "type": "string",
+                    "example": "24h"
                 }
             }
         },
@@ -4196,6 +4677,9 @@
                     "type": "string",
                     "example": "2024-03-18T08:12:33Z"
                 },
+                "date": {
+                    "type": "string"
+                },
                 "domain": {
                     "description": "目标域名",
                     "type": "string",
@@ -4210,6 +4694,13 @@
                     "description": "目标端口",
                     "type": "integer",
                     "example": 443
+                },
+                "hour": {
+                    "type": "integer"
+                },
+                "hourGroupSix": {
+                    "type": "integer",
+                    "example": 0
                 },
                 "id": {
                     "description": "日志唯一标识符",
@@ -4226,6 +4717,9 @@
                     "description": "事件描述消息",
                     "type": "string",
                     "example": "恶意扫描器检测"
+                },
+                "minute": {
+                    "type": "integer"
                 },
                 "payload": {
                     "description": "攻击载荷",

@@ -65,9 +65,6 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
 
-	// 获取HAProxy的统计信息 测试
-	route.GET("/stats", statsController.GetStats)
-
 	// API v1 路由
 	api := route.Group("/api/v1")
 
@@ -176,6 +173,8 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 		statsRoutes.GET("/realtime-qps", middleware.HasPermission(model.PermWAFLogRead), statsController.GetRealtimeQPS)
 		// 获取时间序列数据 - 需要config:read权限
 		statsRoutes.GET("/time-series", middleware.HasPermission(model.PermWAFLogRead), statsController.GetTimeSeriesData)
+		// 获取组合时间序列数据 - 需要config:read权限
+		statsRoutes.GET("/combined-time-series", middleware.HasPermission(model.PermWAFLogRead), statsController.GetCombinedTimeSeriesData)
 	}
 
 	// 配置管理模块

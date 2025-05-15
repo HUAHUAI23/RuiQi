@@ -733,11 +733,12 @@ func (a *StatsAggregator) saveMinuteMetrics(ctx context.Context, targetName stri
 
 	// 创建扁平化的文档结构
 	minuteStats := model.HAProxyMinuteStats{
-		TargetName: targetName,
-		Date:       timestamp.Format("2006-01-02"),
-		Hour:       timestamp.Hour(),
-		Minute:     timestamp.Minute(),
-		Timestamp:  timestamp,
+		TargetName:   targetName,
+		Date:         timestamp.Format("2006-01-02"),
+		Hour:         timestamp.Hour(),
+		HourGroupSix: timestamp.Hour() / 6,
+		Minute:       timestamp.Minute(),
+		Timestamp:    timestamp,
 	}
 	// 设置统计数据
 	minuteStats.SetStats(metrics)

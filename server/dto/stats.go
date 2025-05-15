@@ -78,3 +78,11 @@ type TimeSeriesResponse struct {
 	TimeRange string                `json:"timeRange" example:"24h"`   // 时间范围
 	Data      []TimeSeriesDataPoint `json:"data"`                      // 数据点列表
 }
+
+// CombinedTimeSeriesResponse 组合时间序列响应
+// @Description 同时包含请求数和拦截数的时间序列数据
+type CombinedTimeSeriesResponse struct {
+	TimeRange string             `json:"timeRange" example:"24h"` // 时间范围
+	Requests  TimeSeriesResponse `json:"requests"`                // 请求数时间序列
+	Blocks    TimeSeriesResponse `json:"blocks"`                  // 拦截数时间序列
+}

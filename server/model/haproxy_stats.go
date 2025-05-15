@@ -200,6 +200,8 @@ type HAProxyMinuteStats struct {
 	Hour int `bson:"hour" json:"hour"`
 	// @Description 分钟 (0-59)
 	Minute int `bson:"minute" json:"minute"`
+	// @Description 小时组 (0-4) 0-5点为0组，6-11点为1组，12-17点为2组，18-23点为3组
+	HourGroupSix int `bson:"hourGroupSix" json:"hourGroupSix"`
 	// @Description 完整时间戳
 	Timestamp time.Time `bson:"timestamp" json:"timestamp"`
 

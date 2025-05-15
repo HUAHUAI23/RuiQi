@@ -186,7 +186,7 @@ graph TD
 
 ```bash
 git clone https://github.com/HUAHUAI23/RuiQi.git
-cd simple-waf
+cd RuiQi
 ```
 
 2. Setup the frontend development environment:
@@ -228,19 +228,19 @@ The development server will start with:
 
 ```bash
 git clone https://github.com/HUAHUAI23/RuiQi.git
-cd simple-waf
+cd RuiQi
 ```
 
 2. Build the Docker image:
 
 ```bash
-docker build -t simple-waf:latest .
+docker build -t ruiqi-waf:latest .
 ```
 
 3. Run as a standalone container:
 
 ```bash
-docker run -p 2333:2333 -p 8080:8080 -p 443:443 -p 80:80 -p 9443:9443 -p 8404:8404 simple-waf:latest
+docker run -p 2333:2333 -p 8080:8080 -p 443:443 -p 80:80 -p 9443:9443 -p 8404:8404 ruiqi-waf:latest
 ```
 
 4. Alternatively, use Docker Compose for a complete deployment with MongoDB:

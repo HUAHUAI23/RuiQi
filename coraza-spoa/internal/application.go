@@ -509,19 +509,24 @@ func (a *Application) saveMicroEngineLog(rule *Rule, req *applicationRequest, he
 		},
 	}
 
+	now := time.Now()
 	// 初始化防火墙日志
 	firewallLog := model.WAFLog{
-		CreatedAt: time.Now(),
-		Request:   buildRequestString(req, headers),
-		Response:  "", // 暂时不处理响应
-		Domain:    getHostFromRequest(req),
-		SrcIP:     realIP,
-		DstIP:     req.DstIp.String(),
-		SrcPort:   int(req.SrcPort),
-		DstPort:   int(req.DstPort),
-		RequestID: req.ID,
-		Logs:      logs, // 直接在初始化时设置日志
-		Payload:   logMessage,
+		CreatedAt:    now,
+		Request:      buildRequestString(req, headers),
+		Response:     "", // 暂时不处理响应
+		Domain:       getHostFromRequest(req),
+		SrcIP:        realIP,
+		DstIP:        req.DstIp.String(),
+		SrcPort:      int(req.SrcPort),
+		DstPort:      int(req.DstPort),
+		RequestID:    req.ID,
+		Logs:         logs, // 直接在初始化时设置日志
+		Payload:      logMessage,
+		Date:         now.Format("2006-01-02"),
+		Hour:         now.Hour(),
+		HourGroupSix: now.Hour() / 6,
+		Minute:       now.Minute(),
 	}
 
 	// 获取并添加源IP的地理位置信息
@@ -541,18 +546,23 @@ func (a *Application) saveFirewallLog(matchedRules []types.MatchedRule, interrup
 	logs := make([]model.Log, 0)
 
 	realIP := getRealClientIP(req)
+	now := time.Now()
 
 	// 初始化防火墙日志
 	firewallLog := model.WAFLog{
-		CreatedAt: time.Now(),
-		Request:   buildRequestString(req, headers),
-		Response:  "", // 暂时不处理响应
-		Domain:    getHostFromRequest(req),
-		SrcIP:     realIP,
-		DstIP:     req.DstIp.String(),
-		SrcPort:   int(req.SrcPort),
-		DstPort:   int(req.DstPort),
-		RequestID: req.ID,
+		CreatedAt:    now,
+		Request:      buildRequestString(req, headers),
+		Response:     "", // 暂时不处理响应
+		Domain:       getHostFromRequest(req),
+		SrcIP:        realIP,
+		DstIP:        req.DstIp.String(),
+		SrcPort:      int(req.SrcPort),
+		DstPort:      int(req.DstPort),
+		RequestID:    req.ID,
+		Date:         now.Format("2006-01-02"),
+		Hour:         now.Hour(),
+		HourGroupSix: now.Hour() / 6,
+		Minute:       now.Minute(),
 	}
 
 	// 获取并添加源IP的地理位置信息

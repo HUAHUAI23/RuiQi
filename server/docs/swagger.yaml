@@ -278,6 +278,22 @@ definitions:
         description: 公钥内容（PEM格式）
         type: string
     type: object
+  dto.CombinedTimeSeriesResponse:
+    description: 同时包含请求数和拦截数的时间序列数据
+    properties:
+      blocks:
+        allOf:
+        - $ref: '#/definitions/dto.TimeSeriesResponse'
+        description: 拦截数时间序列
+      requests:
+        allOf:
+        - $ref: '#/definitions/dto.TimeSeriesResponse'
+        description: 请求数时间序列
+      timeRange:
+        description: 时间范围
+        example: 24h
+        type: string
+    type: object
   dto.ConfigPatchRequest:
     description: 用于部分更新配置的请求参数
     properties:
@@ -641,6 +657,75 @@ definitions:
         example: blacklist
         type: string
     type: object
+  dto.OverviewStats:
+    description: 概览统计数据，包含各项关键指标
+    properties:
+      attackIPCount:
+        description: 攻击IP数量
+        example: 45
+        type: integer
+      blockCount:
+        description: 安全统计
+        example: 123
+        type: integer
+      error4xx:
+        description: 错误统计
+        example: 234
+        type: integer
+      error4xxRate:
+        description: 4xx错误率(百分比)
+        example: 0.23
+        type: number
+      error5xx:
+        description: 5xx错误数量
+        example: 45
+        type: integer
+      error5xxRate:
+        description: 5xx错误率(百分比)
+        example: 0.05
+        type: number
+      inboundTraffic:
+        description: 入站流量(字节)
+        example: 67890123
+        type: integer
+      maxQPS:
+        description: 最大QPS
+        example: 150
+        type: integer
+      outboundTraffic:
+        description: 出站流量(字节)
+        example: 12345678
+        type: integer
+      timeRange:
+        description: 时间范围
+        example: 24h
+        type: string
+      totalRequests:
+        description: 流量统计
+        example: 123456
+        type: integer
+    type: object
+  dto.RealtimeQPSData:
+    description: 实时QPS数据点，包含时间戳和值
+    properties:
+      timestamp:
+        description: 时间戳
+        example: "2024-01-01T12:30:45Z"
+        type: string
+      value:
+        description: QPS值
+        example: 120
+        type: integer
+    type: object
+  dto.RealtimeQPSResponse:
+    description: 实时QPS数据响应
+    properties:
+      data:
+        description: QPS数据点列表
+        items:
+          $ref: '#/definitions/dto.RealtimeQPSData'
+        type: array
+    type: object
   dto.ResetPasswordResponseData:
     properties:
       code:
@@ -777,6 +862,35 @@ definitions:
         allOf:
         - $ref: '#/definitions/model.WAFMode'
         description: WAF防护模式
+    type: object
+  dto.TimeSeriesDataPoint:
+    description: 时间序列图表数据点
+    properties:
+      timestamp:
+        description: 时间戳，表示数据点的时间
+        example: "2024-01-01T12:00:00Z"
+        type: string
+      value:
+        description: 数值，表示该时间点的指标值
+        example: 128
+        type: integer
+    type: object
+  dto.TimeSeriesResponse:
+    description: 时间序列图表数据响应
+    properties:
+      data:
+        description: 数据点列表
+        items:
+          $ref: '#/definitions/dto.TimeSeriesDataPoint'
+        type: array
+      metric:
+        description: 指标名称
+        example: requests
+        type: string
+      timeRange:
+        description: 时间范围
+        example: 24h
+        type: string
     type: object
   dto.UpdateSiteRequest:
     description: 更新站点的请求参数
@@ -1295,6 +1409,8 @@ definitions:
         description: 事件发生时间戳
         example: "2024-03-18T08:12:33Z"
         type: string
+      date:
+        type: string
       domain:
         description: 目标域名
         example: api.example.com
@@ -1306,6 +1422,11 @@ definitions:
       dstPort:
         description: 目标端口
         example: 443
+        type: integer
+      hour:
+        type: integer
+      hourGroupSix:
+        example: 0
         type: integer
       id:
         description: 日志唯一标识符
@@ -1319,6 +1440,8 @@ definitions:
         description: 事件描述消息
         example: 恶意扫描器检测
         type: string
+      minute:
+        type: integer
       payload:
         description: 攻击载荷
         example: Scanner/1.0
@@ -2480,6 +2603,184 @@ paths:
       summary: 更新站点
       tags:
       - 站点管理
+  /api/v1/stats/combined-time-series:
+    get:
+      description: 同时获取请求数和拦截数的时间序列数据，用于图表展示
+      parameters:
+      - default: 24h
+        description: 时间范围：24h(24小时)、7d(7天)、30d(30天)
+        enum:
+        - 24h
+        - 7d
+        - 30d
+        in: query
+        name: timeRange
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取组合时间序列数据成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CombinedTimeSeriesResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/model.ErrResponse'
+        "401":
+          description: 未授权访问
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+      security:
+      - BearerAuth: []
+      summary: 获取组合时间序列数据
+      tags:
+      - 统计信息
+  /api/v1/stats/overview:
+    get:
+      description: 获取指定时间范围内的统计概览数据，包括请求数、流量、错误率等
+      parameters:
+      - default: 24h
+        description: 时间范围：24h(24小时)、7d(7天)、30d(30天)
+        enum:
+        - 24h
+        - 7d
+        - 30d
+        in: query
+        name: timeRange
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取统计概览成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.OverviewStats'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/model.ErrResponse'
+        "401":
+          description: 未授权访问
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+      security:
+      - BearerAuth: []
+      summary: 获取统计概览数据
+      tags:
+      - 统计信息
+  /api/v1/stats/realtime-qps:
+    get:
+      description: 获取最近的实时QPS数据点
+      parameters:
+      - default: 30
+        description: 返回的数据点数量，默认30个点，最大60个点
+        in: query
+        maximum: 60
+        minimum: 1
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取实时QPS数据成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.RealtimeQPSResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/model.ErrResponse'
+        "401":
+          description: 未授权访问
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+      security:
+      - BearerAuth: []
+      summary: 获取实时QPS数据
+      tags:
+      - 统计信息
+  /api/v1/stats/time-series:
+    get:
+      description: 获取指定时间范围和指标类型的时间序列数据，用于图表展示
+      parameters:
+      - default: 24h
+        description: 时间范围：24h(24小时)、7d(7天)、30d(30天)
+        enum:
+        - 24h
+        - 7d
+        - 30d
+        in: query
+        name: timeRange
+        required: true
+        type: string
+      - default: requests
+        description: 指标类型：requests(请求数)、blocks(拦截数)
+        enum:
+        - requests
+        - blocks
+        in: query
+        name: metric
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取时间序列数据成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TimeSeriesResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/model.ErrResponse'
+        "401":
+          description: 未授权访问
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+      security:
+      - BearerAuth: []
+      summary: 获取时间序列数据
+      tags:
+      - 统计信息
   /api/v1/waf/logs:
     get:
       consumes:
@@ -2717,6 +3018,29 @@ paths:
       summary: 重置密码
       tags:
       - 认证
+  /stats:
+    get:
+      description: 获取HAProxy原始的统计信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取统计数据成功
+          schema:
+            $ref: '#/definitions/model.SuccessResponse'
+        "401":
+          description: 未授权访问
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+      security:
+      - BearerAuth: []
+      summary: 获取HAProxy原始统计数据
+      tags:
+      - 统计信息
   /users:
     get:
       description: 获取系统中所有用户的列表
