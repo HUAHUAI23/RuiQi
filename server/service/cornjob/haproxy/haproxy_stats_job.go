@@ -52,9 +52,29 @@ func NewStatsJob(runner daemon.ServiceRunner, targetList []string) (*StatsJob, e
 
 // UpdateTargetList 更新监控的目标列表
 func (j *StatsJob) UpdateTargetList(targetList []string) {
+	// 检查前后状态变化
+	hadNoTargets := len(j.targetList) == 0
+	willHaveNoTargets := len(targetList) == 0
+
+	// 保存旧目标数量用于日志
+	oldTargetCount := len(j.targetList)
+
 	j.targetList = targetList
 	j.aggregator.UpdateTargetList(targetList)
-	j.logger.Info().Strs("targets", targetList).Msg("Updated monitoring target list")
+
+	// 处理不同的状态转变
+	if hadNoTargets && !willHaveNoTargets {
+		// 从无目标到有目标
+		j.logger.Info().Strs("targets", targetList).Msg("First targets added, activating monitoring")
+	} else if !hadNoTargets && willHaveNoTargets {
+		// 从有目标到无目标
+		j.logger.Warn().Int("previous_count", oldTargetCount).Msg("All targets removed, monitoring entering standby mode")
+	} else {
+		// 其他正常更新
+		j.logger.Info().
+			Int("count", len(targetList)).
+			Msg("Updated monitoring target list")
+	}
 }
 
 // Start 启动定时任务

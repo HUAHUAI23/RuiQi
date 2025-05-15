@@ -21,6 +21,12 @@ func Start(runner daemon.ServiceRunner, logger zerolog.Logger) (func(), error) {
 		return nil, fmt.Errorf("cornjob start failed:  failed to get target list: %w", err)
 	}
 
+	if len(targetList) == 0 {
+		logger.Warn().Msg("No HAProxy targets found to monitor. Service will start in standby mode.")
+	} else {
+		logger.Info().Strs("targets", targetList).Msg("Starting HAProxy stats service with initial targets")
+	}
+
 	// 创建定时任务服务
 	cronJobService, err := GetInstance(runner, targetList)
 	if err != nil {
@@ -55,7 +61,12 @@ func Start(runner daemon.ServiceRunner, logger zerolog.Logger) (func(), error) {
 		}
 	}
 
-	logger.Info().Msg("HAProxy stats service started successfully")
+	if len(targetList) == 0 {
+		logger.Info().Msg("HAProxy stats service started in standby mode (no targets)")
+	} else {
+		logger.Info().Msg("HAProxy stats service started successfully with active monitoring")
+	}
+
 	return cleanup, nil
 }
 

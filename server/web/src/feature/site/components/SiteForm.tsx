@@ -247,7 +247,7 @@ export function SiteForm({
                                                     placeholder="80"
                                                     className="rounded-md p-3 h-12 dark:text-shadow-glow-white"
                                                     {...field}
-                                                    onChange={(e) => field.onChange(e.target.value)}
+                                                    onChange={(e) => field.onChange(Number(e.target.value))}
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -447,7 +447,7 @@ export function SiteForm({
                                                                 placeholder="80"
                                                                 className="rounded-md p-3 dark:text-shadow-glow-white"
                                                                 {...field}
-                                                                onChange={(e) => field.onChange(e.target.value)}
+                                                                onChange={(e) => field.onChange(Number(e.target.value))}
                                                             />
                                                         </FormControl>
                                                         <FormMessage />

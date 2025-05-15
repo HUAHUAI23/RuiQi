@@ -72,6 +72,11 @@ func (a *StatsAggregator) UpdateTargetList(targetList []string) {
 		newFilter[target] = true
 	}
 
+	// 检查状态变化
+	hadNoTargets := len(a.targetFilter) == 0
+	willHaveNoTargets := len(newFilter) == 0
+	hasNewTargets := len(newFilter) > 0
+
 	// 查找不再监控的目标
 	for target := range a.targetFilter {
 		if !newFilter[target] {
@@ -81,16 +86,50 @@ func (a *StatsAggregator) UpdateTargetList(targetList []string) {
 		}
 	}
 
-	// 记录新增的目标
-	for target := range newFilter {
-		if !a.targetFilter[target] {
-			a.log.Info().Str("target", target).Msg("Adding new target to monitoring")
-			// 新增的目标会在下次数据采集时自动初始化
+	// 更新过滤器
+	prevFilter := a.targetFilter
+	a.targetFilter = newFilter
+
+	// 处理从有目标到无目标的转变
+	if !hadNoTargets && willHaveNoTargets {
+		a.log.Warn().Int("previous_targets", len(prevFilter)).Msg("All targets removed, aggregator entering standby mode")
+
+		// 清空统计数据，减少内存占用
+		a.lastStats = make(map[string]*StatsData)
+
+		// 重置lastStatsLoaded状态，以便下次添加目标时能正确初始化
+		a.lastStatsLoaded = false
+
+		// 保存最终状态到数据库，标记完成
+		if a.isRunning {
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+
+			if err := a.saveLastStats(ctx); err != nil {
+				a.log.Error().Err(err).Msg("Failed to save final stats when entering standby mode")
+			}
+		}
+	} else if hadNoTargets && hasNewTargets && a.isRunning {
+		// 如果从无目标状态变为有目标状态，需要初始化状态
+		a.log.Info().Msg("Targets added to previously empty target list, initializing stats collection")
+
+		// 创建上下文进行初始化
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		// 尝试初始化统计数据
+		if err := a.initializeStats(ctx); err != nil {
+			a.log.Error().Err(err).Msg("Failed to initialize stats after targets were added")
+		}
+	} else {
+		// 记录新增的目标
+		for target := range newFilter {
+			if !prevFilter[target] {
+				a.log.Info().Str("target", target).Msg("Adding new target to monitoring")
+				// 新增的目标会在下次数据采集时自动初始化
+			}
 		}
 	}
-
-	// 更新过滤器
-	a.targetFilter = newFilter
 }
 
 // ensureCollections 确保必要的集合和索引存在
@@ -419,7 +458,8 @@ func (a *StatsAggregator) initializeStats(ctx context.Context) error {
 
 	// 检查是否至少有一个目标
 	if len(a.lastStats) == 0 {
-		return errors.New("no valid targets found to initialize")
+		a.log.Warn().Msg("No valid targets found to initialize, aggregator will wait for targets to be added")
+		return nil // 返回nil而不是错误，允许服务启动但处于空闲状态
 	}
 
 	// 保存初始基准到数据库
@@ -436,6 +476,12 @@ func (a *StatsAggregator) initializeStats(ctx context.Context) error {
 func (a *StatsAggregator) CollectRealtimeMetrics(ctx context.Context) error {
 	if !a.isRunning {
 		return errors.New("aggregator is not running")
+	}
+
+	// 如果没有目标，则跳过收集
+	if len(a.targetFilter) == 0 {
+		a.log.Debug().Msg("Skipping realtime metrics collection: no targets configured")
+		return nil
 	}
 
 	stats, err := a.runner.GetStats()
@@ -565,6 +611,12 @@ func (a *StatsAggregator) processRealtimeMetrics(ctx context.Context, stats mode
 func (a *StatsAggregator) CollectMinuteMetrics(ctx context.Context) error {
 	if !a.isRunning {
 		return errors.New("aggregator is not running")
+	}
+
+	// 如果没有目标，则跳过收集
+	if len(a.targetFilter) == 0 {
+		a.log.Debug().Msg("Skipping minute metrics collection: no targets configured")
+		return nil
 	}
 
 	stats, err := a.runner.GetStats()
