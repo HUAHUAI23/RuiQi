@@ -107,7 +107,7 @@ export function Sidebar({ displayConfig = {} }: SidebarProps) {
             {/* Logo and title */}
             <div className="flex flex-col items-center gap-2 py-6 border-b border-white/10 dark:border-white/5">
                 {/* <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#A48BEA] to-[#8861DB] dark:from-[#9470DB] dark:to-[#7B4FD6] flex items-center justify-center shadow-lg animate-pulse-glow"> */}
-                <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg animate-pulse-glow">
+                <div className="w-16 h-16 rounded-full flex items-center justify-center animate-pulse-glow">
                     {/* <Shield className="w-8 h-8 text-white" /> */}
                     <img src="/logo.svg" alt="logo" />
                 </div>

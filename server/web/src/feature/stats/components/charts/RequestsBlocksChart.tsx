@@ -14,7 +14,7 @@ export function RequestsBlocksChart({ timeRange }: RequestsBlocksChartProps) {
     const { t } = useTranslation()
     const { data, isLoading } = useCombinedTimeSeriesData(timeRange)
     const { theme } = useTheme()
-    
+
     // 判断是否为暗色模式
     const isDarkMode = theme === 'dark'
 
@@ -38,11 +38,11 @@ export function RequestsBlocksChart({ timeRange }: RequestsBlocksChartProps) {
     const THEME_PRIMARY = '#9d76db'         // 主色紫 (157, 118, 219)
     // const THEME_SECONDARY = '#a346ff'       // 更鲜艳的紫色
     const THEME_ERROR = '#f43f5e'           // 错误红色
-    
+
     // 暗色模式下加强色彩亮度和辉光效果
     const THEME_PRIMARY_DARK = '#b394e9'    // 更亮的紫色
     const THEME_ERROR_DARK = '#fb6d88'      // 更亮的红色
-    
+
     // 获取当前主题下的颜色
     const primaryColor = isDarkMode ? THEME_PRIMARY_DARK : THEME_PRIMARY
     const errorColor = isDarkMode ? THEME_ERROR_DARK : THEME_ERROR
@@ -164,14 +164,14 @@ export function RequestsBlocksChart({ timeRange }: RequestsBlocksChartProps) {
                     itemStyle: {
                         borderWidth: 2,
                         shadowBlur: isDarkMode ? 15 : 10,
-                        shadowColor: isDarkMode 
+                        shadowColor: isDarkMode
                             ? 'rgba(179, 148, 233, 0.7)'
                             : 'rgba(157, 118, 219, 0.5)'
                     }
                 },
                 lineStyle: {
                     width: 3,
-                    shadowColor: isDarkMode 
+                    shadowColor: isDarkMode
                         ? 'rgba(179, 148, 233, 0.4)'
                         : 'rgba(157, 118, 219, 0.3)',
                     shadowBlur: isDarkMode ? 15 : 10
@@ -183,23 +183,23 @@ export function RequestsBlocksChart({ timeRange }: RequestsBlocksChartProps) {
                 },
                 areaStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        { 
-                            offset: 0, 
-                            color: isDarkMode 
-                                ? 'rgba(179, 148, 233, 0.5)' 
-                                : 'rgba(157, 118, 219, 0.4)' 
+                        {
+                            offset: 0,
+                            color: isDarkMode
+                                ? 'rgba(179, 148, 233, 0.5)'
+                                : 'rgba(157, 118, 219, 0.4)'
                         },
-                        { 
-                            offset: 0.5, 
-                            color: isDarkMode 
-                                ? 'rgba(179, 148, 233, 0.2)' 
-                                : 'rgba(157, 118, 219, 0.15)' 
+                        {
+                            offset: 0.5,
+                            color: isDarkMode
+                                ? 'rgba(179, 148, 233, 0.2)'
+                                : 'rgba(157, 118, 219, 0.15)'
                         },
-                        { 
-                            offset: 1, 
-                            color: isDarkMode 
-                                ? 'rgba(179, 148, 233, 0.05)' 
-                                : 'rgba(157, 118, 219, 0.02)' 
+                        {
+                            offset: 1,
+                            color: isDarkMode
+                                ? 'rgba(179, 148, 233, 0.05)'
+                                : 'rgba(157, 118, 219, 0.02)'
                         }
                     ]),
                     opacity: 0.8
@@ -220,14 +220,14 @@ export function RequestsBlocksChart({ timeRange }: RequestsBlocksChartProps) {
                     itemStyle: {
                         borderWidth: 2,
                         shadowBlur: isDarkMode ? 15 : 10,
-                        shadowColor: isDarkMode 
+                        shadowColor: isDarkMode
                             ? 'rgba(251, 109, 136, 0.7)'
                             : 'rgba(244, 63, 94, 0.5)'
                     }
                 },
                 lineStyle: {
                     width: 3,
-                    shadowColor: isDarkMode 
+                    shadowColor: isDarkMode
                         ? 'rgba(251, 109, 136, 0.4)'
                         : 'rgba(244, 63, 94, 0.3)',
                     shadowBlur: isDarkMode ? 15 : 10
@@ -239,23 +239,23 @@ export function RequestsBlocksChart({ timeRange }: RequestsBlocksChartProps) {
                 },
                 areaStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        { 
-                            offset: 0, 
-                            color: isDarkMode 
-                                ? 'rgba(251, 109, 136, 0.5)' 
-                                : 'rgba(244, 63, 94, 0.4)' 
+                        {
+                            offset: 0,
+                            color: isDarkMode
+                                ? 'rgba(251, 109, 136, 0.5)'
+                                : 'rgba(244, 63, 94, 0.4)'
                         },
-                        { 
-                            offset: 0.5, 
-                            color: isDarkMode 
-                                ? 'rgba(251, 109, 136, 0.2)' 
-                                : 'rgba(244, 63, 94, 0.15)' 
+                        {
+                            offset: 0.5,
+                            color: isDarkMode
+                                ? 'rgba(251, 109, 136, 0.2)'
+                                : 'rgba(244, 63, 94, 0.15)'
                         },
-                        { 
-                            offset: 1, 
-                            color: isDarkMode 
-                                ? 'rgba(251, 109, 136, 0.05)' 
-                                : 'rgba(244, 63, 94, 0.02)' 
+                        {
+                            offset: 1,
+                            color: isDarkMode
+                                ? 'rgba(251, 109, 136, 0.05)'
+                                : 'rgba(244, 63, 94, 0.02)'
                         }
                     ]),
                     opacity: 0.8

@@ -1,59 +1,79 @@
-import { useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useRealtimeQPS } from '../../hooks/useStats';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { RefreshCcw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { AnimatedIcon } from '@/components/ui/animation/components/animated-icon';
-import * as echarts from 'echarts';
-import { useTheme } from '@/provider/theme-context';
+import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useRealtimeQPS } from '../../hooks/useStats'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { History } from 'lucide-react'
+import { AnimatedIcon } from '@/components/ui/animation/components/animated-icon'
+import * as echarts from 'echarts'
+import { useTheme } from '@/provider/theme-context'
+import WaveIcon from '@/components/icon/wave-icon'
 
 export function RealtimeQPSChart() {
-    const { t } = useTranslation();
-    const [isRefreshing, setIsRefreshing] = useState(false);
-    const chartRef = useRef<HTMLDivElement>(null);
-    const chartInstanceRef = useRef<echarts.ECharts | null>(null);
-    const { theme } = useTheme();
-    
+    const { t } = useTranslation()
+    const chartRef = useRef<HTMLDivElement>(null)
+    const chartInstanceRef = useRef<echarts.ECharts | null>(null)
+    const { theme } = useTheme()
+    const [isResetAnimating, setIsResetAnimating] = useState(false)
     // 判断是否为暗色模式
-    const isDarkMode = theme === 'dark';
-    
-    // 使用修改后的hook获取数据
-    const { localData, isLoading, refetch, isInitialized } = useRealtimeQPS(30);
-    
+    const isDarkMode = theme === 'dark'
+
+    // 使用修改后的hook获取数据，现在包含refreshInterval
+    const { localData, isLoading, isInitialized, refreshInterval } = useRealtimeQPS(30)
+
     // 当前QPS值 - 取最新的数据点值
-    const currentQPS = localData.length > 0 ? localData[localData.length - 1].value : 0;
+    const currentQPS = localData.length > 0 ? localData[localData.length - 1].value : 0
 
-    // 格式化时间戳 - 简化为只显示时:分
+    // 格式化时间戳 - 显示时:分:秒
     const formatTimeLabel = (timestamp: string) => {
-        const date = new Date(timestamp);
-        return date.toLocaleTimeString([], { 
-            hour: '2-digit', 
-            minute: '2-digit'
-        });
-    };
+        const date = new Date(timestamp)
+        return date.toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        })
+    }
 
-    // 处理手动刷新
-    const handleRefresh = () => {
-        setIsRefreshing(true);
-        refetch().finally(() => {
-            setTimeout(() => setIsRefreshing(false), 1000);
-        });
-    };
+    // when data initialized and refreshInterval is set, start the animation
+    useEffect(() => {
+        if (!refreshInterval || !isInitialized) return
+
+        // 创建定时器，与数据刷新周期同步
+        const animationTimer = setInterval(() => {
+            // 触发动画
+            setIsResetAnimating(true)
+
+            // 1秒后结束动画
+            setTimeout(() => {
+                setIsResetAnimating(false)
+            }, 1000)
+        }, refreshInterval)
+
+        // 清理函数
+        return () => {
+            clearInterval(animationTimer)
+        }
+    }, [refreshInterval, isInitialized])
+
 
     // 初始化和更新图表
     useEffect(() => {
-        if (!chartRef.current || localData.length === 0) return;
+        if (!chartRef.current || localData.length === 0) return
 
         // 如果已经有图表实例，则不需要重新创建
         if (!chartInstanceRef.current) {
-            chartInstanceRef.current = echarts.init(chartRef.current);
+            chartInstanceRef.current = echarts.init(chartRef.current)
         }
-        
+
         // 根据主题使用对应颜色
-        const CHART_PRIMARY_COLOR = isDarkMode ? '#b394e9' : '#9d76db'; // 紫色主题
-        const CHART_SECONDARY_COLOR = isDarkMode ? 'rgba(179, 148, 233, 0.5)' : 'rgba(157, 118, 219, 0.5)'; // 半透明紫色
-        
+        const CHART_PRIMARY_COLOR = isDarkMode ? '#b394e9' : '#9d76db' // 紫色主题
+        const CHART_SECONDARY_COLOR = isDarkMode ? 'rgba(179, 148, 233, 0.5)' : 'rgba(157, 118, 219, 0.5)' // 半透明紫色
+
+        // 处理数据，确保0值也显示小柱子
+        const processedData = localData.map(item => {
+            // 如果值为0，给一个最小值0.05以便显示
+            return item.value === 0 ? 0.05 : item.value
+        })
+
         // 设置图表选项
         const option: echarts.EChartsOption = {
             tooltip: {
@@ -64,17 +84,18 @@ export function RealtimeQPSChart() {
                         color: isDarkMode ? 'rgba(179, 148, 233, 0.15)' : 'rgba(157, 118, 219, 0.05)'
                     }
                 },
-                formatter: function(params) {
+                formatter: function (params) {
                     if (!params || !Array.isArray(params) || params.length === 0) {
-                        return '';
+                        return ''
                     }
-                    
-                    const dataIndex = params[0].dataIndex;
+
+                    const dataIndex = params[0].dataIndex
                     if (typeof dataIndex === 'number' && dataIndex >= 0 && dataIndex < localData.length) {
-                        const item = localData[dataIndex];
-                        return `${formatTimeLabel(item.timestamp)}: <span style="font-weight: bold; color: ${CHART_PRIMARY_COLOR}">${item.value}</span> QPS`;
+                        const item = localData[dataIndex]
+                        // 显示实际值，而不是处理后的值
+                        return `${formatTimeLabel(item.timestamp)}: <span style="font-weight: bold; color: ${CHART_PRIMARY_COLOR}">${item.value}</span> QPS`
                     }
-                    return '';
+                    return ''
                 },
                 backgroundColor: isDarkMode ? 'rgba(36, 37, 46, 0.95)' : 'rgba(255, 255, 255, 0.9)',
                 borderColor: isDarkMode ? 'rgba(179, 148, 233, 0.2)' : 'rgba(157, 118, 219, 0.2)',
@@ -109,10 +130,11 @@ export function RealtimeQPSChart() {
             yAxis: {
                 type: 'value',
                 show: false, // 完全隐藏Y轴
-                max: function(value) {
+                max: function (value) {
                     // 让图表顶部有一些留白，最大值上浮20%
-                    return Math.max(10, value.max * 1.2);
-                }
+                    return Math.max(10, value.max * 1.2)
+                },
+                min: 0 // 确保Y轴从0开始，这样小柱子能显示
             },
             series: [
                 {
@@ -130,11 +152,11 @@ export function RealtimeQPSChart() {
                         shadowColor: isDarkMode ? 'rgba(179, 148, 233, 0.6)' : 'rgba(157, 118, 219, 0.4)',
                         shadowBlur: isDarkMode ? 15 : 10
                     },
-                    data: localData.map(item => item.value),
+                    data: processedData, // 使用处理后的数据
                     animationDuration: 300,
                     animationEasing: 'cubicOut',
-                    animationDelay: function(idx) {
-                        return idx * 5; // 快速动画
+                    animationDelay: function (idx) {
+                        return idx * 5 // 快速动画
                     }
                 }
             ],
@@ -153,25 +175,25 @@ export function RealtimeQPSChart() {
                 ]
             },
             animation: true
-        };
+        }
 
         // 应用选项
-        chartInstanceRef.current.setOption(option);
-        
+        chartInstanceRef.current.setOption(option)
+
         // 调整窗口大小时重绘图表
         const handleResize = () => {
             if (chartInstanceRef.current) {
-                chartInstanceRef.current.resize();
+                chartInstanceRef.current.resize()
             }
-        };
-        
-        window.addEventListener('resize', handleResize);
-        
+        }
+
+        window.addEventListener('resize', handleResize)
+
         // 清理函数
         return () => {
-            window.removeEventListener('resize', handleResize);
-        };
-    }, [localData, isInitialized, isDarkMode]);
+            window.removeEventListener('resize', handleResize)
+        }
+    }, [localData, isInitialized, isDarkMode])
 
     return (
         <Card className="border-none shadow-none">
@@ -181,36 +203,27 @@ export function RealtimeQPSChart() {
                         {t('stats.realtimeQPS')}
                     </CardTitle>
                     <div className="flex items-center bg-gray-50 dark:bg-gray-800 rounded-md py-1 px-3">
-                        <span className="text-primary dark:text-primary mr-2">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect x="2" y="7" width="2" height="6" rx="1" fill="currentColor"/>
-                                <rect x="6" y="5" width="2" height="8" rx="1" fill="currentColor"/>
-                                <rect x="10" y="3" width="2" height="10" rx="1" fill="currentColor"/>
-                            </svg>
+                        <span className="text-primary dark:text-primary mr-2 mb-2">
+                            {isDarkMode ? <WaveIcon width={20} height={20} /> : <WaveIcon width={20} height={20} color="#B68AFE" />}
                         </span>
                         <span className="font-medium text-gray-800 dark:text-white">{currentQPS}</span>
                     </div>
                 </div>
-                <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={handleRefresh} 
-                    className="h-8 w-8 p-0 text-gray-500 hover:text-primary dark:text-gray-400 dark:hover:text-primary"
-                >
-                    <AnimatedIcon animationVariant="continuous-spin" isAnimating={isRefreshing}>
-                        <RefreshCcw className="h-4 w-4" />
+                <div className="h-8 w-8 flex items-center justify-center text-gray-500 dark:text-gray-400 qps-refresh-icon">
+                    <AnimatedIcon animationVariant="continuous-spin" isAnimating={isResetAnimating}>
+                        <History className="h-5 w-5" />
                     </AnimatedIcon>
-                </Button>
+                </div>
             </CardHeader>
             <CardContent className="px-4 pb-4 pt-0">
                 <div className="h-[180px]">
-                    <div 
-                        ref={chartRef} 
+                    <div
+                        ref={chartRef}
                         style={{ width: '100%', height: '100%' }}
                         className={isLoading && localData.length === 0 ? "opacity-50" : ""}
                     />
                 </div>
             </CardContent>
         </Card>
-    );
+    )
 }

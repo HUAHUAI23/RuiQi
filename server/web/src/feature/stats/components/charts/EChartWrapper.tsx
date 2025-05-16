@@ -23,35 +23,35 @@ export function EChartWrapper({
     // 监听容器大小变化
     const { width } = useResizeObserver(chartRef)
 
-    // 初始化图表
+    // 初始化图表和处理主题变化 - 合并为一个useEffect
     useEffect(() => {
         if (!chartRef.current) return
 
         const isDarkMode = theme === 'dark'
 
-        // 如果实例已存在，先销毁
-        if (chartInstanceRef.current) {
+        // 如果实例不存在，创建新实例；如果已存在，不重新创建而是应用主题
+        if (!chartInstanceRef.current) {
+            chartInstanceRef.current = echarts.init(chartRef.current, isDarkMode ? 'dark' : undefined)
+        } else {
+            // 如果主题改变，应用新主题
             chartInstanceRef.current.dispose()
+            chartInstanceRef.current = echarts.init(chartRef.current, isDarkMode ? 'dark' : undefined)
         }
-
-        // 创建新实例
-        const newChart = echarts.init(chartRef.current, isDarkMode ? 'dark' : undefined)
-        chartInstanceRef.current = newChart
 
         // 设置加载状态
         if (loading) {
-            newChart.showLoading({
+            chartInstanceRef.current.showLoading({
                 text: '',
                 color: isDarkMode ? '#ffffff' : '#1f2937',
                 textColor: isDarkMode ? '#ffffff' : '#1f2937',
                 maskColor: isDarkMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.8)',
             })
         } else {
-            newChart.hideLoading()
+            chartInstanceRef.current.hideLoading()
         }
 
         // 更新图表
-        newChart.setOption(options)
+        chartInstanceRef.current.setOption(options)
 
         // 清理函数
         return () => {
@@ -68,23 +68,6 @@ export function EChartWrapper({
             chartInstanceRef.current.resize()
         }
     }, [width])
-
-    // 主题变化时更新图表
-    useEffect(() => {
-        if (chartInstanceRef.current) {
-            const isDarkMode = theme === 'dark'
-
-            // 重新初始化图表以应用主题
-            if (chartRef.current) {
-                const newChart = echarts.init(chartRef.current, isDarkMode ? 'dark' : undefined)
-                newChart.setOption(chartInstanceRef.current.getOption())
-
-                // 清理旧实例
-                chartInstanceRef.current.dispose()
-                chartInstanceRef.current = newChart
-            }
-        }
-    }, [theme])
 
     return (
         <div

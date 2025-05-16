@@ -19,7 +19,7 @@ export default function StatsPage() {
         <ScrollArea scrollbarVariant="none" className="h-full mx-auto p-4 space-y-6">
             {/* 时间范围选择器 */}
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold dark:text-white">
+                <h1 className="text-2xl font-bold text-primary dark:text-white">
                     {t('stats.title')}
                 </h1>
                 <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
@@ -78,12 +78,14 @@ export default function StatsPage() {
                                 value={statsData?.blockCount || 0}
                                 icon={<Shield size={16} />}
                                 loading={isLoading}
+                                link={'/logs/protect'}
                             />
                             <StatsCard
                                 title={t('stats.attackIPCount')}
                                 value={statsData?.attackIPCount || 0}
                                 icon={<Network size={16} />}
                                 loading={isLoading}
+                                link={'/logs/attack'}
                             />
                         </div>
                     </Card>
