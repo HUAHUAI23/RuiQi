@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	mongodb "github.com/HUAHUAI23/simple-waf/pkg/database/mongo"
@@ -139,67 +140,121 @@ func (a *StatsAggregator) ensureCollections() error {
 		return fmt.Errorf("failed to get database: %w", err)
 	}
 
+	// 创建上下文
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	// 确保基准数据集合索引
+	// 获取所有集合名称
+	collections, err := db.ListCollectionNames(ctx, bson.D{})
+	if err != nil {
+		return fmt.Errorf("failed to list collections: %w", err)
+	}
+
+	// 定义需要检查的集合
 	var haproxyStatsBaseline model.HAProxyStatsBaseline
-	baselineColl := db.Collection(haproxyStatsBaseline.GetCollectionName())
+	var haproxyMinuteStats model.HAProxyMinuteStats
+	baselineCollName := haproxyStatsBaseline.GetCollectionName()
+	minuteStatsCollName := haproxyMinuteStats.GetCollectionName()
+
+	// 检查时间序列集合是否存在
+	requiredCollections := []string{
+		baselineCollName,
+		minuteStatsCollName,
+		"conn_rate",
+		"scur",
+		"rate",
+		"req_rate",
+	}
+
+	// 使用 slices.Contains 检查所有必需的集合是否存在
+	allCollectionsExist := true
+	for _, collName := range requiredCollections {
+		if !slices.Contains(collections, collName) {
+			allCollectionsExist = false
+			break
+		}
+	}
+
+	// 如果所有必需的集合都存在，则认为数据库已初始化
+	if allCollectionsExist {
+		a.log.Info().
+			Strs("requiredCollections", requiredCollections).
+			Msg("All required collections exist, skipping initialization")
+		return nil
+	}
+
+	// 如果不是所有集合都存在，执行完整的初始化
+	a.log.Info().Msg("Some required collections are missing, initializing database")
+
+	// 创建基准数据集合索引
+	baselineColl := db.Collection(baselineCollName)
+	indexOpts := options.Index().SetUnique(true)
 	_, err = baselineColl.Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys:    bson.D{{Key: "target_name", Value: 1}},
-		Options: options.Index().SetUnique(true),
+		Options: indexOpts,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create index for baseline collection: %w", err)
 	}
+	a.log.Info().Msg("Created baseline collection index")
 
-	// 确保分钟统计数据集合索引
-	var haproxyMinuteStats model.HAProxyMinuteStats
-	minuteStatsColl := db.Collection(haproxyMinuteStats.GetCollectionName())
+	// 创建分钟统计数据集合索引
+	minuteStatsColl := db.Collection(minuteStatsCollName)
 	_, err = minuteStatsColl.Indexes().CreateMany(ctx, []mongo.IndexModel{
 		{
+			// 时间戳索引 - 支持时间范围查询
+			Keys: bson.D{{Key: "timestamp", Value: 1}},
+		},
+		{
+			// 主查询索引 - 按目标和时间查询的主要索引
+			Keys: bson.D{
+				{Key: "target_name", Value: 1},
+				{Key: "timestamp", Value: 1},
+			},
+		},
+		{
+			// 按小时聚合索引
 			Keys: bson.D{
 				{Key: "target_name", Value: 1},
 				{Key: "date", Value: 1},
 				{Key: "hour", Value: 1},
-				{Key: "minute", Value: 1},
 			},
 		},
 		{
-			Keys: bson.D{{Key: "timestamp", Value: 1}},
+			// 按六小时组聚合索引
+			Keys: bson.D{
+				{Key: "target_name", Value: 1},
+				{Key: "date", Value: 1},
+				{Key: "hourGroupSix", Value: 1},
+			},
 		},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create indexes for minute stats collection: %w", err)
 	}
+	a.log.Info().Msg("Created minute stats collection indexes")
 
-	// 确保实时统计数据时间序列集合
+	// 创建实时统计数据时间序列集合
 	realtimeMetrics := []string{"conn_rate", "scur", "rate", "req_rate"}
 	for _, metric := range realtimeMetrics {
-		// 检查集合是否存在
-		names, err := db.ListCollectionNames(ctx, bson.M{"name": metric})
-		if err != nil {
-			return fmt.Errorf("failed to list collection names: %w", err)
-		}
-
-		if len(names) == 0 {
+		// 使用 slices.Contains 检查集合是否已存在
+		if !slices.Contains(collections, metric) {
 			// 创建时间序列集合
 			timeSeriesOpts := options.TimeSeries().
 				SetTimeField("timestamp").
 				SetMetaField("metadata").
 				SetGranularity("seconds")
-
-			// 在MongoDB v2驱动中，过期时间设置在CreateCollection选项中
 			createOpts := options.CreateCollection().
 				SetTimeSeriesOptions(timeSeriesOpts).
 				SetExpireAfterSeconds(3600) // 设置1小时过期
-
 			if err := db.CreateCollection(ctx, metric, createOpts); err != nil {
 				return fmt.Errorf("failed to create timeseries collection %s: %w", metric, err)
 			}
+			a.log.Info().Msgf("Created timeseries collection %s", metric)
 		}
 	}
 
+	a.log.Info().Msg("Database initialization completed successfully")
 	return nil
 }
 

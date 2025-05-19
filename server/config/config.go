@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 
@@ -121,90 +120,6 @@ func InitConfig() error {
 
 	Logger.Info().Msg("✨ Application configure loaded successfully")
 	return nil
-}
-
-func InitDB(db *mongo.Database) error {
-	// 检查配置集合是否存在
-	var cfg model.Config
-	configCollection := db.Collection(cfg.GetCollectionName())
-
-	// 检查是否有配置记录 - 使用 v2 语法
-	filter := bson.D{}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	count, err := configCollection.CountDocuments(ctx, filter)
-	if err != nil {
-		return fmt.Errorf("failed to count documents: %w", err)
-	}
-
-	// 只有在没有配置记录时才创建默认配置
-	if count == 0 {
-		defaultConfig := createDefaultConfig()
-		_, err = configCollection.InsertOne(ctx, defaultConfig)
-		if err != nil {
-			return fmt.Errorf("failed to insert default config: %w", err)
-		}
-		Logger.Info().Msg("Created default configuration")
-	} else {
-		Logger.Info().Int64("count", count).Msg("Found existing configuration documents in database, skip initialization")
-	}
-
-	return nil
-}
-
-// 创建默认配置
-func createDefaultConfig() model.Config {
-	now := time.Now()
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		Logger.Error().Err(err).Msg("无法获取用户主目录")
-	}
-
-	return model.Config{
-		Name: constant.GetString("APP_CONFIG_NAME", "AppConfig"),
-		Engine: model.EngineConfig{
-			Bind:            "127.0.0.1:2342",
-			UseBuiltinRules: true,
-			ASNDBPath:       filepath.Join(homeDir, "simple-waf", "geo-ip", "GeoLite2-ASN.mmdb"),
-			CityDBPath:      filepath.Join(homeDir, "simple-waf", "geo-ip", "GeoLite2-City.mmdb"),
-			AppConfig: []model.AppConfig{
-				{
-					Name: constant.GetString("Default_ENGINE_NAME", "coraza"),
-					Directives: `SecAction \
-    "id:20001,\
-    phase:1,\
-    nolog,\
-    pass,\
-    t:none,\
-    setvar:'tx.allowed_methods=GET HEAD POST OPTIONS PUT DELETE PATCH'"
-
-Include @coraza.conf-recommended
-Include @crs-setup.conf.example
-Include @owasp_crs/*.conf
-SecRuleEngine On
-
-SecRuleUpdateTargetById 933120 !ARGS:json.engine.appConfig.0.directives`,
-					// The transaction cache lifetime in milliseconds (60000ms = 60s)
-					TransactionTTL: 60000,
-					LogLevel:       "info",
-					LogFile:        "/dev/stdout",
-					LogFormat:      "console",
-				},
-			},
-		},
-		Haproxy: model.HaproxyConfig{
-			ConfigBaseDir: filepath.Join(homeDir, "simple-waf"),
-			HaproxyBin:    "haproxy",
-			BackupsNumber: 5,
-			SpoeAgentAddr: "127.0.0.1",
-			SpoeAgentPort: 2342,
-			Thread:        0,
-		},
-		CreatedAt:       now,
-		UpdatedAt:       now,
-		IsResponseCheck: false,
-		IsDebug:         !Global.IsProduction,
-	}
 }
 
 func GetAppConfig() (*model.Config, error) {
