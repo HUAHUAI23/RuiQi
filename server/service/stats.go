@@ -9,6 +9,7 @@ import (
 	mongodb "github.com/HUAHUAI23/simple-waf/pkg/database/mongo"
 	"github.com/HUAHUAI23/simple-waf/server/config"
 	"github.com/HUAHUAI23/simple-waf/server/dto"
+	"github.com/HUAHUAI23/simple-waf/server/model"
 	"github.com/HUAHUAI23/simple-waf/server/repository"
 	"github.com/rs/zerolog"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -327,7 +328,8 @@ func (s *StatsServiceImpl) GetTrafficTimeSeriesData(ctx context.Context, timeRan
 		return nil, fmt.Errorf("获取数据库连接失败: %w", err)
 	}
 
-	collection := db.Collection("haproxy_minute_stats")
+	var haproxyMinuteStats model.HAProxyMinuteStats
+	collection := db.Collection(haproxyMinuteStats.GetCollectionName())
 
 	// 构建时间过滤条件
 	matchStage := bson.D{{Key: "$match", Value: bson.D{
@@ -451,7 +453,8 @@ func (s *StatsServiceImpl) getMinuteStatsAggregate(ctx context.Context, db *mong
 	pipeline := mongo.Pipeline{matchStage, groupStage}
 
 	// 执行聚合查询
-	collection := db.Collection("haproxy_minute_stats")
+	var haproxyMinuteStats model.HAProxyMinuteStats
+	collection := db.Collection(haproxyMinuteStats.GetCollectionName())
 	cursor, err := collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, fmt.Errorf("执行统计聚合查询失败: %w", err)
@@ -533,7 +536,8 @@ func (s *StatsServiceImpl) getRequestTimeSeries(ctx context.Context, startTime t
 		return nil, fmt.Errorf("获取数据库连接失败: %w", err)
 	}
 
-	collection := db.Collection("haproxy_minute_stats")
+	var haproxyMinuteStats model.HAProxyMinuteStats
+	collection := db.Collection(haproxyMinuteStats.GetCollectionName())
 
 	// 构建时间过滤条件
 	matchStage := bson.D{{Key: "$match", Value: bson.D{
