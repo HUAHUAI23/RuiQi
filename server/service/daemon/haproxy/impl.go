@@ -585,16 +585,49 @@ defaults http
     mode http
     log global
     option httplog
-    timeout client 1m
-    timeout server 1m
-    timeout connect 10s
+    
+    # 配置服务器连接关闭模式
+    option http-server-close    # 服务器端关闭连接，优化连接复用
+    
+    # 基本超时设置
+    timeout connect 5s          # 连接超时时间
+    timeout client 30s          # 客户端超时时间
+    timeout server 30s          # 服务器超时时间
+    timeout tunnel 1h           # WebSocket隧道超时时间 - 关键设置
+    
+    # HTTP相关超时
+    timeout http-request 10s    # HTTP请求处理超时
+    timeout http-keep-alive 10s # HTTP保持连接超时
+    
+    # 其他优化选项
+    option forwardfor           # 传递客户端真实IP
+    option dontlognull          # 不记录空连接
+    option redispatch           # 服务器故障时重新分发
+    retries 3                   # 连接失败重试次数
+    
+    # 负载均衡设置 - 为WebSocket优化
+    balance leastconn           # 最少连接数算法，适合WebSocket长连接
 defaults tcp
     mode tcp
     log global
     option tcplog
-    timeout client 1m
-    timeout server 1m
-    timeout connect 10s
+    
+    # 基本超时设置
+    timeout connect 5s          # 连接超时
+    timeout client 3h           # 客户端超时时间延长，适合长连接
+    timeout server 3h           # 服务器超时时间延长
+    
+    # TCP保活设置
+    option tcpka                # 启用TCP保活功能
+    option clitcpka             # 客户端侧保活功能
+    option srvtcpka             # 服务器侧保活功能
+    
+    # 其他设置
+    option dontlognull          # 不记录空连接
+    retries 3                   # 连接失败重试次数
+    
+    # 负载均衡设置
+    balance leastconn           # 针对长连接的最优算法
 frontend stats from http
   mode http
   bind *:8404
