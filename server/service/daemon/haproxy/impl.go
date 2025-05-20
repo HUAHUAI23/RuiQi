@@ -63,6 +63,7 @@ type HAProxyServiceImpl struct {
 	isResponseCheck bool                        // 是否启用响应处理
 	status          atomic.Int32                // 使用原子操作的状态
 	isDebug         bool                        // 是否为生产环境
+	isK8s           bool                        // 是否为K8s环境
 	thread          int                         // 线程数
 
 	logger zerolog.Logger
@@ -219,12 +220,52 @@ func (s *HAProxyServiceImpl) AddSiteConfig(site model.Site) error {
 				// 添加forwarded选项
 				Forwardfor: &models.Forwardfor{
 					Enabled: StringP("enabled"),
+					Ifnone:  true,
 				},
 			},
 		}
 		err = s.confClient.CreateBackend(backend_http, transaction.ID, 0)
 		if err != nil {
 			return fmt.Errorf("创建后端失败: %v", err)
+		}
+
+		if s.isK8s {
+			/*
+				Host Header Rewriting "Origin Host Forwarding"（原始主机转发）
+					确保后端服务器接收到正确的原始主机名
+					实现基于主机名的虚拟主机服务
+					解决多层代理环境中的路由问题
+					满足特定后端服务对 Host 头的要求
+					实现透明代理
+			*/
+			site_backend_request_rule := []struct {
+				index int64
+				rule  *models.HTTPRequestRule
+			}{
+				{
+					index: 0,
+					rule: &models.HTTPRequestRule{
+						Type:      "set-header",
+						HdrName:   "X-Original-Host",
+						HdrFormat: "%[req.hdr(host)]",
+					},
+				},
+				{
+					index: 1,
+					rule: &models.HTTPRequestRule{
+						Type:      "set-header",
+						HdrName:   "Host",
+						HdrFormat: site.Backend.Servers[0].Host, // 使用引号包装主机名
+					},
+				},
+			}
+
+			for _, item := range site_backend_request_rule {
+				err = s.confClient.CreateHTTPRequestRule(item.index, "backend", backend_http.Name, item.rule, transaction.ID, 0)
+				if err != nil {
+					return fmt.Errorf("站点 %s 后端 %s 添加HTTP请求规则 #%d 错误: %v", site.Domain, backend_http.Name, item.index, err)
+				}
+			}
 		}
 
 		_, switchingRules, err := s.confClient.GetBackendSwitchingRules(fmt.Sprintf("fe_%d_http", site.ListenPort), "")
@@ -812,6 +853,7 @@ func (s *HAProxyServiceImpl) Reset() error {
 	s.thread = appConfig.Haproxy.Thread
 	s.isResponseCheck = appConfig.IsResponseCheck
 	s.isDebug = appConfig.IsDebug
+	s.isK8s = appConfig.IsK8s
 
 	if err := s.resetClients(); err != nil {
 		return fmt.Errorf("重置客户端失败: %v", err)
@@ -1293,6 +1335,7 @@ func (s *HAProxyServiceImpl) createFeCombined(port int, isHttpsRedirect bool) er
 			LogFormat: "\"%ci:%cp\\ [%t]\\ %ft\\ %b/%s\\ %Th/%Ti/%TR/%Tq/%Tw/%Tc/%Tr/%Tt\\ %ST\\ %B\\ %CC\\ %CS\\ %tsc\\ %ac/%fc/%bc/%sc/%rc\\ %sq/%bq\\ %hr\\ %hs\\ %{+Q}r\\ %[var(txn.coraza.id)]\\ spoa-error:\\ %[var(txn.coraza.error)]\\ waf-hit:\\ %[var(txn.coraza.status)]\"",
 			Forwardfor: &models.Forwardfor{
 				Enabled: StringP("enabled"),
+				Ifnone:  true,
 			},
 		},
 	}
@@ -1467,6 +1510,7 @@ func (s *HAProxyServiceImpl) createFeCombined(port int, isHttpsRedirect bool) er
 			LogFormat: "\"%ci:%cp\\ [%t]\\ %ft\\ %b/%s\\ %Th/%Ti/%TR/%Tq/%Tw/%Tc/%Tr/%Tt\\ %ST\\ %B\\ %CC\\ %CS\\ %tsc\\ %ac/%fc/%bc/%sc/%rc\\ %sq/%bq\\ %hr\\ %hs\\ %{+Q}r\\ %[var(txn.coraza.id)]\\ spoa-error:\\ %[var(txn.coraza.error)]\\ waf-hit:\\ %[var(txn.coraza.status)]\"",
 			Forwardfor: &models.Forwardfor{
 				Enabled: StringP("enabled"),
+				Ifnone:  true,
 			},
 		},
 	}
@@ -1590,6 +1634,7 @@ func (s *HAProxyServiceImpl) createFeCombined(port int, isHttpsRedirect bool) er
 			// 添加forwarded选项
 			Forwardfor: &models.Forwardfor{
 				Enabled: StringP("enabled"),
+				Ifnone:  true,
 			},
 		},
 	}
@@ -1629,6 +1674,7 @@ func (s *HAProxyServiceImpl) createBackendServer(name, address string, port int,
 	if isSsl {
 		server.ServerParams = models.ServerParams{
 			Ssl: "enabled",
+			Sni: fmt.Sprintf("str(%s)", address),
 			// SslCafile: "",
 			Verify: "none", // 不验证证书
 		}

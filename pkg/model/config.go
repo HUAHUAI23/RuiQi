@@ -12,6 +12,7 @@ type Config struct {
 	UpdatedAt       time.Time     `bson:"updatedAt" json:"updatedAt"`
 	IsResponseCheck bool          `bson:"isResponseCheck" json:"isResponseCheck"`
 	IsDebug         bool          `bson:"isDebug" json:"isDebug"`
+	IsK8s           bool          `bson:"isK8s" json:"isK8s"`
 }
 
 type EngineConfig struct {

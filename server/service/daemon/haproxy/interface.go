@@ -68,5 +68,6 @@ func NewHAProxyService(configBaseDir, haproxyBin string, ctx context.Context) (H
 		logger:             logger,
 		isDebug:            !config.Global.IsProduction,
 		thread:             appConfig.Haproxy.Thread,
+		isK8s:              config.Global.IsK8s,
 	}, nil
 }

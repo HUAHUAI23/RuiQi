@@ -23,6 +23,7 @@ var Global Config
 type Config struct {
 	Bind         string
 	IsProduction bool
+	IsK8s        bool
 	Log          LogConfig
 	DBConfig     DBConfig
 	JWT          JWTConfig
@@ -53,6 +54,7 @@ func InitConfig() error {
 	Global = Config{
 		Bind:         "0.0.0.0:2333",
 		IsProduction: false,
+		IsK8s:        false,
 		Log: LogConfig{
 			Level:  "info",
 			File:   "/dev/stdout",
@@ -75,6 +77,10 @@ func InitConfig() error {
 
 	if env := os.Getenv("IS_PRODUCTION"); env != "" {
 		Global.IsProduction = env == "true"
+	}
+
+	if env := os.Getenv("IS_K8S"); env != "" {
+		Global.IsK8s = env == "true"
 	}
 
 	// 日志配置

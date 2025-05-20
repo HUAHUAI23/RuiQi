@@ -107,6 +107,7 @@ SecRuleUpdateTargetById 933120 !ARGS:json.engine.appConfig.0.directives`,
 		UpdatedAt:       now,
 		IsResponseCheck: false,
 		IsDebug:         !Global.IsProduction,
+		IsK8s:           Global.IsK8s,
 	}
 }
 
