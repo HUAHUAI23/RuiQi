@@ -15,6 +15,9 @@
         "monitor": {
             "overview": "Monitor"
         },
+        "overview": {
+            "viewer": "Overview"
+        },
         "rules": {
             "system": "System rules",
             "user": "Custom rules",

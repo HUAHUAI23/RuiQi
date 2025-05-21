@@ -22,6 +22,7 @@ import SiteManagerPage from "@/pages/setting/pages/site/page"
 import IPGroupPage from "@/pages/rule/pages/ip-group/page"
 import MicroRulePage from "@/pages/rule/pages/micro-rule/page"
 import StatsPage from "@/pages/monitor/pages/stats/page"
+import ViewerPage from "@/pages/monitor/pages/viewer/page"
 import { LoadingFallback } from "@/components/common/loading-fallback"
 
 // 懒加载认证页面
@@ -60,7 +61,8 @@ export function createBreadcrumbConfig(t: TFunction): Record<RoutePath, Breadcru
         [ROUTES.MONITOR]: {
             defaultPath: "overview",
             items: [
-                { title: t('breadcrumb.monitor.overview'), path: "overview", component: <StatsPage /> }
+                { title: t('breadcrumb.monitor.overview'), path: "overview", component: <StatsPage /> },
+                { title: t('breadcrumb.overview.viewer'), path: "viewer", component: <ViewerPage /> },
             ]
         },
         [ROUTES.RULES]: {
