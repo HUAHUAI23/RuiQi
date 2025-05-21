@@ -15,6 +15,9 @@
         "monitor": {
             "overview": "监控"
         },
+        "overview": {
+            "viewer": "监控大屏"
+        },
         "rules": {
             "system": "系统规则",
             "user": "自定义规则",
