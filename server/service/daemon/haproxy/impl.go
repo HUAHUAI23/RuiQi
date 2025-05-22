@@ -636,7 +636,6 @@ frontend stats from http
   stats show-modules
 # The following part will be dynamically configured
 `
-	fmt.Println("s.thread", s.thread)
 	// 准备模板数据
 	data := struct {
 		Username string

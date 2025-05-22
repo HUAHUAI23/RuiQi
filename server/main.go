@@ -122,7 +122,13 @@ func main() {
 			scheme = "https://"
 		}
 
-		swaggerJsonUrl := scheme + c.Request.Host + "/swagger/doc.json"
+		// 优先使用 X-Forwarded-Host，如果没有则使用 Request.Host
+		host := c.GetHeader("X-Forwarded-Host")
+		if host == "" {
+			host = c.Request.Host
+		}
+
+		swaggerJsonUrl := scheme + host + "/swagger/doc.json"
 
 		content := fmt.Sprintf(`
 		<!DOCTYPE html>

@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/HUAHUAI23/simple-waf/pkg/model"
@@ -12,7 +13,7 @@ import (
 // LogStore 定义日志存储接口
 type LogStore interface {
 	Store(log model.WAFLog) error
-	Start(ctx context.Context)
+	Start()
 	Close()
 }
 
@@ -23,21 +24,46 @@ type MongoLogStore struct {
 	mongoCollection string
 	logChan         chan model.WAFLog
 	logger          zerolog.Logger
+	processMutex    sync.Mutex // 控制processLogs启动的互斥锁
+	processStarted  bool       // 标记是否已启动日志处理
 }
 
 const (
 	defaultChannelSize = 1000 // 默认通道缓冲大小
 )
 
-// NewMongoLogStore 创建新的MongoDB日志存储器
+// 添加单例实例和锁
+var (
+	mongoLogStoreInstance *MongoLogStore
+	mongoLogStoreMutex    sync.Mutex
+)
+
+// NewMongoLogStore 创建新的MongoDB日志存储器（单例模式）
 func NewMongoLogStore(client *mongo.Client, database, collection string, logger zerolog.Logger) *MongoLogStore {
-	return &MongoLogStore{
+	mongoLogStoreMutex.Lock()
+	defer mongoLogStoreMutex.Unlock()
+
+	// 如果实例已存在，直接返回
+	if mongoLogStoreInstance != nil {
+		logger.Info().Msg("复用现有的MongoLogStore实例")
+		return mongoLogStoreInstance
+	}
+
+	store := &MongoLogStore{
 		mongo:           client,
 		mongoDB:         database,
 		mongoCollection: collection,
 		logChan:         make(chan model.WAFLog, defaultChannelSize),
 		logger:          logger,
+		processMutex:    sync.Mutex{},
+		processStarted:  false,
 	}
+
+	// 保存单例实例
+	mongoLogStoreInstance = store
+	logger.Info().Msg("创建新的MongoLogStore实例")
+
+	return store
 }
 
 // Store 非阻塞地发送日志到存储通道
@@ -53,18 +79,46 @@ func (s *MongoLogStore) Store(log model.WAFLog) error {
 }
 
 // Start 启动日志存储处理循环
-func (s *MongoLogStore) Start(ctx context.Context) {
+func (s *MongoLogStore) Start() {
+	ctx := context.Background()
+	// 加锁确保线程安全
+	s.processMutex.Lock()
+	defer s.processMutex.Unlock()
+
+	// 检查是否已启动，避免重复启动
+	if s.processStarted {
+		s.logger.Debug().Msg("日志处理循环已启动，跳过")
+		return
+	}
+
+	s.logger.Info().Msg("启动日志处理循环")
+	s.processStarted = true
 	go s.processLogs(ctx)
 }
 
 // Close 关闭日志存储器
 func (s *MongoLogStore) Close() {
-	close(s.logChan)
+	s.processMutex.Lock()
+	defer s.processMutex.Unlock()
+
+	// 如果已经启动，则关闭通道并重置状态
+	if s.processStarted {
+		s.logger.Info().Msg("关闭日志处理循环")
+		close(s.logChan)
+		s.processStarted = false
+	}
 }
 
-// processLogs 处理日志存储循环
 // processLogs 处理日志存储循环，使用批处理提高效率
 func (s *MongoLogStore) processLogs(ctx context.Context) {
+	// 确保在处理结束时更新状态
+	defer func() {
+		s.processMutex.Lock()
+		s.processStarted = false
+		s.processMutex.Unlock()
+		s.logger.Info().Msg("日志处理循环已退出")
+	}()
+
 	collection := s.mongo.Database(s.mongoDB).Collection(s.mongoCollection)
 
 	const (

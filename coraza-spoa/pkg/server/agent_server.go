@@ -115,6 +115,11 @@ func (s *AgentServerImpl) Start() error {
 		IPGroupCollection: ipGroup.GetCollectionName(),
 	}
 
+	flowControllerConfig := internal.FlowControllerConfig{
+		Client:   mongoClient,
+		Database: "waf",
+	}
+
 	geoIPConfig := internal.GeoIP2Options{
 		ASNDBPath:  globalConfig.Engine.ASNDBPath,
 		CityDBPath: globalConfig.Engine.CityDBPath,
@@ -149,9 +154,10 @@ func (s *AgentServerImpl) Start() error {
 
 		// 创建应用
 		application, err := internalAppConfig.NewApplicationWithContext(ctx, internal.ApplicationOptions{
-			MongoConfig:        mongoConfig,
-			GeoIPConfig:        &geoIPConfig,
-			RuleEngineDbConfig: ruleEngineMongoConfig,
+			MongoConfig:          mongoConfig,
+			GeoIPConfig:          &geoIPConfig,
+			RuleEngineDbConfig:   ruleEngineMongoConfig,
+			FlowControllerConfig: &flowControllerConfig,
 		}, globalConfig.IsDebug)
 		if err != nil {
 			s.logger.Fatal().Err(err).Msg("Failed creating application: " + appConfig.Name)
@@ -280,6 +286,11 @@ func (s *AgentServerImpl) UpdateApplications() error {
 		IPGroupCollection: ipGroup.GetCollectionName(),
 	}
 
+	flowControllerConfig := internal.FlowControllerConfig{
+		Client:   mongoClient,
+		Database: "waf",
+	}
+
 	geoIPConfig := internal.GeoIP2Options{
 		ASNDBPath:  globalConfig.Engine.ASNDBPath,
 		CityDBPath: globalConfig.Engine.CityDBPath,
@@ -315,9 +326,10 @@ func (s *AgentServerImpl) UpdateApplications() error {
 
 		// 创建应用
 		application, err := internalAppConfig.NewApplicationWithContext(s.ctx, internal.ApplicationOptions{
-			MongoConfig:        mongoConfig,
-			GeoIPConfig:        &geoIPConfig,
-			RuleEngineDbConfig: ruleEngineMongoConfig,
+			MongoConfig:          mongoConfig,
+			GeoIPConfig:          &geoIPConfig,
+			RuleEngineDbConfig:   ruleEngineMongoConfig,
+			FlowControllerConfig: &flowControllerConfig,
 		}, globalConfig.IsDebug)
 
 		if err != nil {

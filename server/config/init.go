@@ -70,6 +70,7 @@ func createDefaultConfig() model.Config {
 			UseBuiltinRules: true,
 			ASNDBPath:       filepath.Join(homeDir, "simple-waf", "geo-ip", "GeoLite2-ASN.mmdb"),
 			CityDBPath:      filepath.Join(homeDir, "simple-waf", "geo-ip", "GeoLite2-City.mmdb"),
+			FlowController:  model.GetDefaultFlowControlConfig(),
 			AppConfig: []model.AppConfig{
 				{
 					Name: constant.GetString("Default_ENGINE_NAME", "coraza"),

@@ -535,7 +535,7 @@ func (a *StatsAggregator) CollectRealtimeMetrics(ctx context.Context) error {
 
 	// 如果没有目标，则跳过收集
 	if len(a.targetFilter) == 0 {
-		a.log.Debug().Msg("Skipping realtime metrics collection: no targets configured")
+		a.log.Info().Msg("Skipping realtime metrics collection: no targets configured")
 		return nil
 	}
 
@@ -670,7 +670,7 @@ func (a *StatsAggregator) CollectMinuteMetrics(ctx context.Context) error {
 
 	// 如果没有目标，则跳过收集
 	if len(a.targetFilter) == 0 {
-		a.log.Debug().Msg("Skipping minute metrics collection: no targets configured")
+		a.log.Info().Msg("Skipping minute metrics collection: no targets configured")
 		return nil
 	}
 

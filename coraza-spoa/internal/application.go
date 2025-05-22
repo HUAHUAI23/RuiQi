@@ -14,6 +14,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
 
+	flowcontroller "github.com/HUAHUAI23/simple-waf/coraza-spoa/internal/flow-controller"
 	"github.com/HUAHUAI23/simple-waf/pkg/model"
 	coreruleset "github.com/corazawaf/coraza-coreruleset"
 	"github.com/corazawaf/coraza/v3"
@@ -42,17 +43,26 @@ type AppConfig struct {
 
 // ApplicationOptions 应用程序配置选项 配置应用是否开启 ip 解析，日志记录
 type ApplicationOptions struct {
-	MongoConfig        *MongoConfig   // MongoDB配置，用于日志存储
-	GeoIPConfig        *GeoIP2Options // GeoIP配置，用于IP地理位置处理
-	RuleEngineDbConfig *MongoDBConfig // 规则引擎数据库配置
+	MongoConfig          *MongoConfig          // MongoDB配置，用于日志存储
+	GeoIPConfig          *GeoIP2Options        // GeoIP配置，用于IP地理位置处理
+	RuleEngineDbConfig   *MongoDBConfig        // 规则引擎数据库配置
+	FlowControllerConfig *FlowControllerConfig // 流量控制器配置
+}
+
+// FlowControllerConfig 流量控制器配置
+type FlowControllerConfig struct {
+	Client   *mongo.Client // MongoDB客户端
+	Database string        // 数据库名称
 }
 
 type Application struct {
-	waf         coraza.WAF
-	cache       cache.ExpiringCache
-	logStore    LogStore
-	ipProcessor IPProcessor
-	ruleEngine  *RuleEngine
+	waf            coraza.WAF
+	cache          cache.ExpiringCache
+	logStore       LogStore
+	ipProcessor    IPProcessor
+	ruleEngine     *RuleEngine
+	flowController *flowcontroller.FlowController
+	ipRecorder     flowcontroller.IPRecorder
 
 	AppConfig
 }
@@ -85,6 +95,7 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 		encoding.ReleaseKVEntry(k)
 	}()
 
+	// parse request
 	var req applicationRequest
 	for message.KV.Next(k) {
 		switch name := string(k.NameBytes()); name {
@@ -162,6 +173,43 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 		req.ID = sb.String()
 	}
 
+	realIP := getRealClientIP(&req)
+	// 检查IP是否已被限制
+	if a.ipRecorder != nil {
+		if blocked, record := a.ipRecorder.IsIPBlocked(realIP); blocked {
+			a.Logger.Info().
+				Str("ip", realIP).
+				Str("reason", record.Reason).
+				Time("blocked_until", record.BlockedUntil).
+				Msg("请求被拒绝：IP已被限制")
+
+			return ErrInterrupted{
+				Interruption: &types.Interruption{
+					Action: "deny",
+					Status: 403,
+					Data:   fmt.Sprintf("IP has been blocked until %s due to %s", record.BlockedUntil.Format(time.RFC3339), record.Reason),
+				},
+			}
+		}
+	}
+
+	// 进行高频访问检查
+	if a.flowController != nil {
+		allowed, err := a.flowController.CheckVisit(realIP)
+		if err != nil {
+			a.Logger.Error().Err(err).Str("ip", realIP).Msg("流控检查失败")
+		} else if !allowed {
+			return ErrInterrupted{
+				Interruption: &types.Interruption{
+					Action: "deny",
+					Status: 429,
+					Data:   "Too many requests",
+				},
+			}
+		}
+	}
+
+	// micro engine detection
 	if a.ruleEngine != nil {
 		realIP := getRealClientIP(&req)
 		// 获取路径部分
@@ -189,6 +237,11 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 		}
 
 		if shouldBlock && err == nil {
+			// 记录攻击
+			if a.flowController != nil {
+				_, _ = a.flowController.RecordAttack(realIP)
+			}
+
 			a.Logger.Info().
 				Str("ruleName", ruleName).
 				Str("ruleId", ruleId).
@@ -229,6 +282,11 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 
 		// 处理中断情况和日志记录
 		if tx.IsInterrupted() && a.logStore != nil {
+			// 记录攻击
+			if a.flowController != nil {
+				_, _ = a.flowController.RecordAttack(realIP)
+			}
+
 			interruption := tx.Interruption()
 			if matchedRules := tx.MatchedRules(); len(matchedRules) > 0 {
 				err := a.saveFirewallLog(matchedRules, interruption, &req, req.Headers)
@@ -244,6 +302,7 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 		}
 	}()
 
+	// 设置 response id 为事务 id，为 response 检测提供支持
 	if err := writer.SetString(encoding.VarScopeTransaction, "id", tx.ID()); err != nil {
 		return err
 	}
@@ -375,7 +434,7 @@ func (a *Application) HandleResponse(ctx context.Context, writer *encoding.Actio
 	if !ok {
 		a.Logger.Error().Str("id", res.ID).Msg("transaction not found")
 		return nil
-		// TODO: 是否需要报错，还是仅记录
+		// TODO: 是否需要报错，还是仅记录，检测器重启时这里会报错，因为 application 被替换，a.cache.Get 会拿不到 res.ID 对应的 transaction
 		// return fmt.Errorf("transaction not found: %s", res.ID)
 	}
 	a.cache.Remove(res.ID)
@@ -391,9 +450,24 @@ func (a *Application) HandleResponse(ctx context.Context, writer *encoding.Actio
 	*/
 	tx := t.tx
 
+	// 获取真实客户端IP
+	realIP := getRealClientIP(t.request)
+	if res.Status >= 400 {
+		// 检查错误响应并记录
+		// 记录错误
+		if a.flowController != nil {
+			_, _ = a.flowController.RecordError(realIP)
+		}
+	}
+
 	defer func() {
 		// 处理中断情况和日志记录
 		if tx.IsInterrupted() && a.logStore != nil {
+			// 记录攻击
+			if a.flowController != nil {
+				_, _ = a.flowController.RecordAttack(realIP)
+			}
+
 			interruption := tx.Interruption()
 			if matchedRules := tx.MatchedRules(); len(matchedRules) > 0 && t.request != nil {
 				err := a.saveFirewallLog(matchedRules, interruption, t.request, t.request.Headers)
@@ -653,7 +727,7 @@ func (a AppConfig) NewApplicationWithContext(ctx context.Context, options Applic
 			options.MongoConfig.Collection,
 			a.Logger,
 		)
-		logStore.Start(ctx)
+		logStore.Start()
 		app.logStore = logStore
 	}
 
@@ -682,6 +756,34 @@ func (a AppConfig) NewApplicationWithContext(ctx context.Context, options Applic
 	} else {
 		// 如果未提供GeoIP配置，使用空实现
 		app.ipProcessor = NewNullIPProcessor()
+	}
+
+	// 初始化流量控制器
+	if options.FlowControllerConfig != nil && options.FlowControllerConfig.Client != nil {
+		// 先创建IP记录器
+		ipRecorder := flowcontroller.NewMongoIPRecorder(
+			options.FlowControllerConfig.Client,
+			options.FlowControllerConfig.Database,
+			10000, // 默认容量
+			a.Logger,
+		)
+		app.ipRecorder = ipRecorder
+
+		// 创建流量控制器
+		flowController, err := flowcontroller.NewFlowControllerFromMongoConfig(
+			options.FlowControllerConfig.Client,
+			options.FlowControllerConfig.Database,
+			a.Logger,
+			ipRecorder,
+		)
+		if err != nil {
+			a.Logger.Warn().Err(err).Msg("初始化流量控制器失败")
+		} else {
+			app.flowController = flowController
+			if err := app.flowController.Initialize(); err != nil {
+				a.Logger.Warn().Err(err).Msg("流量控制器初始化失败")
+			}
+		}
 	}
 
 	debugLogger := debuglog.Default().
@@ -807,6 +909,67 @@ func getHeaderValue(headers []byte, targetHeader string) (string, error) {
 	}
 	return "", nil
 }
+
+// func getHeaderValue(headers []byte, targetHeader string) string {
+// 	// 预先转换目标头部为小写字节切片，避免在循环中重复转换
+// 	targetHeaderLower := []byte(strings.ToLower(targetHeader))
+
+// 	start := 0
+// 	for start < len(headers) {
+// 		// 查找行尾
+// 		lineEnd := bytes.IndexByte(headers[start:], '\n')
+// 		if lineEnd == -1 {
+// 			lineEnd = len(headers) - start
+// 		} else {
+// 			lineEnd += start
+// 		}
+
+// 		// 获取当前行
+// 		line := headers[start:lineEnd]
+// 		// 去除行尾可能的\r
+// 		if len(line) > 0 && line[len(line)-1] == '\r' {
+// 			line = line[:len(line)-1]
+// 		}
+
+// 		// 跳过空行
+// 		if len(line) == 0 {
+// 			start = lineEnd + 1
+// 			continue
+// 		}
+
+// 		// 查找冒号
+// 		colonIdx := bytes.IndexByte(line, ':')
+// 		if colonIdx > 0 {
+// 			// 提取key和value
+// 			key := bytes.TrimSpace(line[:colonIdx])
+// 			value := bytes.TrimSpace(line[colonIdx+1:])
+
+// 			// 不区分大小写比较
+// 			if len(key) == len(targetHeaderLower) {
+// 				isEqual := true
+// 				for i := 0; i < len(key); i++ {
+// 					// 更快的不区分大小写比较
+// 					a, b := key[i], targetHeaderLower[i]
+// 					if a >= 'A' && a <= 'Z' {
+// 						a += 32 // 转小写
+// 					}
+// 					if a != b {
+// 						isEqual = false
+// 						break
+// 					}
+// 				}
+// 				if isEqual {
+// 					return string(value)
+// 				}
+// 			}
+// 		}
+
+// 		// 移动到下一行
+// 		start = lineEnd + 1
+// 	}
+
+// 	return ""
+// }
 
 func getHostFromRequest(req *applicationRequest) string {
 	if host, err := getHeaderValue(req.Headers, "host"); err == nil && host != "" {
