@@ -5,7 +5,7 @@ import (
 )
 
 // Config WAF系统配置
-// @Description WAF系统全局配置信息
+//	@Description	WAF系统全局配置信息
 type Config struct {
 	Name            string        `bson:"name" json:"name" example:"AppConfig" description:"配置名称"`
 	Engine          EngineConfig  `bson:"engine" json:"engine" description:"引擎配置"`
@@ -18,7 +18,7 @@ type Config struct {
 }
 
 // EngineConfig 引擎配置
-// @Description WAF引擎配置信息
+//	@Description	WAF引擎配置信息
 type EngineConfig struct {
 	Bind            string            `bson:"bind" json:"bind" example:"0.0.0.0:9000" description:"绑定地址"`
 	UseBuiltinRules bool              `bson:"useBuiltinRules" json:"useBuiltinRules" description:"是否使用内置规则"`
@@ -29,7 +29,7 @@ type EngineConfig struct {
 }
 
 // AppConfig 应用配置
-// @Description WAF应用配置
+//	@Description	WAF应用配置
 type AppConfig struct {
 	Name           string        `bson:"name" json:"name" example:"default" description:"应用名称"`
 	Directives     string        `bson:"directives" json:"directives" description:"Coraza指令"`
@@ -40,7 +40,7 @@ type AppConfig struct {
 }
 
 // HaproxyConfig HAProxy配置
-// @Description HAProxy相关配置
+//	@Description	HAProxy相关配置
 type HaproxyConfig struct {
 	ConfigBaseDir string `bson:"configBaseDir" json:"configBaseDir" example:"/etc/haproxy" description:"配置基础目录"`
 	HaproxyBin    string `bson:"haproxyBin" json:"haproxyBin" example:"/usr/sbin/haproxy" description:"HAProxy可执行文件路径"`
@@ -51,7 +51,7 @@ type HaproxyConfig struct {
 }
 
 // FlowControlConfig 定义流控配置，用于存储在数据库中
-// @Description WAF流量控制配置
+//	@Description	WAF流量控制配置
 type FlowControlConfig struct {
 	// 高频访问限制配置
 	VisitLimit struct {
@@ -85,9 +85,9 @@ type FlowControlConfig struct {
 }
 
 // GetDefaultFlowControlConfig 返回默认的流控配置
-// @Summary 获取默认流控配置
-// @Description 获取系统预设的默认流量控制配置
-// @Return FlowControlConfig 默认流控配置
+//	@Summary		获取默认流控配置
+//	@Description	获取系统预设的默认流量控制配置
+//	@Return			FlowControlConfig 默认流控配置
 func GetDefaultFlowControlConfig() FlowControlConfig {
 	return FlowControlConfig{
 		VisitLimit: struct {
@@ -139,9 +139,9 @@ func GetDefaultFlowControlConfig() FlowControlConfig {
 }
 
 // GetCollectionName 获取集合名称
-// @Summary 获取MongoDB集合名称
-// @Description 获取配置在MongoDB中的集合名称
-// @Return string 集合名称
+//	@Summary		获取MongoDB集合名称
+//	@Description	获取配置在MongoDB中的集合名称
+//	@Return			string 集合名称
 func (c *Config) GetCollectionName() string {
 	return "config"
 }
