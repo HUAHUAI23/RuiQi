@@ -3,7 +3,9 @@ package flowcontroller
 import (
 	"container/heap"
 	"context"
+	"hash/fnv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/HUAHUAI23/simple-waf/pkg/model"
@@ -12,26 +14,64 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
+// RecorderConfig 记录器配置
+type RecorderConfig struct {
+	Capacity        int
+	CleanupInterval time.Duration
+	BatchSize       int
+	WriteTimeout    time.Duration
+	MaxRetries      int
+	ShardCount      int // 分片数量，必须是2的幂
+	MetricsEnabled  bool
+	WriteQueueSize  int
+}
+
+// DefaultConfig 默认配置
+func DefaultConfig() RecorderConfig {
+	return RecorderConfig{
+		Capacity:        10000,
+		CleanupInterval: time.Minute,
+		BatchSize:       100,
+		WriteTimeout:    10 * time.Second,
+		MaxRetries:      3,
+		ShardCount:      16, // 默认16个分片
+		MetricsEnabled:  true,
+		WriteQueueSize:  10000,
+	}
+}
+
+// Metrics 监控指标
+type Metrics struct {
+	TotalBlocked    atomic.Uint64
+	TotalExpired    atomic.Uint64
+	CurrentBlocked  atomic.Uint64
+	CleanupDuration atomic.Value // time.Duration
+	WriteQueueSize  atomic.Uint64
+	CacheHits       atomic.Uint64
+	CacheMisses     atomic.Uint64
+}
+
 // IPRecorder IP记录器接口
 type IPRecorder interface {
-	// RecordBlockedIP 记录被限制的IP
 	RecordBlockedIP(ip string, reason string, duration time.Duration) error
-
-	// IsIPBlocked 检查IP是否被限制
 	IsIPBlocked(ip string) (bool, *model.BlockedIPRecord)
-
-	// GetBlockedIPs 获取所有被限制的IP
 	GetBlockedIPs() ([]model.BlockedIPRecord, error)
-
-	// Close 关闭记录器并释放资源
 	Close() error
+	GetMetrics() *Metrics
 }
 
 // IPExpiryItem 用于过期优先队列的项目
 type IPExpiryItem struct {
-	ip        string    // IP地址
-	expiresAt time.Time // 过期时间
-	index     int       // 在堆中的索引
+	ip        string
+	expiresAt time.Time
+	index     int
+}
+
+// 对象池，减少GC压力
+var ipExpiryItemPool = sync.Pool{
+	New: func() interface{} {
+		return &IPExpiryItem{}
+	},
 }
 
 // IPExpiryHeap 过期IP的优先队列实现
@@ -40,7 +80,6 @@ type IPExpiryHeap []*IPExpiryItem
 func (h IPExpiryHeap) Len() int { return len(h) }
 
 func (h IPExpiryHeap) Less(i, j int) bool {
-	// 过期时间早的优先
 	return h[i].expiresAt.Before(h[j].expiresAt)
 }
 
@@ -61,8 +100,8 @@ func (h *IPExpiryHeap) Pop() interface{} {
 	old := *h
 	n := len(old)
 	item := old[n-1]
-	old[n-1] = nil  // 避免内存泄漏
-	item.index = -1 // 标记为已移除
+	old[n-1] = nil
+	item.index = -1
 	*h = old[0 : n-1]
 	return item
 }
@@ -74,187 +113,279 @@ func (h *IPExpiryHeap) Peek() *IPExpiryItem {
 	return (*h)[0]
 }
 
-// Update 更新堆中项目的过期时间
 func (h *IPExpiryHeap) Update(item *IPExpiryItem, expiresAt time.Time) {
 	item.expiresAt = expiresAt
 	heap.Fix(h, item.index)
 }
 
-// MemoryIPRecorder 基于内存的IP记录器实现
-type MemoryIPRecorder struct {
-	blockedIPs      map[string]model.BlockedIPRecord // IP记录映射
-	expiryItems     map[string]*IPExpiryItem         // IP到过期项的映射
-	expiryHeap      IPExpiryHeap                     // 过期优先队列
-	capacity        int                              // 最大容量
-	mu              sync.RWMutex                     // 读写锁
-	logger          zerolog.Logger                   // 日志记录器
-	cleanupInterval time.Duration                    // 清理间隔
-	stopCleaner     chan struct{}                    // 停止清理的信号
-
-	// 优化：预分配批量删除缓存
-	toDelete []string // 复用的删除缓存，减少内存分配
+// shard 分片结构
+type shard struct {
+	mu          sync.RWMutex
+	blockedIPs  map[string]model.BlockedIPRecord
+	expiryItems map[string]*IPExpiryItem
+	expiryHeap  IPExpiryHeap
+	toDelete    []string // 复用的删除缓存
 }
 
-// 添加内存记录器单例实例和锁
+// MemoryIPRecorder 基于内存的IP记录器实现（分片版本）
+type MemoryIPRecorder struct {
+	shards          []*shard
+	shardMask       uint32
+	capacity        int
+	config          RecorderConfig
+	logger          zerolog.Logger
+	cleanupInterval atomic.Value // time.Duration
+	stopCleaner     chan struct{}
+	Metrics         *Metrics // 公开以便 MongoIPRecorder 共享
+}
+
+// 单例实例
 var (
+	memoryIPRecorderOnce     sync.Once
 	memoryIPRecorderInstance *MemoryIPRecorder
-	memoryIPRecorderMutex    sync.Mutex
 )
 
-// NewMemoryIPRecorder 创建新的内存IP记录器（单例模式）
-// @Summary 创建内存IP记录器
-// @Description 创建一个基于内存的IP记录器，用于记录被限制的IP，采用单例模式
-// @Param capacity int - 记录器的最大容量，如果小于等于0则使用默认值10000
-// @Param logger zerolog.Logger - 日志记录器
-// @Return *MemoryIPRecorder - 创建的内存IP记录器
-func NewMemoryIPRecorder(capacity int, logger zerolog.Logger) *MemoryIPRecorder {
-	memoryIPRecorderMutex.Lock()
-	defer memoryIPRecorderMutex.Unlock()
-
-	// 如果实例已存在，直接返回
-	if memoryIPRecorderInstance != nil {
-		logger.Debug().Msg("复用现有的MemoryIPRecorder实例")
-		return memoryIPRecorderInstance
-	}
-
-	if capacity <= 0 {
-		capacity = 10000 // 默认容量
-	}
-
-	recorder := &MemoryIPRecorder{
-		blockedIPs:      make(map[string]model.BlockedIPRecord, capacity),
-		expiryItems:     make(map[string]*IPExpiryItem, capacity),
-		expiryHeap:      make(IPExpiryHeap, 0, capacity),
-		capacity:        capacity,
-		logger:          logger,
-		cleanupInterval: time.Minute, // 默认每分钟清理一次
-		stopCleaner:     make(chan struct{}),
-		toDelete:        make([]string, 0, 100), // 预分配批量删除缓存
-	}
-
-	// 初始化优先队列
-	heap.Init(&recorder.expiryHeap)
-
-	// 启动清理过期记录的goroutine
-	go recorder.cleanupLoop()
-
-	// 保存单例实例
-	memoryIPRecorderInstance = recorder
-	logger.Info().Msg("创建新的MemoryIPRecorder实例")
-
-	return recorder
+// fnv32 计算字符串的FNV-32哈希
+func fnv32(s string) uint32 {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	return h.Sum32()
 }
 
-// cleanupLoop 循环清理过期记录
-func (r *MemoryIPRecorder) cleanupLoop() {
-	ticker := time.NewTicker(r.cleanupInterval)
+// NewMemoryIPRecorder 创建新的内存IP记录器（单例模式）
+func NewMemoryIPRecorder(capacity int, logger zerolog.Logger) *MemoryIPRecorder {
+	config := DefaultConfig()
+	config.Capacity = capacity
+	return NewMemoryIPRecorderWithConfig(config, logger)
+}
+
+// NewMemoryIPRecorderWithConfig 使用配置创建内存IP记录器
+func NewMemoryIPRecorderWithConfig(config RecorderConfig, logger zerolog.Logger) *MemoryIPRecorder {
+	memoryIPRecorderOnce.Do(func() {
+		if config.Capacity <= 0 {
+			config.Capacity = 10000
+		}
+
+		// 确保分片数是2的幂
+		shardCount := config.ShardCount
+		if shardCount <= 0 || (shardCount&(shardCount-1)) != 0 {
+			shardCount = 16
+		}
+
+		recorder := &MemoryIPRecorder{
+			shards:      make([]*shard, shardCount),
+			shardMask:   uint32(shardCount - 1),
+			capacity:    config.Capacity,
+			config:      config,
+			logger:      logger,
+			stopCleaner: make(chan struct{}),
+			Metrics:     &Metrics{},
+		}
+
+		recorder.cleanupInterval.Store(config.CleanupInterval)
+
+		// 初始化每个分片
+		capacityPerShard := config.Capacity / shardCount
+		for i := 0; i < shardCount; i++ {
+			s := &shard{
+				blockedIPs:  make(map[string]model.BlockedIPRecord, capacityPerShard),
+				expiryItems: make(map[string]*IPExpiryItem, capacityPerShard),
+				expiryHeap:  make(IPExpiryHeap, 0, capacityPerShard),
+				toDelete:    make([]string, 0, 100),
+			}
+			heap.Init(&s.expiryHeap)
+			recorder.shards[i] = s
+		}
+
+		// 启动自适应清理
+		go recorder.adaptiveCleanupLoop()
+
+		memoryIPRecorderInstance = recorder
+		logger.Info().
+			Int("capacity", config.Capacity).
+			Int("shards", shardCount).
+			Msg("创建新的MemoryIPRecorder实例")
+	})
+
+	return memoryIPRecorderInstance
+}
+
+// getShard 获取IP对应的分片
+func (r *MemoryIPRecorder) getShard(ip string) *shard {
+	hash := fnv32(ip)
+	return r.shards[hash&r.shardMask]
+}
+
+// adaptiveCleanupInterval 自适应清理间隔
+func (r *MemoryIPRecorder) adaptiveCleanupInterval() time.Duration {
+	// 计算总使用率
+	var totalUsed int
+	for _, s := range r.shards {
+		s.mu.RLock()
+		totalUsed += len(s.blockedIPs)
+		s.mu.RUnlock()
+	}
+
+	usage := float64(totalUsed) / float64(r.capacity)
+
+	var interval time.Duration
+	switch {
+	case usage > 0.9:
+		interval = 10 * time.Second
+	case usage > 0.7:
+		interval = 30 * time.Second
+	case usage > 0.5:
+		interval = 45 * time.Second
+	default:
+		interval = r.config.CleanupInterval
+	}
+
+	r.cleanupInterval.Store(interval)
+	return interval
+}
+
+// adaptiveCleanupLoop 自适应清理循环
+func (r *MemoryIPRecorder) adaptiveCleanupLoop() {
+	ticker := time.NewTicker(r.config.CleanupInterval)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ticker.C:
+			start := time.Now()
 			r.cleanupExpired()
+			duration := time.Since(start)
+
+			if r.config.MetricsEnabled {
+				r.Metrics.CleanupDuration.Store(duration)
+			}
+
+			// 调整下次清理间隔
+			interval := r.adaptiveCleanupInterval()
+			ticker.Reset(interval)
+
 		case <-r.stopCleaner:
 			return
 		}
 	}
 }
 
-// cleanupExpired 清理过期的IP记录 - 优化版本
+// cleanupExpired 清理过期的IP记录
 func (r *MemoryIPRecorder) cleanupExpired() {
 	now := time.Now()
+	var totalRemoved int
 
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	// 并行清理各个分片
+	var wg sync.WaitGroup
+	removedChan := make(chan int, len(r.shards))
 
-	// 重置删除缓存，复用slice避免重复分配
-	r.toDelete = r.toDelete[:0]
-
-	// 从堆顶开始检查，收集所有已过期的记录
-	for r.expiryHeap.Len() > 0 {
-		item := r.expiryHeap.Peek()
-		if item.expiresAt.After(now) {
-			// 堆顶没过期，后面的也都没过期
-			break
-		}
-
-		// 收集要删除的IP
-		heap.Pop(&r.expiryHeap)
-		r.toDelete = append(r.toDelete, item.ip)
+	for _, s := range r.shards {
+		wg.Add(1)
+		go func(s *shard) {
+			defer wg.Done()
+			removed := r.cleanupShardExpired(s, now)
+			removedChan <- removed
+		}(s)
 	}
 
-	// 批量删除，减少map操作次数
-	removed := len(r.toDelete)
-	for _, ip := range r.toDelete {
-		delete(r.blockedIPs, ip)
-		delete(r.expiryItems, ip)
+	wg.Wait()
+	close(removedChan)
+
+	for removed := range removedChan {
+		totalRemoved += removed
 	}
 
-	if removed > 0 {
+	if totalRemoved > 0 {
+		r.Metrics.TotalExpired.Add(uint64(totalRemoved))
 		r.logger.Debug().
-			Int("removed", removed).
+			Int("removed", totalRemoved).
 			Msg("已清理过期IP记录")
 	}
 }
 
-// ensureCapacity 确保容量不超限 - 优化版本
-func (r *MemoryIPRecorder) ensureCapacity() {
-	// 如果没有达到容量限制，直接返回
-	if len(r.blockedIPs) < r.capacity {
+// cleanupShardExpired 清理单个分片的过期记录
+func (r *MemoryIPRecorder) cleanupShardExpired(s *shard, now time.Time) int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.toDelete = s.toDelete[:0]
+
+	// 从堆顶开始检查
+	for s.expiryHeap.Len() > 0 {
+		item := s.expiryHeap.Peek()
+		if item.expiresAt.After(now) {
+			break
+		}
+
+		heap.Pop(&s.expiryHeap)
+		s.toDelete = append(s.toDelete, item.ip)
+
+		// 返回对象到池
+		item.ip = ""
+		item.expiresAt = time.Time{}
+		item.index = -1
+		ipExpiryItemPool.Put(item)
+	}
+
+	// 批量删除
+	removed := len(s.toDelete)
+	for _, ip := range s.toDelete {
+		delete(s.blockedIPs, ip)
+		delete(s.expiryItems, ip)
+	}
+
+	return removed
+}
+
+// ensureShardCapacity 确保分片容量不超限
+func (r *MemoryIPRecorder) ensureShardCapacity(s *shard) {
+	capacityPerShard := r.capacity / len(r.shards)
+	if len(s.blockedIPs) < capacityPerShard {
 		return
 	}
 
-	// 先尝试清理已过期的记录
 	now := time.Now()
-	r.toDelete = r.toDelete[:0] // 复用slice
+	s.toDelete = s.toDelete[:0]
 
-	// 快速检查堆顶的一些过期记录
-	for r.expiryHeap.Len() > 0 && len(r.blockedIPs) >= r.capacity {
-		item := r.expiryHeap.Peek()
+	// 先清理过期的
+	for s.expiryHeap.Len() > 0 && len(s.blockedIPs) >= capacityPerShard {
+		item := s.expiryHeap.Peek()
 		if item.expiresAt.After(now) {
-			break // 没过期的停止
+			break
 		}
 
-		heap.Pop(&r.expiryHeap)
-		r.toDelete = append(r.toDelete, item.ip)
+		heap.Pop(&s.expiryHeap)
+		s.toDelete = append(s.toDelete, item.ip)
+		ipExpiryItemPool.Put(item)
 	}
 
 	// 批量删除过期记录
-	for _, ip := range r.toDelete {
-		delete(r.blockedIPs, ip)
-		delete(r.expiryItems, ip)
+	for _, ip := range s.toDelete {
+		delete(s.blockedIPs, ip)
+		delete(s.expiryItems, ip)
 	}
 
-	// 如果清理过期记录后还是容量不够，移除最早过期的记录
-	for len(r.blockedIPs) >= r.capacity && r.expiryHeap.Len() > 0 {
-		item := heap.Pop(&r.expiryHeap).(*IPExpiryItem)
-		delete(r.blockedIPs, item.ip)
-		delete(r.expiryItems, item.ip)
+	// 如果还是满的，删除最早过期的
+	for len(s.blockedIPs) >= capacityPerShard && s.expiryHeap.Len() > 0 {
+		item := heap.Pop(&s.expiryHeap).(*IPExpiryItem)
+		delete(s.blockedIPs, item.ip)
+		delete(s.expiryItems, item.ip)
 
 		r.logger.Debug().
 			Str("ip", item.ip).
 			Time("expires_at", item.expiresAt).
 			Msg("容量已满，移除最早过期IP记录")
+
+		ipExpiryItemPool.Put(item)
 	}
 }
 
-// removeExpiredRecord 立即删除过期记录的内部方法
-// 可以在 IsIPBlocked 调用时，添加删除该条过期记录
-func (r *MemoryIPRecorder) removeExpiredRecord(ip string) {
-	if item, exists := r.expiryItems[ip]; exists {
-		// 从堆中移除
-		if item.index >= 0 && item.index < r.expiryHeap.Len() {
-			heap.Remove(&r.expiryHeap, item.index)
-		}
-		delete(r.expiryItems, ip)
-	}
-	delete(r.blockedIPs, ip)
-}
-
-// RecordBlockedIP 记录被限制的IP - 优化版本
+// RecordBlockedIP 记录被限制的IP
 func (r *MemoryIPRecorder) RecordBlockedIP(ip string, reason string, duration time.Duration) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	s := r.getShard(ip)
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	now := time.Now()
 	expiresAt := now.Add(duration)
@@ -267,10 +398,9 @@ func (r *MemoryIPRecorder) RecordBlockedIP(ip string, reason string, duration ti
 	}
 
 	// 检查IP是否已存在
-	if item, exists := r.expiryItems[ip]; exists {
-		// 更新现有记录
-		r.blockedIPs[ip] = record
-		r.expiryHeap.Update(item, expiresAt)
+	if item, exists := s.expiryItems[ip]; exists {
+		s.blockedIPs[ip] = record
+		s.expiryHeap.Update(item, expiresAt)
 
 		r.logger.Info().
 			Str("ip", ip).
@@ -280,17 +410,21 @@ func (r *MemoryIPRecorder) RecordBlockedIP(ip string, reason string, duration ti
 		return nil
 	}
 
-	// 确保容量不超限
-	r.ensureCapacity()
+	// 确保容量
+	r.ensureShardCapacity(s)
 
 	// 添加新记录
-	r.blockedIPs[ip] = record
-	item := &IPExpiryItem{
-		ip:        ip,
-		expiresAt: expiresAt,
-	}
-	r.expiryItems[ip] = item
-	heap.Push(&r.expiryHeap, item)
+	s.blockedIPs[ip] = record
+
+	item := ipExpiryItemPool.Get().(*IPExpiryItem)
+	item.ip = ip
+	item.expiresAt = expiresAt
+
+	s.expiryItems[ip] = item
+	heap.Push(&s.expiryHeap, item)
+
+	r.Metrics.TotalBlocked.Add(1)
+	r.Metrics.CurrentBlocked.Add(1)
 
 	r.logger.Info().
 		Str("ip", ip).
@@ -301,45 +435,67 @@ func (r *MemoryIPRecorder) RecordBlockedIP(ip string, reason string, duration ti
 	return nil
 }
 
-// IsIPBlocked 检查IP是否被限制 - 无锁版本，接受并发风险
+// IsIPBlocked 检查IP是否被限制 - 无锁版本，容忍并发问题
 func (r *MemoryIPRecorder) IsIPBlocked(ip string) (bool, *model.BlockedIPRecord) {
-	// 使用defer recover防止panic
+	// 使用defer recover防止任何可能的panic
 	defer func() {
 		if r := recover(); r != nil {
 			// 发生panic时直接放行
 		}
 	}()
 
-	record, exists := r.blockedIPs[ip]
+	s := r.getShard(ip)
+
+	// 无锁访问，接受并发风险
+	record, exists := s.blockedIPs[ip]
 	if !exists {
+		r.Metrics.CacheMisses.Add(1)
 		return false, nil
 	}
 
-	// 安全检查时间，避免损坏的时间值
+	// 安全检查时间
 	now := time.Now()
 	if record.BlockedUntil.IsZero() || now.After(record.BlockedUntil) {
+		// 过期了，直接返回false，不删除（避免加锁）
+		r.Metrics.CacheMisses.Add(1)
 		return false, nil
 	}
 
+	r.Metrics.CacheHits.Add(1)
 	return true, &record
 }
 
-// GetBlockedIPs 获取所有被限制的IP - 优化版本
+// GetBlockedIPs 获取所有被限制的IP
 func (r *MemoryIPRecorder) GetBlockedIPs() ([]model.BlockedIPRecord, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
 	now := time.Now()
-	// 预分配合适的容量，避免slice扩容
-	records := make([]model.BlockedIPRecord, 0, len(r.blockedIPs))
+	records := make([]model.BlockedIPRecord, 0, r.capacity/10)
 
-	for _, record := range r.blockedIPs {
-		if now.Before(record.BlockedUntil) {
-			records = append(records, record)
+	// 收集所有分片的记录
+	for _, s := range r.shards {
+		s.mu.RLock()
+		for _, record := range s.blockedIPs {
+			if now.Before(record.BlockedUntil) {
+				records = append(records, record)
+			}
 		}
+		s.mu.RUnlock()
 	}
 
 	return records, nil
+}
+
+// GetMetrics 获取监控指标
+func (r *MemoryIPRecorder) GetMetrics() *Metrics {
+	// 更新当前阻塞数
+	var current uint64
+	for _, s := range r.shards {
+		s.mu.RLock()
+		current += uint64(len(s.blockedIPs))
+		s.mu.RUnlock()
+	}
+	r.Metrics.CurrentBlocked.Store(current)
+
+	return r.Metrics
 }
 
 // Close 关闭记录器并释放资源
@@ -348,106 +504,282 @@ func (r *MemoryIPRecorder) Close() error {
 	return nil
 }
 
-// MongoIPRecorder MongoDB实现的IP记录器 - 优化版本
-type MongoIPRecorder struct {
-	client     *mongo.Client
-	database   string
-	collection string
-	memory     *MemoryIPRecorder // 内存记录器
-	logger     zerolog.Logger
-
-	// 优化：批量写入通道
-	writeQueue chan model.BlockedIPRecord
-	stopWriter chan struct{}
+// RingBuffer 环形缓冲区
+type RingBuffer struct {
+	buffer []model.BlockedIPRecord
+	head   uint64
+	tail   uint64
+	size   uint64
+	mask   uint64
+	mu     sync.Mutex
 }
 
-// 添加单例实例和锁
+// NewRingBuffer 创建环形缓冲区
+func NewRingBuffer(size int) *RingBuffer {
+	// 确保size是2的幂
+	actualSize := 1
+	for actualSize < size {
+		actualSize <<= 1
+	}
+
+	return &RingBuffer{
+		buffer: make([]model.BlockedIPRecord, actualSize),
+		size:   uint64(actualSize),
+		mask:   uint64(actualSize - 1),
+	}
+}
+
+// Push 添加元素
+func (rb *RingBuffer) Push(record model.BlockedIPRecord) bool {
+	rb.mu.Lock()
+	defer rb.mu.Unlock()
+
+	next := (rb.tail + 1) & rb.mask
+	if next == rb.head {
+		return false // 缓冲区满
+	}
+
+	rb.buffer[rb.tail] = record
+	rb.tail = next
+	return true
+}
+
+// PopBatch 批量弹出元素
+func (rb *RingBuffer) PopBatch(maxBatch int) []model.BlockedIPRecord {
+	rb.mu.Lock()
+	defer rb.mu.Unlock()
+
+	if rb.head == rb.tail {
+		return nil
+	}
+
+	batch := make([]model.BlockedIPRecord, 0, maxBatch)
+	for i := 0; i < maxBatch && rb.head != rb.tail; i++ {
+		batch = append(batch, rb.buffer[rb.head])
+		rb.head = (rb.head + 1) & rb.mask
+	}
+
+	return batch
+}
+
+// Len 获取当前元素数量
+func (rb *RingBuffer) Len() int {
+	rb.mu.Lock()
+	defer rb.mu.Unlock()
+
+	if rb.tail >= rb.head {
+		return int(rb.tail - rb.head)
+	}
+	return int(rb.size - rb.head + rb.tail)
+}
+
+// CircuitBreaker 熔断器
+type CircuitBreaker struct {
+	failures      atomic.Uint32
+	successCount  atomic.Uint32
+	lastFailure   atomic.Value  // time.Time
+	state         atomic.Uint32 // 0: closed, 1: open, 2: half-open
+	threshold     uint32
+	timeout       time.Duration
+	recoveryCount uint32
+}
+
+// NewCircuitBreaker 创建熔断器
+func NewCircuitBreaker(threshold uint32, timeout time.Duration, recoveryCount uint32) *CircuitBreaker {
+	return &CircuitBreaker{
+		threshold:     threshold,
+		timeout:       timeout,
+		recoveryCount: recoveryCount,
+	}
+}
+
+// IsOpen 检查熔断器是否打开
+func (cb *CircuitBreaker) IsOpen() bool {
+	state := cb.state.Load()
+	if state == 0 { // closed
+		return false
+	}
+
+	if state == 1 { // open
+		lastFailure, ok := cb.lastFailure.Load().(time.Time)
+		if ok && time.Since(lastFailure) > cb.timeout {
+			// 尝试进入半开状态
+			cb.state.CompareAndSwap(1, 2)
+			cb.successCount.Store(0)
+			return false
+		}
+		return true
+	}
+
+	// half-open
+	return false
+}
+
+// RecordSuccess 记录成功
+func (cb *CircuitBreaker) RecordSuccess() {
+	state := cb.state.Load()
+	if state == 2 { // half-open
+		count := cb.successCount.Add(1)
+		if count >= cb.recoveryCount {
+			cb.state.Store(0) // closed
+			cb.failures.Store(0)
+		}
+	} else if state == 0 { // closed
+		cb.failures.Store(0)
+	}
+}
+
+// RecordFailure 记录失败
+func (cb *CircuitBreaker) RecordFailure() {
+	failures := cb.failures.Add(1)
+	cb.lastFailure.Store(time.Now())
+
+	if failures >= cb.threshold {
+		cb.state.Store(1) // open
+	}
+}
+
+// MongoIPRecorder MongoDB实现的IP记录器
+type MongoIPRecorder struct {
+	client         *mongo.Client
+	database       string
+	collection     string
+	memory         *MemoryIPRecorder
+	logger         zerolog.Logger
+	config         RecorderConfig
+	metrics        *Metrics
+	circuitBreaker *CircuitBreaker
+
+	// 使用环形缓冲区替代channel
+	writeBuffer     *RingBuffer
+	stopWriter      chan struct{}
+	avgWriteLatency atomic.Value // time.Duration
+}
+
+// 单例实例
 var (
+	mongoIPRecorderOnce     sync.Once
 	mongoIPRecorderInstance *MongoIPRecorder
-	mongoIPRecorderMutex    sync.Mutex
 )
 
-// NewMongoIPRecorder 创建新的MongoDB IP记录器 - 优化版本 (单例模式)
-// @Summary 创建MongoDB IP记录器
-// @Description 创建一个基于MongoDB的IP记录器，用于持久化存储被限制的IP，采用单例模式
-// @Param client *mongo.Client - MongoDB客户端
-// @Param database string - 数据库名称
-// @Param capacity int - 记录器的最大容量，如果小于等于0则使用默认值10000
-// @Param logger zerolog.Logger - 日志记录器
-// @Return *MongoIPRecorder - 创建的MongoDB IP记录器
+// NewMongoIPRecorder 创建新的MongoDB IP记录器
 func NewMongoIPRecorder(client *mongo.Client, database string, capacity int, logger zerolog.Logger) *MongoIPRecorder {
-	mongoIPRecorderMutex.Lock()
-	defer mongoIPRecorderMutex.Unlock()
-
-	// 如果实例已存在，直接返回
-	if mongoIPRecorderInstance != nil {
-		logger.Info().Msg("复用现有的MongoIPRecorder实例")
-		return mongoIPRecorderInstance
-	}
-
-	var blockedIPs model.BlockedIPRecord
-
-	recorder := &MongoIPRecorder{
-		client:     client,
-		database:   database,
-		collection: blockedIPs.GetCollectionName(),
-		memory:     NewMemoryIPRecorder(capacity, logger),
-		logger:     logger,
-		writeQueue: make(chan model.BlockedIPRecord, 1000), // 异步写入队列
-		stopWriter: make(chan struct{}),
-	}
-
-	// 启动批量写入goroutine
-	go recorder.batchWriteLoop()
-
-	// 保存单例实例
-	mongoIPRecorderInstance = recorder
-	logger.Info().Msg("创建新的MongoIPRecorder实例")
-
-	return recorder
+	config := DefaultConfig()
+	config.Capacity = capacity
+	return NewMongoIPRecorderWithConfig(client, database, config, logger)
 }
 
-// batchWriteLoop 批量写入到MongoDB
-func (r *MongoIPRecorder) batchWriteLoop() {
-	ticker := time.NewTicker(5 * time.Second) // 每5秒批量写入一次
-	defer ticker.Stop()
+// NewMongoIPRecorderWithConfig 使用配置创建MongoDB IP记录器
+func NewMongoIPRecorderWithConfig(client *mongo.Client, database string, config RecorderConfig, logger zerolog.Logger) *MongoIPRecorder {
+	mongoIPRecorderOnce.Do(func() {
+		var blockedIPs model.BlockedIPRecord
 
-	var batch []model.BlockedIPRecord
+		// 先创建内存记录器
+		memoryRecorder := NewMemoryIPRecorderWithConfig(config, logger)
+
+		recorder := &MongoIPRecorder{
+			client:         client,
+			database:       database,
+			collection:     blockedIPs.GetCollectionName(),
+			memory:         memoryRecorder,
+			logger:         logger,
+			config:         config,
+			metrics:        memoryRecorder.Metrics, // 共享metrics
+			circuitBreaker: NewCircuitBreaker(5, 30*time.Second, 3),
+			writeBuffer:    NewRingBuffer(config.WriteQueueSize),
+			stopWriter:     make(chan struct{}),
+		}
+
+		// 启动批量写入
+		go recorder.adaptiveBatchWriteLoop()
+
+		mongoIPRecorderInstance = recorder
+		logger.Info().Msg("创建新的MongoIPRecorder实例")
+	})
+
+	return mongoIPRecorderInstance
+}
+
+// adaptiveBatchSize 动态调整批量大小
+func (r *MongoIPRecorder) adaptiveBatchSize() int {
+	latency, ok := r.avgWriteLatency.Load().(time.Duration)
+	if !ok {
+		return r.config.BatchSize
+	}
+
+	switch {
+	case latency > 200*time.Millisecond:
+		return r.config.BatchSize / 2
+	case latency > 100*time.Millisecond:
+		return r.config.BatchSize * 3 / 4
+	case latency < 50*time.Millisecond:
+		return r.config.BatchSize * 2
+	default:
+		return r.config.BatchSize
+	}
+}
+
+// adaptiveBatchWriteLoop 自适应批量写入循环
+func (r *MongoIPRecorder) adaptiveBatchWriteLoop() {
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
 
 	for {
 		select {
-		case record := <-r.writeQueue:
-			batch = append(batch, record)
-			// 如果批次满了，立即写入
-			if len(batch) >= 100 {
-				r.flushBatch(batch)
-				batch = batch[:0] // 重置slice
-			}
-
 		case <-ticker.C:
-			// 定时写入
+			batchSize := r.adaptiveBatchSize()
+			batch := r.writeBuffer.PopBatch(batchSize)
 			if len(batch) > 0 {
-				r.flushBatch(batch)
-				batch = batch[:0]
+				r.metrics.WriteQueueSize.Store(uint64(r.writeBuffer.Len()))
+				go r.flushBatchWithRetry(batch)
 			}
 
 		case <-r.stopWriter:
 			// 关闭前写入剩余数据
+			batch := r.writeBuffer.PopBatch(r.config.BatchSize * 10)
 			if len(batch) > 0 {
-				r.flushBatch(batch)
+				r.flushBatchWithRetry(batch)
 			}
 			return
 		}
 	}
 }
 
-// flushBatch 批量写入到MongoDB
-func (r *MongoIPRecorder) flushBatch(batch []model.BlockedIPRecord) {
-	if len(batch) == 0 {
-		return
+// flushBatchWithRetry 带重试的批量写入
+func (r *MongoIPRecorder) flushBatchWithRetry(batch []model.BlockedIPRecord) {
+	for retry := 0; retry < r.config.MaxRetries; retry++ {
+		start := time.Now()
+		err := r.flushBatch(batch)
+		latency := time.Since(start)
+
+		// 更新平均延迟
+		r.avgWriteLatency.Store(latency)
+
+		if err == nil {
+			r.circuitBreaker.RecordSuccess()
+			return
+		}
+
+		r.circuitBreaker.RecordFailure()
+
+		if retry < r.config.MaxRetries-1 {
+			// 指数退避
+			time.Sleep(time.Duration(1<<retry) * time.Second)
+		}
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	r.logger.Error().
+		Int("batch_size", len(batch)).
+		Msg("批量写入MongoDB失败，已达最大重试次数")
+}
+
+// flushBatch 批量写入到MongoDB
+func (r *MongoIPRecorder) flushBatch(batch []model.BlockedIPRecord) error {
+	if len(batch) == 0 {
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), r.config.WriteTimeout)
 	defer cancel()
 
 	collection := r.client.Database(r.database).Collection(r.collection)
@@ -463,17 +795,20 @@ func (r *MongoIPRecorder) flushBatch(batch []model.BlockedIPRecord) {
 			SetUpsert(true)
 	}
 
-	opts := options.BulkWrite().SetOrdered(false) // 无序写入提高性能
+	opts := options.BulkWrite().SetOrdered(false)
 	_, err := collection.BulkWrite(ctx, models, opts)
 	if err != nil {
 		r.logger.Error().
 			Err(err).
 			Int("batch_size", len(batch)).
 			Msg("批量保存IP限制记录到MongoDB失败")
+		return err
 	}
+
+	return nil
 }
 
-// RecordBlockedIP 记录被限制的IP - 优化版本
+// RecordBlockedIP 记录被限制的IP
 func (r *MongoIPRecorder) RecordBlockedIP(ip string, reason string, duration time.Duration) error {
 	// 先记录到内存
 	err := r.memory.RecordBlockedIP(ip, reason, duration)
@@ -481,7 +816,15 @@ func (r *MongoIPRecorder) RecordBlockedIP(ip string, reason string, duration tim
 		return err
 	}
 
-	// 异步写入到队列
+	// 如果熔断器打开，直接返回
+	if r.circuitBreaker.IsOpen() {
+		r.logger.Warn().
+			Str("ip", ip).
+			Msg("MongoDB熔断器已打开，跳过持久化")
+		return nil
+	}
+
+	// 异步写入到环形缓冲区
 	now := time.Now()
 	record := model.BlockedIPRecord{
 		IP:           ip,
@@ -490,13 +833,10 @@ func (r *MongoIPRecorder) RecordBlockedIP(ip string, reason string, duration tim
 		BlockedUntil: now.Add(duration),
 	}
 
-	// 非阻塞写入，如果队列满了就丢弃（优先保证内存记录的性能）
-	select {
-	case r.writeQueue <- record:
-	default:
+	if !r.writeBuffer.Push(record) {
 		r.logger.Warn().
 			Str("ip", ip).
-			Msg("MongoDB写入队列已满，丢弃记录")
+			Msg("MongoDB写入缓冲区已满，丢弃记录")
 	}
 
 	return nil
@@ -504,19 +844,22 @@ func (r *MongoIPRecorder) RecordBlockedIP(ip string, reason string, duration tim
 
 // IsIPBlocked 检查IP是否被限制
 func (r *MongoIPRecorder) IsIPBlocked(ip string) (bool, *model.BlockedIPRecord) {
-	// 直接从内存查询
 	return r.memory.IsIPBlocked(ip)
 }
 
 // GetBlockedIPs 获取所有被限制的IP
 func (r *MongoIPRecorder) GetBlockedIPs() ([]model.BlockedIPRecord, error) {
-	// 从内存返回所有记录
 	return r.memory.GetBlockedIPs()
+}
+
+// GetMetrics 获取监控指标
+func (r *MongoIPRecorder) GetMetrics() *Metrics {
+	r.metrics.WriteQueueSize.Store(uint64(r.writeBuffer.Len()))
+	return r.metrics
 }
 
 // Close 关闭记录器并释放资源
 func (r *MongoIPRecorder) Close() error {
-	close(r.stopWriter) // 先停止写入
-	close(r.writeQueue) // 再关闭队列
+	close(r.stopWriter)
 	return r.memory.Close()
 }

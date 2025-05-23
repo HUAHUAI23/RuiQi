@@ -888,88 +888,74 @@ func (e ErrInterrupted) Is(target error) bool {
 		e.Interruption.Data == t.Interruption.Data
 }
 
-// 添加新的辅助函数
+// 优化的getHeaderValue函数 - 高性能版本
 func getHeaderValue(headers []byte, targetHeader string) (string, error) {
-	s := bufio.NewScanner(bytes.NewReader(headers))
-	for s.Scan() {
-		line := bytes.TrimSpace(s.Bytes())
+	if len(headers) == 0 || targetHeader == "" {
+		return "", nil
+	}
+
+	// 预先转换目标头部为小写，避免在循环中重复转换
+	targetHeaderLower := strings.ToLower(targetHeader)
+	targetLen := len(targetHeaderLower)
+
+	start := 0
+	for start < len(headers) {
+		// 查找行尾
+		lineEnd := start
+		for lineEnd < len(headers) && headers[lineEnd] != '\n' {
+			lineEnd++
+		}
+
+		// 获取当前行并去除可能的\r
+		line := headers[start:lineEnd]
+		if len(line) > 0 && line[len(line)-1] == '\r' {
+			line = line[:len(line)-1]
+		}
+
+		// 跳过空行
 		if len(line) == 0 {
+			start = lineEnd + 1
 			continue
 		}
 
-		kv := bytes.SplitN(line, []byte(":"), 2)
-		if len(kv) != 2 {
+		// 查找冒号
+		colonIdx := bytes.IndexByte(line, ':')
+		if colonIdx <= 0 {
+			start = lineEnd + 1
 			continue
 		}
 
-		key, value := bytes.TrimSpace(kv[0]), bytes.TrimSpace(kv[1])
-		if strings.EqualFold(string(key), targetHeader) {
+		// 提取key，并检查长度
+		key := bytes.TrimSpace(line[:colonIdx])
+		if len(key) != targetLen {
+			start = lineEnd + 1
+			continue
+		}
+
+		// 快速不区分大小写比较（仅限ASCII）
+		isMatch := true
+		for i := 0; i < targetLen; i++ {
+			a := key[i]
+			if a >= 'A' && a <= 'Z' {
+				a += 32 // 转小写
+			}
+			if a != targetHeaderLower[i] {
+				isMatch = false
+				break
+			}
+		}
+
+		if isMatch {
+			value := bytes.TrimSpace(line[colonIdx+1:])
 			return string(value), nil
 		}
+
+		// 移动到下一行
+		start = lineEnd + 1
 	}
+
 	return "", nil
 }
-
-// func getHeaderValue(headers []byte, targetHeader string) string {
-// 	// 预先转换目标头部为小写字节切片，避免在循环中重复转换
-// 	targetHeaderLower := []byte(strings.ToLower(targetHeader))
-
-// 	start := 0
-// 	for start < len(headers) {
-// 		// 查找行尾
-// 		lineEnd := bytes.IndexByte(headers[start:], '\n')
-// 		if lineEnd == -1 {
-// 			lineEnd = len(headers) - start
-// 		} else {
-// 			lineEnd += start
-// 		}
-
-// 		// 获取当前行
-// 		line := headers[start:lineEnd]
-// 		// 去除行尾可能的\r
-// 		if len(line) > 0 && line[len(line)-1] == '\r' {
-// 			line = line[:len(line)-1]
-// 		}
-
-// 		// 跳过空行
-// 		if len(line) == 0 {
-// 			start = lineEnd + 1
-// 			continue
-// 		}
-
-// 		// 查找冒号
-// 		colonIdx := bytes.IndexByte(line, ':')
-// 		if colonIdx > 0 {
-// 			// 提取key和value
-// 			key := bytes.TrimSpace(line[:colonIdx])
-// 			value := bytes.TrimSpace(line[colonIdx+1:])
-
-// 			// 不区分大小写比较
-// 			if len(key) == len(targetHeaderLower) {
-// 				isEqual := true
-// 				for i := 0; i < len(key); i++ {
-// 					// 更快的不区分大小写比较
-// 					a, b := key[i], targetHeaderLower[i]
-// 					if a >= 'A' && a <= 'Z' {
-// 						a += 32 // 转小写
-// 					}
-// 					if a != b {
-// 						isEqual = false
-// 						break
-// 					}
-// 				}
-// 				if isEqual {
-// 					return string(value)
-// 				}
-// 			}
-// 		}
-
-// 		// 移动到下一行
-// 		start = lineEnd + 1
-// 	}
-
-// 	return ""
-// }
 
 func getHostFromRequest(req *applicationRequest) string {
 	if host, err := getHeaderValue(req.Headers, "host"); err == nil && host != "" {
@@ -987,69 +973,188 @@ func getHostFromRequest(req *applicationRequest) string {
 	return dstIpStr
 }
 
-// getRealClientIP 从多种HTTP头部获取客户端真实IP
+// getRealClientIP 从多种HTTP头部获取客户端真实IP (优化版本)
 func getRealClientIP(req *applicationRequest) string {
 	if req == nil {
 		return ""
 	}
 
-	// 按优先级尝试不同的头部
-	headers := []string{
-		"x-forwarded-for",  // 最常用，链式格式
+	headers := req.Headers
+	if len(headers) == 0 {
+		// 如果没有header，直接返回源IP
+		if req.SrcIp.IsValid() {
+			return req.SrcIp.String()
+		}
+		return ""
+	}
+
+	// 快速路径：优先查找最常见的 X-Forwarded-For header
+	if ip := getXForwardedForIP(headers); ip != "" {
+		return ip
+	}
+
+	// 按优先级尝试其他头部
+	priorityHeaders := []string{
 		"x-real-ip",        // Nginx常用
 		"true-client-ip",   // Akamai
 		"cf-connecting-ip", // Cloudflare
 		"fastly-client-ip", // Fastly
 		"x-client-ip",      // 通用
-		"x-original-forwarded-for",
-		"forwarded", // 标准头部
-		"x-cluster-client-ip",
 	}
 
-	// 尝试从各个头部获取IP
-	for _, header := range headers {
-		if value, err := getHeaderValue(req.Headers, header); err == nil && value != "" {
-			// 对于X-Forwarded-For和类似的链式格式，提取第一个IP
-			if header == "x-forwarded-for" || header == "x-original-forwarded-for" {
-				ips := strings.Split(value, ",")
-				if len(ips) > 0 {
-					ip := strings.TrimSpace(ips[0])
-					if ip != "" {
-						return ip
-					}
-				}
-			} else if header == "forwarded" { // 对于Forwarded头部，需要特殊处理
-				// 解析Forwarded头部，格式如：for=client;proto=https;by=proxy
-				parts := strings.Split(value, ";")
-				for _, part := range parts {
-					kv := strings.SplitN(part, "=", 2)
-					if len(kv) == 2 && strings.TrimSpace(kv[0]) == "for" {
-						// 去除可能的引号和IPv6方括号
-						ip := strings.TrimSpace(kv[1])
-						ip = strings.Trim(ip, "\"")
-
-						// 处理IPv6地址特殊格式
-						if strings.HasPrefix(ip, "[") && strings.HasSuffix(ip, "]") {
-							ip = ip[1 : len(ip)-1]
-						}
-
-						if ip != "" {
-							return ip
-						}
-					}
-				}
-			} else { // 其他头部直接返回值
-				ip := strings.TrimSpace(value)
-				if ip != "" {
-					return ip
-				}
+	// 批量查找简单headers（直接返回值的）
+	for _, header := range priorityHeaders {
+		if value, err := getHeaderValue(headers, header); err == nil && value != "" {
+			if ip := strings.TrimSpace(value); ip != "" {
+				return ip
 			}
+		}
+	}
+
+	// 查找复杂headers
+	if value, err := getHeaderValue(headers, "x-original-forwarded-for"); err == nil && value != "" {
+		if ips := strings.Split(value, ","); len(ips) > 0 {
+			if ip := strings.TrimSpace(ips[0]); ip != "" {
+				return ip
+			}
+		}
+	}
+
+	// Forwarded header需要特殊解析
+	if value, err := getHeaderValue(headers, "forwarded"); err == nil && value != "" {
+		if ip := parseForwardedHeaderFast(value); ip != "" {
+			return ip
+		}
+	}
+
+	// X-Cluster-Client-IP（最后检查）
+	if value, err := getHeaderValue(headers, "x-cluster-client-ip"); err == nil && value != "" {
+		if ip := strings.TrimSpace(value); ip != "" {
+			return ip
 		}
 	}
 
 	// 如果所有头部都没有，返回源IP
 	if req.SrcIp.IsValid() {
 		return req.SrcIp.String()
+	}
+
+	return ""
+}
+
+// getXForwardedForIP 快速解析X-Forwarded-For header
+func getXForwardedForIP(headers []byte) string {
+	// 快速查找 "x-forwarded-for:" 或 "X-Forwarded-For:"
+	target := []byte("x-forwarded-for:")
+	targetUpper := []byte("X-Forwarded-For:")
+
+	start := 0
+	for start < len(headers) {
+		// 查找行尾
+		lineEnd := start
+		for lineEnd < len(headers) && headers[lineEnd] != '\n' {
+			lineEnd++
+		}
+
+		line := headers[start:lineEnd]
+		if len(line) > 0 && line[len(line)-1] == '\r' {
+			line = line[:len(line)-1]
+		}
+
+		// 检查是否匹配 X-Forwarded-For
+		if len(line) > 16 { // "x-forwarded-for:" 最小长度是16
+			// 快速检查前缀
+			if (bytes.HasPrefix(line, target) || bytes.HasPrefix(line, targetUpper)) ||
+				(len(line) > 15 && isXForwardedForHeader(line)) {
+
+				// 找到冒号后的值
+				colonIdx := bytes.IndexByte(line, ':')
+				if colonIdx > 0 && colonIdx < len(line)-1 {
+					value := bytes.TrimSpace(line[colonIdx+1:])
+					if len(value) > 0 {
+						// 提取第一个IP（逗号分隔）
+						valueStr := string(value)
+						if commaIdx := strings.Index(valueStr, ","); commaIdx > 0 {
+							ip := strings.TrimSpace(valueStr[:commaIdx])
+							if ip != "" {
+								return ip
+							}
+						} else {
+							ip := strings.TrimSpace(valueStr)
+							if ip != "" {
+								return ip
+							}
+						}
+					}
+				}
+			}
+		}
+
+		start = lineEnd + 1
+	}
+	return ""
+}
+
+// isXForwardedForHeader 检查是否是X-Forwarded-For header（不区分大小写）
+func isXForwardedForHeader(line []byte) bool {
+	if len(line) < 16 { // "x-forwarded-for:" 长度是16
+		return false
+	}
+
+	target := "x-forwarded-for:"
+	for i := 0; i < 16; i++ {
+		c := line[i]
+		if c >= 'A' && c <= 'Z' {
+			c += 32 // 转小写
+		}
+		if c != target[i] {
+			return false
+		}
+	}
+	return true
+}
+
+// parseForwardedHeaderFast 快速解析Forwarded header
+func parseForwardedHeaderFast(forwarded string) string {
+	// 快速查找 "for=" 模式
+	forPrefix := "for="
+	start := 0
+
+	for {
+		idx := strings.Index(forwarded[start:], forPrefix)
+		if idx == -1 {
+			break
+		}
+
+		start += idx + 4 // len("for=")
+		if start >= len(forwarded) {
+			break
+		}
+
+		// 查找值的结束位置（分号或字符串结尾）
+		end := start
+		for end < len(forwarded) && forwarded[end] != ';' {
+			end++
+		}
+
+		if end > start {
+			ip := strings.TrimSpace(forwarded[start:end])
+			// 去除引号
+			ip = strings.Trim(ip, "\"")
+
+			// 处理IPv6地址格式 [ip]:port 或 [ip]
+			if strings.HasPrefix(ip, "[") {
+				if closeBracket := strings.Index(ip, "]"); closeBracket > 1 {
+					ip = ip[1:closeBracket]
+				}
+			}
+
+			if ip != "" {
+				return ip
+			}
+		}
+
+		start = end
 	}
 
 	return ""
