@@ -10,7 +10,6 @@ import (
 	"github.com/alibaba/sentinel-golang/core/base"
 	"github.com/alibaba/sentinel-golang/core/config"
 	"github.com/alibaba/sentinel-golang/core/hotspot"
-	"github.com/alibaba/sentinel-golang/logging"
 	"github.com/rs/zerolog"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -200,13 +199,36 @@ func (fc *FlowController) Initialize() error {
 		return nil
 	}
 
-	// 初始化Sentinel
+	// 创建 Sentinel 配置
 	conf := config.NewDefaultConfig()
-	// 设置较低的日志级别，避免过多日志
-	conf.Sentinel.Log.Logger = logging.NewConsoleLogger()
-	// logging.ResetGlobalLoggerLevel(logging.InfoLevel)
-	// logging.ResetGlobalLogger(logging.NewConsoleLogger())
 
+	// 应用配置
+	conf.Sentinel.App.Name = "ruiqi-waf-flow-controller"
+	conf.Sentinel.App.Type = 1 // API Gateway 类型
+
+	// 日志配置
+	conf.Sentinel.Log.Dir = "/tmp/sentinel-logs"
+	conf.Sentinel.Log.UsePid = true // 使用 PID 避免多进程冲突
+
+	// 日志文件数量配置
+	conf.Sentinel.Log.Metric.MaxFileCount = 3
+
+	// 度量导出配置
+	conf.Sentinel.Exporter.Metric.HttpAddr = ":8719"    // Sentinel 默认度量端口
+	conf.Sentinel.Exporter.Metric.HttpPath = "/metrics" // Prometheus 风格的度量路径
+
+	// 记录配置信息
+	fc.logger.Info().
+		Str("app_name", conf.Sentinel.App.Name).
+		Int32("app_type", conf.Sentinel.App.Type).
+		Str("log_dir", conf.Sentinel.Log.Dir).
+		Bool("log_use_pid", conf.Sentinel.Log.UsePid).
+		Uint32("log_max_files", conf.Sentinel.Log.Metric.MaxFileCount).
+		Str("metrics_addr", conf.Sentinel.Exporter.Metric.HttpAddr).
+		Str("metrics_path", conf.Sentinel.Exporter.Metric.HttpPath).
+		Msg("初始化 Sentinel 配置")
+
+	// 初始化 Sentinel
 	err := sentinel.InitWithConfig(conf)
 	if err != nil {
 		return fmt.Errorf("初始化Sentinel失败: %v", err)
