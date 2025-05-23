@@ -293,7 +293,7 @@ func (fc *FlowController) setupAllRules() {
 }
 
 // CheckVisit 检查IP访问请求是否被允许
-func (fc *FlowController) CheckVisit(ip string) (bool, error) {
+func (fc *FlowController) CheckVisit(ip string, requestUri string) (bool, error) {
 	if !fc.initialized {
 		if err := fc.Initialize(); err != nil {
 			return true, err
@@ -308,7 +308,7 @@ func (fc *FlowController) CheckVisit(ip string) (bool, error) {
 
 	if blockError != nil {
 		// 记录被限制的IP
-		fc.ipRecorder.RecordBlockedIP(ip, "high_frequency_visit", fc.config.VisitLimit.BlockDuration)
+		fc.ipRecorder.RecordBlockedIP(ip, "high_frequency_visit", requestUri, fc.config.VisitLimit.BlockDuration)
 		fc.logger.Warn().
 			Str("ip", ip).
 			Str("reason", "high_frequency_visit").
@@ -323,7 +323,7 @@ func (fc *FlowController) CheckVisit(ip string) (bool, error) {
 }
 
 // RecordAttack 记录IP触发的攻击检测，返回是否被限制
-func (fc *FlowController) RecordAttack(ip string) (bool, error) {
+func (fc *FlowController) RecordAttack(ip string, requestUri string) (bool, error) {
 	if !fc.initialized {
 		if err := fc.Initialize(); err != nil {
 			return false, err
@@ -338,7 +338,7 @@ func (fc *FlowController) RecordAttack(ip string) (bool, error) {
 
 	if blockError != nil {
 		// 记录被限制的IP
-		fc.ipRecorder.RecordBlockedIP(ip, "high_frequency_attack", fc.config.AttackLimit.BlockDuration)
+		fc.ipRecorder.RecordBlockedIP(ip, "high_frequency_attack", requestUri, fc.config.AttackLimit.BlockDuration)
 		fc.logger.Warn().
 			Str("ip", ip).
 			Str("reason", "high_frequency_attack").
@@ -353,7 +353,7 @@ func (fc *FlowController) RecordAttack(ip string) (bool, error) {
 }
 
 // RecordError 记录IP返回的错误响应，返回是否被限制
-func (fc *FlowController) RecordError(ip string) (bool, error) {
+func (fc *FlowController) RecordError(ip string, requestUri string) (bool, error) {
 	if !fc.initialized {
 		if err := fc.Initialize(); err != nil {
 			return false, err
@@ -368,7 +368,7 @@ func (fc *FlowController) RecordError(ip string) (bool, error) {
 
 	if blockError != nil {
 		// 记录被限制的IP
-		fc.ipRecorder.RecordBlockedIP(ip, "high_frequency_error", fc.config.ErrorLimit.BlockDuration)
+		fc.ipRecorder.RecordBlockedIP(ip, "high_frequency_error", requestUri, fc.config.ErrorLimit.BlockDuration)
 		fc.logger.Warn().
 			Str("ip", ip).
 			Str("reason", "high_frequency_error").

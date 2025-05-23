@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// 原始的bufio.Scanner实现
+// 原始的bufio.Scanner实现（用于对比验证）
 func getHeaderValueOld(headers []byte, targetHeader string) (string, error) {
 	s := bufio.NewScanner(bytes.NewReader(headers))
 	for s.Scan() {
@@ -29,6 +29,7 @@ func getHeaderValueOld(headers []byte, targetHeader string) (string, error) {
 	return "", nil
 }
 
+// TestGetHeaderValue 测试getHeaderValue函数的正确性
 func TestGetHeaderValue(t *testing.T) {
 	testHeaders := []byte(`Host: example.com
 User-Agent: Mozilla/5.0
@@ -65,7 +66,7 @@ Authorization: Bearer token123`)
 				t.Errorf("getHeaderValue() = %v, want %v", result, tt.expected)
 			}
 
-			// 测试旧实现对比
+			// 测试与旧实现的一致性
 			oldResult, err := getHeaderValueOld(testHeaders, tt.header)
 			if err != nil {
 				t.Errorf("getHeaderValueOld() error = %v", err)
@@ -78,220 +79,131 @@ Authorization: Bearer token123`)
 	}
 }
 
-func BenchmarkGetHeaderValue(b *testing.B) {
-	testHeaders := []byte(`Host: example.com
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
-X-Real-IP: 192.168.1.100
-X-Forwarded-For: 10.0.0.1, 192.168.1.100, 172.16.0.1
-X-Forwarded-Proto: https
-X-Cluster-Client-IP: 10.0.0.1
-Content-Type: application/json; charset=utf-8
-Content-Length: 1234
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
-Cache-Control: no-cache
-Accept: application/json, text/plain, */*
-Accept-Language: en-US,en;q=0.9,zh-CN;q=0.8
-Accept-Encoding: gzip, deflate, br`)
-
-	b.Run("New_Implementation", func(b *testing.B) {
-		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
-			_, _ = getHeaderValue(testHeaders, "x-forwarded-for")
-		}
-	})
-
-	b.Run("Old_Implementation", func(b *testing.B) {
-		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
-			_, _ = getHeaderValueOld(testHeaders, "x-forwarded-for")
-		}
-	})
-
-	// 模拟真实场景：查找多个header（如getRealClientIP函数中的使用）
-	headers := []string{
-		"x-forwarded-for", "x-real-ip", "true-client-ip", "cf-connecting-ip",
-		"fastly-client-ip", "x-client-ip", "x-original-forwarded-for",
-		"forwarded", "x-cluster-client-ip",
-	}
-
-	b.Run("New_Multiple_Headers", func(b *testing.B) {
-		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
-			for _, header := range headers {
-				_, _ = getHeaderValue(testHeaders, header)
-			}
-		}
-	})
-
-	b.Run("Old_Multiple_Headers", func(b *testing.B) {
-		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
-			for _, header := range headers {
-				_, _ = getHeaderValueOld(testHeaders, header)
-			}
-		}
-	})
-}
-
-func BenchmarkGetHeaderValueWorstCase(b *testing.B) {
-	// 创建一个很长的header列表，目标header在最后
-	var headerBuilder strings.Builder
-	for i := 0; i < 20; i++ {
-		headerBuilder.WriteString("Header-")
-		headerBuilder.WriteString(strings.Repeat("X", 10))
-		headerBuilder.WriteString(": value")
-		headerBuilder.WriteString(strings.Repeat("Y", 50))
-		headerBuilder.WriteByte('\n')
-	}
-	headerBuilder.WriteString("Target-Header: found-value\n")
-
-	testHeaders := []byte(headerBuilder.String())
-
-	b.Run("New_Worst_Case", func(b *testing.B) {
-		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
-			_, _ = getHeaderValue(testHeaders, "target-header")
-		}
-	})
-
-	b.Run("Old_Worst_Case", func(b *testing.B) {
-		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
-			_, _ = getHeaderValueOld(testHeaders, "target-header")
-		}
-	})
-}
-
-// 原始实现（用于性能对比）
-func getRealClientIPOriginal(req *applicationRequest) string {
-	if req == nil {
-		return ""
-	}
-
-	// 按优先级尝试不同的头部
-	headers := []string{
-		"x-forwarded-for",  // 最常用，链式格式
-		"x-real-ip",        // Nginx常用
-		"true-client-ip",   // Akamai
-		"cf-connecting-ip", // Cloudflare
-		"fastly-client-ip", // Fastly
-		"x-client-ip",      // 通用
-		"x-original-forwarded-for",
-		"forwarded", // 标准头部
-		"x-cluster-client-ip",
-	}
-
-	// 尝试从各个头部获取IP
-	for _, header := range headers {
-		if value, err := getHeaderValue(req.Headers, header); err == nil && value != "" {
-			// 对于X-Forwarded-For和类似的链式格式，提取第一个IP
-			if header == "x-forwarded-for" || header == "x-original-forwarded-for" {
-				ips := strings.Split(value, ",")
-				if len(ips) > 0 {
-					ip := strings.TrimSpace(ips[0])
-					if ip != "" {
-						return ip
-					}
-				}
-			} else if header == "forwarded" { // 对于Forwarded头部，需要特殊处理
-				// 解析Forwarded头部，格式如：for=client;proto=https;by=proxy
-				parts := strings.Split(value, ";")
-				for _, part := range parts {
-					kv := strings.SplitN(part, "=", 2)
-					if len(kv) == 2 && strings.TrimSpace(kv[0]) == "for" {
-						// 去除可能的引号和IPv6方括号
-						ip := strings.TrimSpace(kv[1])
-						ip = strings.Trim(ip, "\"")
-
-						// 处理IPv6地址特殊格式
-						if strings.HasPrefix(ip, "[") && strings.HasSuffix(ip, "]") {
-							ip = ip[1 : len(ip)-1]
-						}
-
-						if ip != "" {
-							return ip
-						}
-					}
-				}
-			} else { // 其他头部直接返回值
-				ip := strings.TrimSpace(value)
-				if ip != "" {
-					return ip
-				}
-			}
-		}
-	}
-
-	// 如果所有头部都没有，返回源IP
-	if req.SrcIp.IsValid() {
-		return req.SrcIp.String()
-	}
-
-	return ""
-}
-
-func BenchmarkGetRealClientIPOptimization(b *testing.B) {
-	// 测试不同场景的header
-	testCases := []struct {
-		name    string
-		headers []byte
+// TestGetHeaderValueEdgeCases 测试边界情况
+func TestGetHeaderValueEdgeCases(t *testing.T) {
+	tests := []struct {
+		name     string
+		headers  []byte
+		header   string
+		expected string
 	}{
 		{
-			name: "XForwardedFor_First",
-			headers: []byte(`X-Forwarded-For: 192.168.1.100, 10.0.0.1
-Host: example.com
-User-Agent: Mozilla/5.0`),
+			name:     "空headers",
+			headers:  []byte(""),
+			header:   "test",
+			expected: "",
 		},
 		{
-			name: "XForwardedFor_Middle",
-			headers: []byte(`Host: example.com
-X-Forwarded-For: 192.168.1.100, 10.0.0.1
-User-Agent: Mozilla/5.0`),
+			name:     "只有换行符",
+			headers:  []byte("\n\n\n"),
+			header:   "test",
+			expected: "",
 		},
 		{
-			name: "XRealIP_Only",
-			headers: []byte(`Host: example.com
-X-Real-IP: 192.168.1.100
-User-Agent: Mozilla/5.0`),
+			name:     "无冒号的行",
+			headers:  []byte("invalid line\nHost: example.com"),
+			header:   "host",
+			expected: "example.com",
 		},
 		{
-			name: "CloudFlare_Only",
-			headers: []byte(`Host: example.com
-CF-Connecting-IP: 192.168.1.100
-User-Agent: Mozilla/5.0`),
+			name:     "value前后有空格",
+			headers:  []byte("Host:   example.com   "),
+			header:   "host",
+			expected: "example.com",
 		},
 		{
-			name: "No_Client_IP_Headers",
-			headers: []byte(`Host: example.com
-User-Agent: Mozilla/5.0
-Content-Type: application/json`),
+			name:     "key前后有空格",
+			headers:  []byte("   Host   : example.com"),
+			header:   "host",
+			expected: "example.com",
 		},
 		{
-			name: "Many_Headers_XFF_Last",
-			headers: []byte(`Host: example.com
-User-Agent: Mozilla/5.0
-Accept: application/json
-Content-Type: application/json
-Cache-Control: no-cache
-Authorization: Bearer token
-X-Forwarded-For: 192.168.1.100, 10.0.0.1`),
+			name:     "空value",
+			headers:  []byte("Empty-Header: "),
+			header:   "empty-header",
+			expected: "",
+		},
+		{
+			name:     "多个冒号",
+			headers:  []byte("Time: 12:34:56"),
+			header:   "time",
+			expected: "12:34:56",
 		},
 	}
 
-	for _, tc := range testCases {
-		req := &applicationRequest{Headers: tc.headers}
-
-		b.Run(tc.name+"_Original", func(b *testing.B) {
-			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
-				_ = getRealClientIPOriginal(req)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := getHeaderValue(tt.headers, tt.header)
+			if err != nil {
+				t.Errorf("getHeaderValue() error = %v", err)
+				return
+			}
+			if result != tt.expected {
+				t.Errorf("getHeaderValue() = %q, want %q", result, tt.expected)
 			}
 		})
+	}
+}
 
-		b.Run(tc.name+"_Optimized", func(b *testing.B) {
-			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
-				_ = getRealClientIP(req)
+// TestGetRealClientIP 测试getRealClientIP函数的正确性
+func TestGetRealClientIP(t *testing.T) {
+	tests := []struct {
+		name     string
+		headers  []byte
+		expected string
+	}{
+		{
+			name: "X-Forwarded-For单个IP",
+			headers: []byte(`Host: example.com
+X-Forwarded-For: 192.168.1.100`),
+			expected: "192.168.1.100",
+		},
+		{
+			name: "X-Forwarded-For多个IP",
+			headers: []byte(`Host: example.com
+X-Forwarded-For: 192.168.1.100, 10.0.0.1, 172.16.0.1`),
+			expected: "192.168.1.100",
+		},
+		{
+			name: "X-Real-IP",
+			headers: []byte(`Host: example.com
+X-Real-IP: 192.168.1.200`),
+			expected: "192.168.1.200",
+		},
+		{
+			name: "CF-Connecting-IP",
+			headers: []byte(`Host: example.com
+CF-Connecting-IP: 1.2.3.4`),
+			expected: "1.2.3.4",
+		},
+		{
+			name: "优先级测试：X-Forwarded-For优先",
+			headers: []byte(`Host: example.com
+X-Real-IP: 192.168.1.200
+X-Forwarded-For: 192.168.1.100`),
+			expected: "192.168.1.100",
+		},
+		{
+			name: "Forwarded标准头部",
+			headers: []byte(`Host: example.com
+Forwarded: for=192.168.1.100;proto=https;by=proxy`),
+			expected: "192.168.1.100",
+		},
+		{
+			name:     "无客户端IP头部",
+			headers:  []byte(`Host: example.com\nUser-Agent: test`),
+			expected: "", // 由于没有设置SrcIp，应该返回空
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := &applicationRequest{
+				Headers: tt.headers,
+			}
+			result := getRealClientIP(req)
+			if result != tt.expected {
+				t.Errorf("getRealClientIP() = %q, want %q", result, tt.expected)
 			}
 		})
 	}

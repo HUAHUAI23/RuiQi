@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -193,9 +192,10 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 		}
 	}
 
+	host := getHostFromRequest(&req)
 	// 进行高频访问检查
 	if a.flowController != nil {
-		allowed, err := a.flowController.CheckVisit(realIP)
+		allowed, err := a.flowController.CheckVisit(realIP, buildFullURL(host, req.Path, req.Query))
 		if err != nil {
 			a.Logger.Error().Err(err).Str("ip", realIP).Msg("流控检查失败")
 		} else if !allowed {
@@ -215,11 +215,8 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 		// 获取路径部分
 		path := string(req.Path)
 
-		// 组装完整的 URL
-		url := path
-		if len(req.Query) > 0 {
-			url = path + "?" + string(req.Query)
-		}
+		url := buildURLFromBytes(req.Path, req.Query)
+
 		shouldBlock, _, rule, err := a.ruleEngine.MatchRequest(realIP, url, path)
 
 		if err != nil {
@@ -239,7 +236,7 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 		if shouldBlock && err == nil {
 			// 记录攻击
 			if a.flowController != nil {
-				_, _ = a.flowController.RecordAttack(realIP)
+				_, _ = a.flowController.RecordAttack(realIP, buildFullURL(host, req.Path, req.Query))
 			}
 
 			a.Logger.Info().
@@ -284,7 +281,7 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 		if tx.IsInterrupted() && a.logStore != nil {
 			// 记录攻击
 			if a.flowController != nil {
-				_, _ = a.flowController.RecordAttack(realIP)
+				_, _ = a.flowController.RecordAttack(realIP, buildFullURL(host, req.Path, req.Query))
 			}
 
 			interruption := tx.Interruption()
@@ -314,16 +311,7 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 
 	tx.ProcessConnection(req.SrcIp.String(), int(req.SrcPort), req.DstIp.String(), int(req.DstPort))
 
-	{
-		url := strings.Builder{}
-		url.Write(req.Path)
-		if req.Query != nil {
-			url.WriteString("?")
-			url.Write(req.Query)
-		}
-
-		tx.ProcessURI(url.String(), req.Method, "HTTP/"+req.Version)
-	}
+	tx.ProcessURI(buildURLFromBytes(req.Path, req.Query), req.Method, "HTTP/"+req.Version)
 
 	if err := readHeaders(req.Headers, tx.AddRequestHeader); err != nil {
 		return fmt.Errorf("reading headers: %v", err)
@@ -350,25 +338,98 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 	return nil
 }
 
+// readHeaders parses HTTP headers with optimized performance while maintaining correctness
 func readHeaders(headers []byte, callback func(key string, value string)) error {
-	s := bufio.NewScanner(bytes.NewReader(headers))
-	for s.Scan() {
-		line := bytes.TrimSpace(s.Bytes())
+	if len(headers) == 0 {
+		return nil
+	}
+
+	start := 0
+	length := len(headers)
+
+	for start < length {
+		// 查找行尾
+		end := start
+		for end < length && headers[end] != '\n' {
+			end++
+		}
+
+		// 获取当前行
+		line := headers[start:end]
+
+		// 处理 \r\n (去除 \r)
+		if len(line) > 0 && line[len(line)-1] == '\r' {
+			line = line[:len(line)-1]
+		}
+
+		// 跳过空行
 		if len(line) == 0 {
+			start = end + 1
 			continue
 		}
 
-		kv := bytes.SplitN(line, []byte(":"), 2)
-		if len(kv) != 2 {
-			return fmt.Errorf("invalid header: %q", s.Text())
+		// 查找冒号
+		colonPos := -1
+		for i, b := range line {
+			if b == ':' {
+				colonPos = i
+				break
+			}
 		}
 
-		key, value := bytes.TrimSpace(kv[0]), bytes.TrimSpace(kv[1])
+		if colonPos == -1 {
+			return fmt.Errorf("invalid header: %q", string(line))
+		}
 
-		callback(string(key), string(value))
+		// 提取并trim key和value
+		keyBytes := line[:colonPos]
+		valueBytes := line[colonPos+1:]
+
+		keyStart, keyEnd := trimSpaceIndices(keyBytes)
+		valueStart, valueEnd := trimSpaceIndices(valueBytes)
+
+		// 检查key是否为空（与原始版本保持一致的行为）
+		if keyStart >= keyEnd {
+			// 对于空key，原始版本的bytes.SplitN不会报错，而是创建空字符串
+			// 我们也保持这种行为
+			key := ""
+			value := string(valueBytes[valueStart:valueEnd])
+			callback(key, value)
+		} else {
+			key := string(keyBytes[keyStart:keyEnd])
+			value := string(valueBytes[valueStart:valueEnd])
+			callback(key, value)
+		}
+
+		// 移动到下一行
+		start = end + 1
 	}
 
 	return nil
+}
+
+// trimSpaceIndices 返回去除前后空白字符后的起始和结束索引
+// 避免内存分配，只返回索引
+func trimSpaceIndices(data []byte) (start, end int) {
+	// 跳过前导空白
+	start = 0
+	for start < len(data) && isWhitespace(data[start]) {
+		start++
+	}
+
+	// 跳过尾随空白
+	end = len(data)
+	for end > start && isWhitespace(data[end-1]) {
+		end--
+	}
+
+	return start, end
+}
+
+// isWhitespace 检查字符是否为空白字符（与bytes.TrimSpace行为一致）
+func isWhitespace(b byte) bool {
+	// 包含所有bytes.TrimSpace处理的空白字符
+	return b == ' ' || b == '\t' || b == '\n' || b == '\r' || b == '\v' || b == '\f'
 }
 
 type applicationResponse struct {
@@ -452,11 +513,12 @@ func (a *Application) HandleResponse(ctx context.Context, writer *encoding.Actio
 
 	// 获取真实客户端IP
 	realIP := getRealClientIP(t.request)
+	host := getHostFromRequest(t.request)
 	if res.Status >= 400 {
 		// 检查错误响应并记录
 		// 记录错误
 		if a.flowController != nil {
-			_, _ = a.flowController.RecordError(realIP)
+			_, _ = a.flowController.RecordError(realIP, buildFullURL(host, t.request.Path, t.request.Query))
 		}
 	}
 
@@ -465,7 +527,7 @@ func (a *Application) HandleResponse(ctx context.Context, writer *encoding.Actio
 		if tx.IsInterrupted() && a.logStore != nil {
 			// 记录攻击
 			if a.flowController != nil {
-				_, _ = a.flowController.RecordAttack(realIP)
+				_, _ = a.flowController.RecordAttack(realIP, buildFullURL(host, t.request.Path, t.request.Query))
 			}
 
 			interruption := tx.Interruption()
@@ -1158,4 +1220,37 @@ func parseForwardedHeaderFast(forwarded string) string {
 	}
 
 	return ""
+}
+
+// buildURLFromBytes 高性能 URL 构建函数
+func buildURLFromBytes(path, query []byte) string {
+	if len(query) == 0 {
+		return string(path)
+	}
+
+	// 一次性分配所需内存
+	result := make([]byte, 0, len(path)+1+len(query))
+	result = append(result, path...)
+	result = append(result, '?')
+	result = append(result, query...)
+	return string(result)
+}
+
+// buildFullURL 构建完整 URL（包含 host）
+func buildFullURL(host string, path, query []byte) string {
+	// 计算总长度
+	totalLen := len(host) + len(path)
+	if len(query) > 0 {
+		totalLen += 1 + len(query) // +1 for '?'
+	}
+
+	// 一次性分配
+	result := make([]byte, 0, totalLen)
+	result = append(result, host...)
+	result = append(result, path...)
+	if len(query) > 0 {
+		result = append(result, '?')
+		result = append(result, query...)
+	}
+	return string(result)
 }

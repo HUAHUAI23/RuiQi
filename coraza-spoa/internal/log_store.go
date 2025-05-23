@@ -266,16 +266,14 @@ func (s *MongoLogStore) writer(id int) {
 	defer ticker.Stop()
 
 	for {
-		select {
-		case <-ticker.C:
-			if s.state.Load() == 2 {
-				// 正在关闭，处理剩余数据
-				s.flushAll(startIdx, endIdx)
-				return
-			}
-			// 处理分配的buffers
-			s.processBatches(startIdx, endIdx)
+		<-ticker.C
+		if s.state.Load() == 2 {
+			// 正在关闭，处理剩余数据
+			s.flushAll(startIdx, endIdx)
+			return
 		}
+		// 处理分配的buffers
+		s.processBatches(startIdx, endIdx)
 
 		// 检查是否需要退出
 		if s.state.Load() == 2 {
@@ -335,40 +333,38 @@ func (s *MongoLogStore) dynamicAdjuster() {
 	lastCount := uint64(0)
 
 	for {
-		select {
-		case <-ticker.C:
-			if s.state.Load() == 2 {
-				return
-			}
-
-			// 计算当前负载
-			currentCount := uint64(0)
-			for _, buffer := range s.ringBuffers {
-				head := buffer.head.Load()
-				tail := buffer.tail.Load()
-				currentCount += (tail - head) & buffer.mask
-			}
-
-			// 根据增长率调整批大小
-			elapsed := time.Since(lastCheck).Seconds()
-			rate := float64(currentCount-lastCount) / elapsed
-
-			currentBatchSize := s.batchSize.Load()
-			newBatchSize := currentBatchSize
-
-			if rate > 1000 { // 高负载
-				newBatchSize = min(currentBatchSize*2, int32(s.maxBatchSize))
-			} else if rate < 100 { // 低负载
-				newBatchSize = max(currentBatchSize/2, int32(s.minBatchSize))
-			}
-
-			if newBatchSize != currentBatchSize {
-				s.batchSize.Store(newBatchSize)
-			}
-
-			lastCheck = time.Now()
-			lastCount = currentCount
+		<-ticker.C
+		if s.state.Load() == 2 {
+			return
 		}
+
+		// 计算当前负载
+		currentCount := uint64(0)
+		for _, buffer := range s.ringBuffers {
+			head := buffer.head.Load()
+			tail := buffer.tail.Load()
+			currentCount += (tail - head) & buffer.mask
+		}
+
+		// 根据增长率调整批大小
+		elapsed := time.Since(lastCheck).Seconds()
+		rate := float64(currentCount-lastCount) / elapsed
+
+		currentBatchSize := s.batchSize.Load()
+		newBatchSize := currentBatchSize
+
+		if rate > 1000 { // 高负载
+			newBatchSize = min(currentBatchSize*2, int32(s.maxBatchSize))
+		} else if rate < 100 { // 低负载
+			newBatchSize = max(currentBatchSize/2, int32(s.minBatchSize))
+		}
+
+		if newBatchSize != currentBatchSize {
+			s.batchSize.Store(newBatchSize)
+		}
+
+		lastCheck = time.Now()
+		lastCount = currentCount
 	}
 }
 
