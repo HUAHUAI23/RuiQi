@@ -18,7 +18,8 @@
         "rules": {
             "system": "System rules",
             "user": "Custom rules",
-            "ipGroup": "IP Group Management"
+            "ipGroup": "IP Group Management",
+            "flowControl": "Rate Limiting"
         },
         "settings": {
             "settings": "Settings",
@@ -534,5 +535,90 @@
         "requestsAndBlocks": "Requests & Blocks Trend",
         "requests": "Requests",
         "blocks": "Blocks"
+    },
+    "flowControl": {
+        "blockIpList": "IP Blocklist",
+        "title": "Flow Control",
+        "pageTitle": "Flow Control Management",
+        "pageDescription": "Manage IP-based access frequency limits and blocked IP list",
+        "configSettings": "Flow Control Settings",
+        "refresh": "Refresh",
+        "cleanup": "Cleanup Expired Records",
+        "cleaning": "Cleaning...",
+        "filters": "Filters",
+        "filterByIP": "Filter by IP Address",
+        "filterByReason": "Filter by Block Reason",
+        "clearFilters": "Clear",
+        "expired": "Expired",
+        "untilUnblock": "until unblock",
+        "hours": " hours ",
+        "minutes": " minutes ",
+        "seconds": " seconds",
+        "table": {
+            "ip": "IP Address",
+            "reason": "Block Reason",
+            "requestUri": "Request Path",
+            "blockedAt": "Blocked At",
+            "status": "Status"
+        },
+        "status": {
+            "placeholder": "Status",
+            "all": "All",
+            "active": "Active",
+            "expired": "Expired"
+        },
+        "reason": {
+            "all": "All Reasons",
+            "highFrequencyVisit": "High Frequency Visit",
+            "highFrequencyAttack": "High Frequency Attack",
+            "highFrequencyError": "High Frequency Error"
+        },
+        "pagination": {
+            "info": "Page {{current}} of {{total}}, {{count}} records total",
+            "previous": "Previous",
+            "next": "Next"
+        },
+        "dialog": {
+            "title": "Flow Control Configuration",
+            "description": "Configure IP-based access frequency, attack frequency and error frequency limits to protect the system from malicious attacks"
+        },
+        "visitLimit": {
+            "title": "Visit Frequency Limit",
+            "description": "Limit the number of visits from a single IP within a specified time window to prevent high-frequency access"
+        },
+        "attackLimit": {
+            "title": "Attack Frequency Limit",
+            "description": "Limit the number of attacks from a single IP within a specified time window to prevent malicious attacks"
+        },
+        "errorLimit": {
+            "title": "Error Frequency Limit",
+            "description": "Limit the number of error responses from a single IP within a specified time window to prevent malicious probing"
+        },
+        "enabled": "Enable Limit",
+        "enabledDescription": "Enable this limit rule",
+        "threshold": "Trigger Threshold",
+        "thresholdDescription": "Maximum number of requests within the statistical time window",
+        "attackThresholdDescription": "Maximum number of attacks within the statistical time window",
+        "errorThresholdDescription": "Maximum number of errors within the statistical time window",
+        "statDuration": "Statistical Time Window",
+        "statDurationDescription": "Length of statistical time window (seconds)",
+        "blockDuration": "Block Duration",
+        "blockDurationDescription": "Block duration after triggering the limit (seconds)",
+        "burstCount": "Burst Count",
+        "burstCountDescription": "Number of burst requests allowed",
+        "paramsCapacity": "Cache Capacity",
+        "paramsCapacityDescription": "Maximum number of IPs to cache",
+        "updating": "Updating...",
+        "updateConfig": "Update Configuration",
+        "toast": {
+            "updateSuccess": "Update Successful",
+            "configUpdated": "Flow control configuration updated successfully",
+            "updateFailed": "Update Failed",
+            "updateError": "Error occurred while updating configuration",
+            "cleanupSuccess": "Cleanup Successful",
+            "cleanupMessage": "{{count}} expired records cleaned up",
+            "cleanupFailed": "Cleanup Failed",
+            "cleanupError": "Error occurred while cleaning up expired records"
+        }
     }
 }

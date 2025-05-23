@@ -18,7 +18,8 @@
         "rules": {
             "system": "系统规则",
             "user": "自定义规则",
-            "ipGroup": "IP 组管理"
+            "ipGroup": "IP 组管理",
+            "flowControl": "频率限制"
         },
         "settings": {
             "settings": "设置",
@@ -534,5 +535,90 @@
         "requestsAndBlocks": "请求与拦截趋势",
         "requests": "请求数",
         "blocks": "拦截数"
+    },
+    "flowControl": {
+        "blockIpList": "拦截ip列表",
+        "title": "流量控制",
+        "pageTitle": "流量控制管理",
+        "pageDescription": "管理基于IP的访问频率限制和封禁IP列表",
+        "configSettings": "流量控制配置",
+        "refresh": "刷新",
+        "cleanup": "清理过期记录",
+        "cleaning": "清理中...",
+        "filters": "过滤条件",
+        "filterByIP": "按IP地址过滤",
+        "filterByReason": "按封禁原因过滤",
+        "clearFilters": "清除",
+        "expired": "已过期",
+        "untilUnblock": "后解封",
+        "hours": "小时",
+        "minutes": "分钟",
+        "seconds": "秒",
+        "table": {
+            "ip": "IP地址",
+            "reason": "封禁原因",
+            "requestUri": "请求路径",
+            "blockedAt": "封禁时间",
+            "status": "状态"
+        },
+        "status": {
+            "placeholder": "状态",
+            "all": "全部",
+            "active": "生效中",
+            "expired": "已过期"
+        },
+        "reason": {
+            "all": "全部原因",
+            "highFrequencyVisit": "高频访问",
+            "highFrequencyAttack": "高频攻击",
+            "highFrequencyError": "高频错误"
+        },
+        "pagination": {
+            "info": "第 {{current}} 页，共 {{total}} 页，总计 {{count}} 条记录",
+            "previous": "上一页",
+            "next": "下一页"
+        },
+        "dialog": {
+            "title": "流量控制配置",
+            "description": "配置基于IP的访问频率、攻击频率和错误频率限制，保护系统免受恶意攻击"
+        },
+        "visitLimit": {
+            "title": "访问频率限制",
+            "description": "限制单个IP在指定时间窗口内的访问次数，防止高频访问"
+        },
+        "attackLimit": {
+            "title": "攻击频率限制",
+            "description": "限制单个IP在指定时间窗口内的攻击次数，防止恶意攻击"
+        },
+        "errorLimit": {
+            "title": "错误频率限制",
+            "description": "限制单个IP在指定时间窗口内的错误响应次数，防止恶意探测"
+        },
+        "enabled": "启用限制",
+        "enabledDescription": "开启此限制规则",
+        "threshold": "触发阈值",
+        "thresholdDescription": "统计时间窗口内的最大请求数",
+        "attackThresholdDescription": "统计时间窗口内的最大攻击次数",
+        "errorThresholdDescription": "统计时间窗口内的最大错误次数",
+        "statDuration": "统计时间窗口",
+        "statDurationDescription": "统计时间窗口长度（秒）",
+        "blockDuration": "封禁时长",
+        "blockDurationDescription": "触发限制后的封禁时长（秒）",
+        "burstCount": "突发请求数",
+        "burstCountDescription": "允许的突发请求数量",
+        "paramsCapacity": "缓存容量",
+        "paramsCapacityDescription": "最多缓存的IP数量",
+        "updating": "更新中...",
+        "updateConfig": "更新配置",
+        "toast": {
+            "updateSuccess": "更新成功",
+            "configUpdated": "流量控制配置已成功更新",
+            "updateFailed": "更新失败",
+            "updateError": "更新配置时出现错误",
+            "cleanupSuccess": "清理成功",
+            "cleanupMessage": "已清理 {{count}} 条过期记录",
+            "cleanupFailed": "清理失败",
+            "cleanupError": "清理过期记录时出现错误"
+        }
     }
 }

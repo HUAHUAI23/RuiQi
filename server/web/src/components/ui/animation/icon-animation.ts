@@ -51,6 +51,55 @@ export const continuousSpinAnimation: HTMLMotionProps<"div"> = {
     }
 }
 
+// 持续震动动画 - 适用于警告、错误提示状态
+export const continuousShakeAnimation: HTMLMotionProps<"div"> = {
+    animate: {
+        x: [-2, 2, -2, 2, -1, 1, 0],
+        transition: {
+            duration: 0.6,
+            ease: "easeInOut",
+            repeat: Infinity,
+            repeatDelay: 0.3
+        }
+    },
+    // 点击时可暂时停止震动并缩放
+    whileTap: {
+        scale: 0.95,
+        x: 0,
+        transition: {
+            type: "spring",
+            stiffness: 400,
+            damping: 10,
+            duration: 0.1
+        }
+    }
+}
+
+// 持续脉冲动画 - 适用于过滤器、搜索等处理状态
+export const continuousPulseAnimation: HTMLMotionProps<"div"> = {
+    animate: {
+        scale: [1, 1.1, 1],
+        opacity: [0.8, 1, 0.8],
+        transition: {
+            duration: 1.2,
+            ease: "easeInOut",
+            repeat: Infinity,
+            times: [0, 0.5, 1]
+        }
+    },
+    // 点击时可暂时停止脉冲并缩放
+    whileTap: {
+        scale: 0.95,
+        opacity: 1,
+        transition: {
+            type: "spring",
+            stiffness: 400,
+            damping: 10,
+            duration: 0.1
+        }
+    }
+}
+
 // 震动动画 - 适用于通知、警告图标
 export const shakeIconAnimation: HTMLMotionProps<"div"> = {
     whileHover: {

@@ -130,5 +130,19 @@ src/utils 下是项目 utils 文件，负责项目的 utils 管理
 - 认证状态: 包括用户信息、token、是否已认证等
 - 状态持久化: 使用 Zustand persist 中间件实现
 
+流量控制功能模块:
+- src/types/blocked-ip.ts: 定义封禁IP相关类型，包括封禁记录、请求参数、统计数据等
+- src/api/blocked-ip.ts: 提供封禁IP相关API服务，包括获取封禁IP列表、统计信息和清理过期记录
+- src/validation/flow-control.ts: 使用zod定义流量控制配置的表单验证规则
+- src/feature/flow-control/: 流量控制功能模块
+  - hooks/useBlockedIP.ts: 封禁IP相关的tanstack query数据管理封装
+  - hooks/useFlowControl.ts: 流量控制配置相关的数据管理封装
+  - components/BlockedIPTable.tsx: 封禁IP列表表格组件，支持搜索、过滤、排序和分页
+  - components/FlowControlDialog.tsx: 流量控制配置对话框组件
+  - components/FlowControlForm.tsx: 流量控制配置表单组件，包含访问、攻击、错误频率限制配置
+- src/pages/rule/pages/cc/page.tsx: 流量控制管理页面，展示封禁IP表格和配置入口
+- 国际化支持: 在translation.json中添加了flowControl相关的中英文翻译
+- 更新了config类型定义，添加了FlowControlConfig相关接口
+
 
 

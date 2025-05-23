@@ -138,7 +138,7 @@ export function DataTable<TData, TValue>({
                 "w-full h-full relative",
                 style === 'border' && "rounded-md border"
             )}>
-                <div className="overflow-auto h-full">
+                <div className="overflow-auto h-full scrollbar-neon">
                     <table className="w-full caption-bottom text-sm">
                         {renderTableHeader()}
                         <tbody className={cn(
@@ -157,7 +157,7 @@ export function DataTable<TData, TValue>({
     switch (style) {
         case 'simple':
             return (
-                <div className="w-full h-full">
+                <div className="w-full h-full scrollbar-neon">
                     <Table>
                         {renderTableHeader()}
                         <TableBody>
@@ -169,7 +169,7 @@ export function DataTable<TData, TValue>({
 
         case 'border':
             return (
-                <div className="rounded-md border h-full w-full">
+                <div className="rounded-md border h-full w-full scrollbar-neon">
                     <Table>
                         {renderTableHeader()}
                         <TableBody>
@@ -181,7 +181,7 @@ export function DataTable<TData, TValue>({
 
         default:
             return (
-                <div className="w-full h-full">
+                <div className="w-full h-full scrollbar-neon">
                     <Table>
                         {renderTableHeader()}
                         <TableBody className={isLoading || !table.getRowModel().rows?.length ? "[&_tr:last-child]:!border-b-0" : ""}>

@@ -22,6 +22,7 @@ import SiteManagerPage from "@/pages/setting/pages/site/page"
 import IPGroupPage from "@/pages/rule/pages/ip-group/page"
 import MicroRulePage from "@/pages/rule/pages/micro-rule/page"
 import StatsPage from "@/pages/monitor/pages/stats/page"
+import FlowControlPage from "@/pages/rule/pages/cc/page"
 import { LoadingFallback } from "@/components/common/loading-fallback"
 
 // 懒加载认证页面
@@ -68,7 +69,8 @@ export function createBreadcrumbConfig(t: TFunction): Record<RoutePath, Breadcru
             items: [
                 // { title: t('breadcrumb.rules.system'), path: "system", component: <SysRules /> },
                 { title: t('breadcrumb.rules.user'), path: "user", component: <MicroRulePage /> },
-                { title: t('breadcrumb.rules.ipGroup'), path: "ip-group", component: <IPGroupPage /> }
+                { title: t('breadcrumb.rules.ipGroup'), path: "ip-group", component: <IPGroupPage /> },
+                { title: t('breadcrumb.rules.flowControl'), path: "flow-control", component: <FlowControlPage /> }
             ]
         },
         [ROUTES.SETTINGS]: {

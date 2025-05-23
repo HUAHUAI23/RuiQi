@@ -7,10 +7,26 @@ export interface AppConfig {
     transactionTTL?: number
 }
 
+export interface LimitConfig {
+    enabled: boolean
+    threshold: number
+    statDuration: number
+    blockDuration: number
+    burstCount: number
+    paramsCapacity: number
+}
+
+export interface FlowControlConfig {
+    visitLimit: LimitConfig
+    attackLimit: LimitConfig
+    errorLimit: LimitConfig
+}
+
 export interface EngineConfig {
     bind: string
     useBuiltinRules: boolean
     appConfig: AppConfig[]
+    flowController: FlowControlConfig
 }
 
 export interface HaproxyConfig {
@@ -48,6 +64,11 @@ export interface ConfigPatchRequest {
             logFile?: string
             transactionTTL?: number
         }[]
+        flowController?: {
+            visitLimit?: Partial<LimitConfig>
+            attackLimit?: Partial<LimitConfig>
+            errorLimit?: Partial<LimitConfig>
+        }
     }
     haproxy?: {
         thread?: number
