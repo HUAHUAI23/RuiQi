@@ -130,6 +130,245 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/blocked-ips": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取被封禁的IP地址列表，支持分页、过滤和排序",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "封禁IP管理"
+                ],
+                "summary": "获取封禁IP列表",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码，从1开始",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页数量，最大100",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "192.168.1.1",
+                        "description": "IP地址过滤，支持模糊匹配",
+                        "name": "ip",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "high_frequency_attack",
+                        "description": "封禁原因过滤",
+                        "name": "reason",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "active",
+                            "expired",
+                            "all"
+                        ],
+                        "type": "string",
+                        "default": "all",
+                        "description": "状态过滤：active-生效中，expired-已过期，all-全部",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "blocked_at",
+                            "blocked_until",
+                            "ip"
+                        ],
+                        "type": "string",
+                        "default": "blocked_at",
+                        "description": "排序字段",
+                        "name": "sortBy",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "desc",
+                        "description": "排序方向：asc-升序，desc-降序",
+                        "name": "sortDir",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取封禁IP列表成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.BlockedIPListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "403": {
+                        "description": "禁止访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/blocked-ips/cleanup": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "删除已过期的封禁IP记录，释放存储空间",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "封禁IP管理"
+                ],
+                "summary": "清理过期的封禁IP记录",
+                "responses": {
+                    "200": {
+                        "description": "清理完成",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.BlockedIPCleanupResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "403": {
+                        "description": "禁止访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/blocked-ips/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取封禁IP的统计信息，包括总数、生效数、过期数、按原因统计和按小时统计",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "封禁IP管理"
+                ],
+                "summary": "获取封禁IP统计信息",
+                "responses": {
+                    "200": {
+                        "description": "获取统计信息成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.BlockedIPStatsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "403": {
+                        "description": "禁止访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/certificates": {
             "get": {
                 "security": [
@@ -3031,6 +3270,147 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.BlockedIPCleanupResponse": {
+            "description": "清理过期封禁IP记录的响应数据",
+            "type": "object",
+            "properties": {
+                "deletedCount": {
+                    "description": "删除的记录数量",
+                    "type": "integer",
+                    "example": 25
+                },
+                "message": {
+                    "description": "操作结果消息",
+                    "type": "string",
+                    "example": "已成功清理过期的封禁IP记录"
+                }
+            }
+        },
+        "dto.BlockedIPHourlyStats": {
+            "description": "按小时的封禁统计",
+            "type": "object",
+            "properties": {
+                "count": {
+                    "description": "该小时的封禁数量",
+                    "type": "integer",
+                    "example": 10
+                },
+                "hour": {
+                    "description": "小时时间点",
+                    "type": "string",
+                    "example": "2023-12-01T10:00:00Z"
+                }
+            }
+        },
+        "dto.BlockedIPListResponse": {
+            "description": "封禁IP分页列表响应",
+            "type": "object",
+            "properties": {
+                "items": {
+                    "description": "IP列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.BlockedIPResponse"
+                    }
+                },
+                "page": {
+                    "description": "当前页码",
+                    "type": "integer",
+                    "example": 1
+                },
+                "pages": {
+                    "description": "总页数",
+                    "type": "integer",
+                    "example": 10
+                },
+                "size": {
+                    "description": "每页数量",
+                    "type": "integer",
+                    "example": 10
+                },
+                "total": {
+                    "description": "总数量",
+                    "type": "integer",
+                    "example": 100
+                }
+            }
+        },
+        "dto.BlockedIPResponse": {
+            "description": "封禁IP详细信息",
+            "type": "object",
+            "properties": {
+                "blockedAt": {
+                    "description": "封禁开始时间",
+                    "type": "string",
+                    "example": "2023-12-01T10:00:00Z"
+                },
+                "blockedUntil": {
+                    "description": "封禁结束时间",
+                    "type": "string",
+                    "example": "2023-12-01T11:00:00Z"
+                },
+                "ip": {
+                    "description": "被封禁的IP地址",
+                    "type": "string",
+                    "example": "192.168.1.1"
+                },
+                "isActive": {
+                    "description": "是否仍在封禁中",
+                    "type": "boolean",
+                    "example": true
+                },
+                "reason": {
+                    "description": "封禁原因",
+                    "type": "string",
+                    "example": "high_frequency_attack"
+                },
+                "remainingTTL": {
+                    "description": "剩余封禁时间（秒）",
+                    "type": "integer",
+                    "example": 3600
+                },
+                "requestUri": {
+                    "description": "请求URI",
+                    "type": "string",
+                    "example": "/api/v1/login"
+                }
+            }
+        },
+        "dto.BlockedIPStatsResponse": {
+            "description": "封禁IP统计信息",
+            "type": "object",
+            "properties": {
+                "activeBlocked": {
+                    "description": "当前生效的封禁数量",
+                    "type": "integer",
+                    "example": 50
+                },
+                "expiredBlocked": {
+                    "description": "已过期的封禁数量",
+                    "type": "integer",
+                    "example": 950
+                },
+                "last24HourStats": {
+                    "description": "最近24小时统计",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.BlockedIPHourlyStats"
+                    }
+                },
+                "reasonStats": {
+                    "description": "按原因统计",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "totalBlocked": {
+                    "description": "总封禁数量",
+                    "type": "integer",
+                    "example": 1000
+                }
+            }
+        },
         "dto.CertificateCreateRequest": {
             "description": "创建证书的请求参数",
             "type": "object",
@@ -3241,6 +3621,11 @@ const docTemplate = `{
                     "type": "boolean",
                     "example": false
                 },
+                "isK8s": {
+                    "description": "是否在K8s环境",
+                    "type": "boolean",
+                    "example": false
+                },
                 "isResponseCheck": {
                     "description": "是否检查响应",
                     "type": "boolean",
@@ -3283,6 +3668,10 @@ const docTemplate = `{
                 },
                 "isDebug": {
                     "description": "是否开启调试模式",
+                    "type": "boolean"
+                },
+                "isK8s": {
+                    "description": "是否在K8s环境",
                     "type": "boolean"
                 },
                 "isResponseCheck": {
@@ -3378,9 +3767,25 @@ const docTemplate = `{
                         "$ref": "#/definitions/dto.AppConfigDTO"
                     }
                 },
+                "asnDBPath": {
+                    "description": "ASN数据库路径",
+                    "type": "string"
+                },
                 "bind": {
                     "description": "引擎绑定地址",
                     "type": "string"
+                },
+                "cityDBPath": {
+                    "description": "城市数据库路径",
+                    "type": "string"
+                },
+                "flowController": {
+                    "description": "流量控制配置",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.FlowControllerDTO"
+                        }
+                    ]
                 },
                 "useBuiltinRules": {
                     "description": "是否使用内置规则",
@@ -3398,15 +3803,91 @@ const docTemplate = `{
                         "$ref": "#/definitions/dto.AppConfigPatchDTO"
                     }
                 },
+                "asnDBPath": {
+                    "description": "ASN数据库路径",
+                    "type": "string",
+                    "example": "/opt/geoip/GeoLite2-ASN.mmdb"
+                },
                 "bind": {
                     "description": "引擎绑定地址",
                     "type": "string",
                     "example": "127.0.0.1:2342"
                 },
+                "cityDBPath": {
+                    "description": "城市数据库路径",
+                    "type": "string",
+                    "example": "/opt/geoip/GeoLite2-City.mmdb"
+                },
+                "flowController": {
+                    "description": "流量控制配置",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.FlowControllerPatchDTO"
+                        }
+                    ]
+                },
                 "useBuiltinRules": {
                     "description": "是否使用内置规则",
                     "type": "boolean",
                     "example": true
+                }
+            }
+        },
+        "dto.FlowControllerDTO": {
+            "type": "object",
+            "properties": {
+                "attackLimit": {
+                    "description": "攻击频率限制配置",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.LimitConfigDTO"
+                        }
+                    ]
+                },
+                "errorLimit": {
+                    "description": "错误频率限制配置",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.LimitConfigDTO"
+                        }
+                    ]
+                },
+                "visitLimit": {
+                    "description": "访问频率限制配置",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.LimitConfigDTO"
+                        }
+                    ]
+                }
+            }
+        },
+        "dto.FlowControllerPatchDTO": {
+            "type": "object",
+            "properties": {
+                "attackLimit": {
+                    "description": "攻击频率限制配置",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.LimitConfigPatchDTO"
+                        }
+                    ]
+                },
+                "errorLimit": {
+                    "description": "错误频率限制配置",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.LimitConfigPatchDTO"
+                        }
+                    ]
+                },
+                "visitLimit": {
+                    "description": "访问频率限制配置",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.LimitConfigPatchDTO"
+                        }
+                    ]
                 }
             }
         },
@@ -3557,6 +4038,70 @@ const docTemplate = `{
                     "description": "IP组名称",
                     "type": "string",
                     "example": "内部服务器"
+                }
+            }
+        },
+        "dto.LimitConfigDTO": {
+            "type": "object",
+            "properties": {
+                "blockDuration": {
+                    "description": "封禁时长（秒）",
+                    "type": "integer"
+                },
+                "burstCount": {
+                    "description": "允许的突发请求数",
+                    "type": "integer"
+                },
+                "enabled": {
+                    "description": "是否启用",
+                    "type": "boolean"
+                },
+                "paramsCapacity": {
+                    "description": "缓存容量",
+                    "type": "integer"
+                },
+                "statDuration": {
+                    "description": "统计时间窗口（秒）",
+                    "type": "integer"
+                },
+                "threshold": {
+                    "description": "阈值",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.LimitConfigPatchDTO": {
+            "type": "object",
+            "properties": {
+                "blockDuration": {
+                    "description": "封禁时长（秒）",
+                    "type": "integer",
+                    "example": 600
+                },
+                "burstCount": {
+                    "description": "允许的突发请求数",
+                    "type": "integer",
+                    "example": 10
+                },
+                "enabled": {
+                    "description": "是否启用",
+                    "type": "boolean",
+                    "example": true
+                },
+                "paramsCapacity": {
+                    "description": "缓存容量",
+                    "type": "integer",
+                    "example": 10000
+                },
+                "statDuration": {
+                    "description": "统计时间窗口（秒）",
+                    "type": "integer",
+                    "example": 60
+                },
+                "threshold": {
+                    "description": "阈值",
+                    "type": "integer",
+                    "example": 100
                 }
             }
         },

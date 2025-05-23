@@ -15,6 +15,7 @@ pkg 公共包，负责一些多模块共同依赖的工具,可对外被其他模
 pkg/database/mongo 数据库包，处理数据库操作, 统一的数据库封装，单例模式，Connect 获取数据库clent，GetCollection 获取集合，使用 mongodb 驱动，驱动为 v2 版本 go.mongodb.org/mongo-driver/v2/mongo
 pkg/utils 工具类，一些多模块都可能使用到的工具
 pkg/model 模型层，负责数据模型定义, 一些共用数据模型
+pkg/model/blocked_ips.go 封禁IP记录模型定义，包含IP地址、封禁原因、请求URI、封禁时间等信息
 
 
 server 后端，负责后端接口处理，haproxy 启动管理，配置生成等，haproxy corazawaf spoe（ engine） 启动管理等
@@ -30,14 +31,20 @@ server/model/site.go 站点模型定义，包含站点配置、证书、后端�
 server/dto dto 层，负责数据传输对象定义，例如请求数据，响应数据模型等
 server/dto/auth.go 认证请求数据模型定义
 server/dto/site.go 站点请求和响应数据模型定义
+server/dto/config.go 配置管理相关的数据传输对象定义，包含配置补丁更新请求和响应模型
+server/dto/blocked_ip.go 封禁IP管理相关的数据传输对象定义，包含分页请求、响应和统计信息模型
 
 server/controller 控制器 mvc 中控制层
 server/controller/auth.go 认证控制器，处理登录、注册、密码重置和用户管理等
 server/controller/site.go 站点控制器，处理站点的CRUD操作
+server/controller/config.go 配置控制器，处理系统配置的获取和更新，支持增量更新模式
+server/controller/blocked_ip.go 封禁IP控制器，处理封禁IP的分页查询、统计信息获取和过期记录清理
 
 server/service 服务层，负责业务逻辑处理
 server/service/auth.go 认证服务，处理用户认证逻辑、密码重置和用户管理
 server/service/site.go 站点服务，处理站点的业务逻辑
+server/service/config.go 配置服务，处理系统配置的业务逻辑，支持增量补丁更新
+server/service/blocked_ip.go 封禁IP服务，处理封禁IP的业务逻辑，包括分页查询、统计分析和数据清理
 server/service/daemon 守护进程层，负责守护进程管理,例如 haproxy 守护进程，corazawaf spoe（ engine） 守护进程等
 server/service/engine 引擎层，负责引擎管理,例如 corazawaf spoe（ engine） 引擎管理等
 server/service/haproxy 负责haproxy 的启动管理等，配置生成等
@@ -51,6 +58,8 @@ server/repository/user.go 用户仓库，处理用户数据存取，包含初始
 server/repository/role.go 角色仓库，处理角色数据存取，包含默认角色初始化
 server/repository/site.go 站点仓库，处理站点数据的CRUD操作
 server/repository/waf_log.go WAF日志仓库，处理WAF攻击日志的查询和聚合
+server/repository/config.go 配置仓库，处理系统配置的数据库操作，支持增量更新
+server/repository/blocked_ip.go 封禁IP仓库，处理封禁IP记录的数据库操作，包括分页查询、统计聚合和过期清理
 
 server/middleware 中间件层，负责中间件处理，例如日志处理，jwt 鉴权，统一错误处理等
 server/middleware/auth.go JWT认证中间件，包含基于权限的访问控制

@@ -12,13 +12,17 @@ type ConfigPatchRequest struct {
 	Haproxy         *HaproxyPatchDTO `json:"haproxy,omitempty" binding:"omitempty"`                         // HAProxy配置
 	IsResponseCheck *bool            `json:"isResponseCheck,omitempty" binding:"omitempty" example:"false"` // 是否检查响应
 	IsDebug         *bool            `json:"isDebug,omitempty" binding:"omitempty" example:"false"`         // 是否开启调试模式
+	IsK8s           *bool            `json:"isK8s,omitempty" binding:"omitempty" example:"false"`           // 是否在K8s环境
 }
 
 // EnginePatchDTO 引擎配置补丁DTO
 type EnginePatchDTO struct {
-	Bind            *string             `json:"bind,omitempty" binding:"omitempty" example:"127.0.0.1:2342"`  // 引擎绑定地址
-	UseBuiltinRules *bool               `json:"useBuiltinRules,omitempty" binding:"omitempty" example:"true"` // 是否使用内置规则
-	AppConfig       []AppConfigPatchDTO `json:"appConfig,omitempty" binding:"omitempty,dive"`                 // 应用配置列表
+	Bind            *string                 `json:"bind,omitempty" binding:"omitempty" example:"127.0.0.1:2342"`                      // 引擎绑定地址
+	UseBuiltinRules *bool                   `json:"useBuiltinRules,omitempty" binding:"omitempty" example:"true"`                     // 是否使用内置规则
+	ASNDBPath       *string                 `json:"asnDBPath,omitempty" binding:"omitempty" example:"/opt/geoip/GeoLite2-ASN.mmdb"`   // ASN数据库路径
+	CityDBPath      *string                 `json:"cityDBPath,omitempty" binding:"omitempty" example:"/opt/geoip/GeoLite2-City.mmdb"` // 城市数据库路径
+	AppConfig       []AppConfigPatchDTO     `json:"appConfig,omitempty" binding:"omitempty,dive"`                                     // 应用配置列表
+	FlowController  *FlowControllerPatchDTO `json:"flowController,omitempty" binding:"omitempty"`                                     // 流量控制配置
 }
 
 // AppConfigPatchDTO 应用配置补丁DTO
@@ -41,6 +45,23 @@ type HaproxyPatchDTO struct {
 	Thread        *int    `json:"thread,omitempty" binding:"omitempty,min=0,max=256" example:"4"`    // 线程数
 }
 
+// FlowControllerPatchDTO 流量控制器配置补丁DTO
+type FlowControllerPatchDTO struct {
+	VisitLimit  *LimitConfigPatchDTO `json:"visitLimit,omitempty" binding:"omitempty"`  // 访问频率限制配置
+	AttackLimit *LimitConfigPatchDTO `json:"attackLimit,omitempty" binding:"omitempty"` // 攻击频率限制配置
+	ErrorLimit  *LimitConfigPatchDTO `json:"errorLimit,omitempty" binding:"omitempty"`  // 错误频率限制配置
+}
+
+// LimitConfigPatchDTO 限制配置补丁DTO
+type LimitConfigPatchDTO struct {
+	Enabled        *bool  `json:"enabled,omitempty" binding:"omitempty" example:"true"`         // 是否启用
+	Threshold      *int64 `json:"threshold,omitempty" binding:"omitempty" example:"100"`        // 阈值
+	StatDuration   *int64 `json:"statDuration,omitempty" binding:"omitempty" example:"60"`      // 统计时间窗口（秒）
+	BlockDuration  *int64 `json:"blockDuration,omitempty" binding:"omitempty" example:"600"`    // 封禁时长（秒）
+	BurstCount     *int64 `json:"burstCount,omitempty" binding:"omitempty" example:"10"`        // 允许的突发请求数
+	ParamsCapacity *int64 `json:"paramsCapacity,omitempty" binding:"omitempty" example:"10000"` // 缓存容量
+}
+
 // ConfigResponse 配置响应
 // @Description 配置响应
 type ConfigResponse struct {
@@ -52,13 +73,17 @@ type ConfigResponse struct {
 	UpdatedAt       time.Time  `json:"updatedAt"`       // 更新时间
 	IsResponseCheck bool       `json:"isResponseCheck"` // 是否检查响应
 	IsDebug         bool       `json:"isDebug"`         // 是否开启调试模式
+	IsK8s           bool       `json:"isK8s"`           // 是否在K8s环境
 }
 
 // EngineDTO 引擎配置DTO
 type EngineDTO struct {
-	Bind            string         `json:"bind"`            // 引擎绑定地址
-	UseBuiltinRules bool           `json:"useBuiltinRules"` // 是否使用内置规则
-	AppConfig       []AppConfigDTO `json:"appConfig"`       // 应用配置列表
+	Bind            string            `json:"bind"`            // 引擎绑定地址
+	UseBuiltinRules bool              `json:"useBuiltinRules"` // 是否使用内置规则
+	ASNDBPath       string            `json:"asnDBPath"`       // ASN数据库路径
+	CityDBPath      string            `json:"cityDBPath"`      // 城市数据库路径
+	AppConfig       []AppConfigDTO    `json:"appConfig"`       // 应用配置列表
+	FlowController  FlowControllerDTO `json:"flowController"`  // 流量控制配置
 }
 
 // AppConfigDTO 应用配置DTO
@@ -79,6 +104,23 @@ type HaproxyDTO struct {
 	SpoeAgentAddr string `json:"spoeAgentAddr"` // SPOE代理地址
 	SpoeAgentPort int    `json:"spoeAgentPort"` // SPOE代理端口
 	Thread        int    `json:"thread"`        // 线程数
+}
+
+// FlowControllerDTO 流量控制器配置DTO
+type FlowControllerDTO struct {
+	VisitLimit  LimitConfigDTO `json:"visitLimit"`  // 访问频率限制配置
+	AttackLimit LimitConfigDTO `json:"attackLimit"` // 攻击频率限制配置
+	ErrorLimit  LimitConfigDTO `json:"errorLimit"`  // 错误频率限制配置
+}
+
+// LimitConfigDTO 限制配置DTO
+type LimitConfigDTO struct {
+	Enabled        bool  `json:"enabled"`        // 是否启用
+	Threshold      int64 `json:"threshold"`      // 阈值
+	StatDuration   int64 `json:"statDuration"`   // 统计时间窗口（秒）
+	BlockDuration  int64 `json:"blockDuration"`  // 封禁时长（秒）
+	BurstCount     int64 `json:"burstCount"`     // 允许的突发请求数
+	ParamsCapacity int64 `json:"paramsCapacity"` // 缓存容量
 }
 
 // 将 time.Duration 转换为毫秒表示的 int64

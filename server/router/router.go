@@ -32,6 +32,7 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 	configRepo := repository.NewConfigRepository(db)
 	ipGroupRepo := repository.NewIPGroupRepository(db)
 	ruleRepo := repository.NewMicroRuleRepository(db)
+	blockedIPRepo := repository.NewBlockedIPRepository(db)
 
 	// 创建服务
 	authService := service.NewAuthService(userRepo, roleRepo)
@@ -43,6 +44,7 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 	ipGroupService := service.NewIPGroupService(ipGroupRepo)
 	ruleService := service.NewMicroRuleService(ruleRepo)
 	statsService := service.NewStatsService(wafLogRepo)
+	blockedIPService := service.NewBlockedIPService(blockedIPRepo)
 	// 创建控制器
 	authController := controller.NewAuthController(authService)
 	siteController := controller.NewSiteController(siteService)
@@ -53,6 +55,7 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 	ipGroupController := controller.NewIPGroupController(ipGroupService)
 	ruleController := controller.NewMicroRuleController(ruleService)
 	statsController := controller.NewStatsController(runnerService, statsService)
+	blockedIPController := controller.NewBlockedIPController(blockedIPService)
 	// 将仓库添加到上下文中，供中间件使用
 	route.Use(func(c *gin.Context) {
 		c.Set("userRepo", userRepo)
@@ -193,6 +196,14 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 		configRoutes.GET("", middleware.HasPermission(model.PermConfigRead), configController.GetConfig)
 		// 更新配置 - 需要config:update权限
 		configRoutes.PATCH("", middleware.HasPermission(model.PermConfigUpdate), configController.PatchConfig)
+	}
+
+	// 封禁IP管理模块
+	blockedIPRoutes := authenticated.Group("/blocked-ips")
+	{
+		blockedIPRoutes.GET("", middleware.HasPermission(model.PermConfigRead), blockedIPController.GetBlockedIPs)
+		blockedIPRoutes.GET("/stats", middleware.HasPermission(model.PermConfigRead), blockedIPController.GetBlockedIPStats)
+		blockedIPRoutes.DELETE("/cleanup", middleware.HasPermission(model.PermConfigUpdate), blockedIPController.CleanupExpiredBlockedIPs)
 	}
 
 	// 审计日志模块

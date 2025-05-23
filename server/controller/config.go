@@ -112,7 +112,35 @@ func mapConfigToDTO(cfg *model.Config) dto.ConfigResponse {
 	engineDTO := dto.EngineDTO{
 		Bind:            cfg.Engine.Bind,
 		UseBuiltinRules: cfg.Engine.UseBuiltinRules,
+		ASNDBPath:       cfg.Engine.ASNDBPath,
+		CityDBPath:      cfg.Engine.CityDBPath,
 		AppConfig:       make([]dto.AppConfigDTO, len(cfg.Engine.AppConfig)),
+		FlowController: dto.FlowControllerDTO{
+			VisitLimit: dto.LimitConfigDTO{
+				Enabled:        cfg.Engine.FlowController.VisitLimit.Enabled,
+				Threshold:      cfg.Engine.FlowController.VisitLimit.Threshold,
+				StatDuration:   cfg.Engine.FlowController.VisitLimit.StatDuration,
+				BlockDuration:  cfg.Engine.FlowController.VisitLimit.BlockDuration,
+				BurstCount:     cfg.Engine.FlowController.VisitLimit.BurstCount,
+				ParamsCapacity: cfg.Engine.FlowController.VisitLimit.ParamsCapacity,
+			},
+			AttackLimit: dto.LimitConfigDTO{
+				Enabled:        cfg.Engine.FlowController.AttackLimit.Enabled,
+				Threshold:      cfg.Engine.FlowController.AttackLimit.Threshold,
+				StatDuration:   cfg.Engine.FlowController.AttackLimit.StatDuration,
+				BlockDuration:  cfg.Engine.FlowController.AttackLimit.BlockDuration,
+				BurstCount:     cfg.Engine.FlowController.AttackLimit.BurstCount,
+				ParamsCapacity: cfg.Engine.FlowController.AttackLimit.ParamsCapacity,
+			},
+			ErrorLimit: dto.LimitConfigDTO{
+				Enabled:        cfg.Engine.FlowController.ErrorLimit.Enabled,
+				Threshold:      cfg.Engine.FlowController.ErrorLimit.Threshold,
+				StatDuration:   cfg.Engine.FlowController.ErrorLimit.StatDuration,
+				BlockDuration:  cfg.Engine.FlowController.ErrorLimit.BlockDuration,
+				BurstCount:     cfg.Engine.FlowController.ErrorLimit.BurstCount,
+				ParamsCapacity: cfg.Engine.FlowController.ErrorLimit.ParamsCapacity,
+			},
+		},
 	}
 
 	// 转换应用配置
@@ -145,5 +173,6 @@ func mapConfigToDTO(cfg *model.Config) dto.ConfigResponse {
 		UpdatedAt:       cfg.UpdatedAt,
 		IsResponseCheck: cfg.IsResponseCheck,
 		IsDebug:         cfg.IsDebug,
+		IsK8s:           cfg.IsK8s,
 	}
 }

@@ -71,6 +71,10 @@ func (s *ConfigServiceImpl) PatchConfig(ctx context.Context, req *dto.ConfigPatc
 		cfg.IsDebug = *req.IsDebug
 	}
 
+	if req.IsK8s != nil {
+		cfg.IsK8s = *req.IsK8s
+	}
+
 	// 更新Engine配置
 	if req.Engine != nil {
 		if req.Engine.Bind != nil {
@@ -79,6 +83,14 @@ func (s *ConfigServiceImpl) PatchConfig(ctx context.Context, req *dto.ConfigPatc
 
 		if req.Engine.UseBuiltinRules != nil {
 			cfg.Engine.UseBuiltinRules = *req.Engine.UseBuiltinRules
+		}
+
+		if req.Engine.ASNDBPath != nil {
+			cfg.Engine.ASNDBPath = *req.Engine.ASNDBPath
+		}
+
+		if req.Engine.CityDBPath != nil {
+			cfg.Engine.CityDBPath = *req.Engine.CityDBPath
 		}
 
 		// 更新AppConfig
@@ -105,6 +117,78 @@ func (s *ConfigServiceImpl) PatchConfig(ctx context.Context, req *dto.ConfigPatc
 						}
 						break
 					}
+				}
+			}
+		}
+
+		// 更新FlowController配置
+		if req.Engine.FlowController != nil {
+			// 更新VisitLimit配置
+			if req.Engine.FlowController.VisitLimit != nil {
+				visitLimit := req.Engine.FlowController.VisitLimit
+				if visitLimit.Enabled != nil {
+					cfg.Engine.FlowController.VisitLimit.Enabled = *visitLimit.Enabled
+				}
+				if visitLimit.Threshold != nil {
+					cfg.Engine.FlowController.VisitLimit.Threshold = *visitLimit.Threshold
+				}
+				if visitLimit.StatDuration != nil {
+					cfg.Engine.FlowController.VisitLimit.StatDuration = *visitLimit.StatDuration
+				}
+				if visitLimit.BlockDuration != nil {
+					cfg.Engine.FlowController.VisitLimit.BlockDuration = *visitLimit.BlockDuration
+				}
+				if visitLimit.BurstCount != nil {
+					cfg.Engine.FlowController.VisitLimit.BurstCount = *visitLimit.BurstCount
+				}
+				if visitLimit.ParamsCapacity != nil {
+					cfg.Engine.FlowController.VisitLimit.ParamsCapacity = *visitLimit.ParamsCapacity
+				}
+			}
+
+			// 更新AttackLimit配置
+			if req.Engine.FlowController.AttackLimit != nil {
+				attackLimit := req.Engine.FlowController.AttackLimit
+				if attackLimit.Enabled != nil {
+					cfg.Engine.FlowController.AttackLimit.Enabled = *attackLimit.Enabled
+				}
+				if attackLimit.Threshold != nil {
+					cfg.Engine.FlowController.AttackLimit.Threshold = *attackLimit.Threshold
+				}
+				if attackLimit.StatDuration != nil {
+					cfg.Engine.FlowController.AttackLimit.StatDuration = *attackLimit.StatDuration
+				}
+				if attackLimit.BlockDuration != nil {
+					cfg.Engine.FlowController.AttackLimit.BlockDuration = *attackLimit.BlockDuration
+				}
+				if attackLimit.BurstCount != nil {
+					cfg.Engine.FlowController.AttackLimit.BurstCount = *attackLimit.BurstCount
+				}
+				if attackLimit.ParamsCapacity != nil {
+					cfg.Engine.FlowController.AttackLimit.ParamsCapacity = *attackLimit.ParamsCapacity
+				}
+			}
+
+			// 更新ErrorLimit配置
+			if req.Engine.FlowController.ErrorLimit != nil {
+				errorLimit := req.Engine.FlowController.ErrorLimit
+				if errorLimit.Enabled != nil {
+					cfg.Engine.FlowController.ErrorLimit.Enabled = *errorLimit.Enabled
+				}
+				if errorLimit.Threshold != nil {
+					cfg.Engine.FlowController.ErrorLimit.Threshold = *errorLimit.Threshold
+				}
+				if errorLimit.StatDuration != nil {
+					cfg.Engine.FlowController.ErrorLimit.StatDuration = *errorLimit.StatDuration
+				}
+				if errorLimit.BlockDuration != nil {
+					cfg.Engine.FlowController.ErrorLimit.BlockDuration = *errorLimit.BlockDuration
+				}
+				if errorLimit.BurstCount != nil {
+					cfg.Engine.FlowController.ErrorLimit.BurstCount = *errorLimit.BurstCount
+				}
+				if errorLimit.ParamsCapacity != nil {
+					cfg.Engine.FlowController.ErrorLimit.ParamsCapacity = *errorLimit.ParamsCapacity
 				}
 			}
 		}
